@@ -1,6 +1,6 @@
 [workspace]
-members = ["zeroflops-web"]
-exclude = ["zeroflops-wasm"]
+members = ["mybops-web"]
+exclude = ["mybops-wasm"]
 
 [workspace.dependencies]
 arrow-schema = "53.0.0"

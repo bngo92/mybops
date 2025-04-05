@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>zeroflops</title>
+    <link href="/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-link-color-rgb: 69, 130, 236;
+            --bs-link-hover-color-rgb: 55, 104, 189;
+        }
+
+        body {
+            overscroll-behavior: none;
+        }
+
+        .btn-primary {
+            --bs-btn-bg: #4582ec;
+            --bs-btn-border-color: #4582ec;
+        }
+
+        .td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 0;
+        }
+
+        .min-width {
+            min-width: 168px;
+        }
+
+        .max-width {
+            max-width: 424px;
+        }
+
+        .navbar-bg {
+            background-image: linear-gradient(rgba(47, 179, 128, 1), rgba(47, 179, 128, 0.95));
+        }
+
+        .main-bg {
+            background-image: linear-gradient(180deg, rgba(255, 245, 250, 0.01), rgba(255, 245, 250, 1) 85%), radial-gradient(ellipse at top right, rgba(189, 238, 255, 0.5), transparent 50%), radial-gradient(ellipse at center left, rgba(255, 230, 153, 0.5), transparent 72%);
+        }
+    </style>
+</head>
+<body>
+<div>
+    <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
+        <div class="container-lg d-flex justify-content-start gap-3">
+            <button type="button" style="background-color: transparent; color: rgba(255,255,255,0.85)" class="border-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
+                     class="bi bi-list">
+                    <path fill-rule="evenodd"
+                          d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"></path>
+                </svg>
+            </button>
+            <a href="/" class="navbar-brand">zeroflops</a>
+        </div>
+    </nav>
+    <div class="d-flex vh-100 min-vh-100 align-items-stretch">
+        <div style="width: 200px;" class="p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark">
+            <div class="h-100 offcanvas-body d-flex flex-column">
+                <div data-bs-theme="dark" class="d-flex gap-2 align-items-baseline"><a href="/"
+                                                                                       class="text-white text-decoration-none fs-5">zeroflops</a>
+                    <button type="button" class="btn-close d-sm-none"></button>
+                </div>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item"><a href="/lists" class="nav-link text-white">Lists</a></li>
+                    <li class="nav-item"><a href="/search" class="nav-link text-white">Query</a></li>
+                    <li class="nav-item dropdown"><a href="#"
+                                                     class="nav-link dropdown-toggle text-white">Integrations</a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a href="/integrations/spotify" class="dropdown-item">Spotify</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="/docs" class="nav-link text-white">Docs</a></li>
+                </ul>
+                <hr>
+                <div>
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item"><a href="#" class="nav-link text-white">Log in</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+            <nav class="navbar navbar-expand navbar-bg py-2">
+                <div class="container-fluid">
+                    <ul class="navbar-nav me-auto">
+                        <li class="navbar-brand">Demo</li>
+                    </ul>
+                    <div class="d-flex gap-3 align-items-baseline"><span
+                            class="navbar-text text-nowrap">Sort Mode:</span><select class="form-select">
+                        <option>Tournament</option>
+                        <option selected="selected">Random Tournament</option>
+                        <option>Random Matches</option>
+                        <option>Random Rounds</option>
+                    </select>
+                        <button class="btn btn-info">Help</button>
+                    </div>
+                </div>
+            </nav>
+            <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
+                <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="module">
+    import init from '/mybops_wasm.js'
+
+    async function initRun() {
+        await init();
+    }
+
+    initRun();
+</script>
+</body>
+</html>

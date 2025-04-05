@@ -1,8 +1,8 @@
 use async_trait::async_trait;
+use mybops::Error;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zeroflops::Error;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Token {

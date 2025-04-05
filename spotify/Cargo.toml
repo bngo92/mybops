@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 async-trait.workspace = true
+mybops = { path = "../mybops/", features = ["full"] }
 reqwest = { workspace = true, features = ["json"] }
 serde.workspace = true
-zeroflops = { path = "../zeroflops/", features = ["full"] }

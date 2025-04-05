@@ -6,7 +6,7 @@ use azure_data_cosmos::{
 use futures::TryStreamExt;
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::{Arc, RwLock};
-use zeroflops::{
+use mybops::{
     storage::{
         CreateDocumentBuilder, DeleteDocumentBuilder, DocumentWriter, GetDocumentBuilder,
         QueryDocumentsBuilder, ReplaceDocumentBuilder, SessionClient,

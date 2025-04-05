@@ -1,9 +1,9 @@
-# zeroflops
-## zeroflops-web
+# mybops
+## mybops-web
 ```
 COSMOS_MASTER_KEY= COSMOS_ACCOUNT= SPOTIFY_TOKEN= cargo +nightly run --features dev
 ```
-## zeroflops-wasm
+## mybops-wasm
 ```
 rustup run nightly wasm-pack build --target web
 ```
