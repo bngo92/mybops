@@ -1,4 +1,4 @@
-name: zeroflops-wasm
+name: mybops-wasm
 
 on:
   push:
@@ -21,4 +21,4 @@ jobs:
 
 defaults:
   run:
-    working-directory: zeroflops-wasm
+    working-directory: mybops-wasm

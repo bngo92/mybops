@@ -1,4 +1,4 @@
-name: zeroflops-web
+name: mybops-web
 
 on:
   push:
@@ -24,4 +24,4 @@ jobs:
 
 defaults:
   run:
-    working-directory: zeroflops-web
+    working-directory: mybops-web
