@@ -11,7 +11,7 @@ fn main() {
 fn import() -> Result<(), Error> {
     let items: Vec<Item> = serde_json::from_reader(File::open("items.json").unwrap())?;
     let lists: Vec<List> = serde_json::from_reader(File::open("lists.json").unwrap())?;
-    let mut conn = Connection::open("zeroflops").unwrap();
+    let mut conn = Connection::open("mybops").unwrap();
     let tx = conn.transaction().unwrap();
     for item in items {
         tx.execute(

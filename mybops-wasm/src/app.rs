@@ -208,14 +208,14 @@ impl Component for App {
                       <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
                     </svg>
                   </button>
-                  <Link<Route> classes="navbar-brand" to={Route::Home}>{"zeroflops"}</Link<Route>>
+                  <Link<Route> classes="navbar-brand" to={Route::Home}>{"mybops"}</Link<Route>>
                 </div>
               </nav>
               <div class="d-flex vh-100 min-vh-100 align-items-stretch">
                 <div class={sidebar_class} style="width: 200px;">
                   <div class="h-100 offcanvas-body d-flex flex-column">
                     <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
-                      <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"zeroflops"}</Link<Route>>
+                      <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"mybops"}</Link<Route>>
                       <button type="button" class="btn-close d-sm-none" onclick={hide_sidebar}></button>
                     </div>
                     <hr/>

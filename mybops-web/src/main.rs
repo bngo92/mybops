@@ -710,7 +710,7 @@ async fn main() {
 
     // A `Service` is needed for every connection, so this
     // creates one from our `hello_world` function.
-    let session_store = SqlStore { path: "zeroflops" };
+    let session_store = SqlStore { path: "mybops" };
     let shared_state = Arc::new(AppState {
         sql_store: session_store.clone(),
         sql_client: SqlSessionClient { path: "data" },

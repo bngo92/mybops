@@ -95,9 +95,9 @@ impl Component for Home {
               <div>
                 <Collapse collapsed={self.help_collapsed}>
                   <p>
-                  {"zeroflops is an app that helps you filter your data and remove flops from your life.
+                  {"mybops is an app that helps you filter your data and remove flops from your life.
                     Use it to gain insights about your favorite songs, TV shows, and even restaurants.
-                    zeroflops makes it easy to rate and/or rank what's important to you."}
+                    mybops makes it easy to rate and/or rank what's important to you."}
                   </p>
                   <p>
                   {"The data is organized into lists of items and your lists are displayed here on the home page using user-defined widgets.
