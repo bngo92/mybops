@@ -1,20 +1,21 @@
 use ::spotify::{AuthClient, SpotifyCredentials};
 use async_trait::async_trait;
 use axum_login::{
-    tower_sessions::{
-        session::{Id, Record},
-        session_store, SessionStore,
-    },
     AuthUser, AuthnBackend,
+    tower_sessions::{
+        SessionStore,
+        session::{Id, Record},
+        session_store,
+    },
 };
 #[cfg(feature = "azure")]
 use azure_data_cosmos::CosmosEntity;
-use base64::prelude::{Engine, BASE64_STANDARD};
+use base64::prelude::{BASE64_STANDARD, Engine};
 use mybops::Error;
 use rand::Rng;
 use reqwest::Client;
 use rusqlite::{Connection, OptionalExtension, Params, Row};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use uuid::Uuid;
 
 #[async_trait]
@@ -369,8 +370,8 @@ impl AuthnBackend for SqlStore {
             password_auth::verify_password(creds.secret, &user.secret)
                 .ok()
                 .is_some() // We're using password-based authentication--this
-                           // works by comparing our form input with an argon2
-                           // password hash.
+            // works by comparing our form input with an argon2
+            // password hash.
         }))
     }
 
@@ -388,7 +389,7 @@ impl AuthnBackend for SqlStore {
 }
 
 pub fn generate_secret() -> String {
-    BASE64_STANDARD.encode(rand::thread_rng().gen::<[u8; 64]>())
+    BASE64_STANDARD.encode(rand::thread_rng().r#gen::<[u8; 64]>())
 }
 
 #[cfg(test)]
@@ -398,7 +399,7 @@ mod test {
     use async_trait::async_trait;
     use mybops::Error;
     use rusqlite::{Params, Row};
-    use serde::{de::DeserializeOwned, Serialize};
+    use serde::{Serialize, de::DeserializeOwned};
     use spotify::{AuthClient, SpotifyCredentials};
     use std::sync::{Arc, Mutex};
 

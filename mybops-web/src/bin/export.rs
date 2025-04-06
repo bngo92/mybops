@@ -9,8 +9,8 @@ async fn main() {
     use azure_data_cosmos::{clients::CosmosClient, resources::permission::AuthorizationToken};
     use cosmos::CosmosSessionClient;
     use mybops::{
-        storage::{CosmosQuery, QueryDocumentsBuilder, SessionClient},
         List,
+        storage::{CosmosQuery, QueryDocumentsBuilder, SessionClient},
     };
     use mybops_web::Item;
     let master_key =

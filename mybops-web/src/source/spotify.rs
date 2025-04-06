@@ -1,10 +1,10 @@
 use crate::query::IntoQuery;
 use mybops::{
+    Error, Id, List, ListMode, Source, SourceType, Spotify, UserId,
     spotify::{Playlist, Playlists, RecentTrack},
     storage::{
         CosmosParam, CosmosQuery, QueryDocumentsBuilder, SessionClient, SqlSessionClient, View,
     },
-    Error, Id, List, ListMode, Source, SourceType, Spotify, UserId,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -521,8 +521,7 @@ pub async fn get_recent_tracks(
                     .collect::<Vec<_>>(),
             ),
         ))
-        .await
-        .map_err(Error::from)?;
+        .await?;
     let map: HashMap<_, _> = items
         .into_iter()
         .map(|r: Map<String, Value>| (r["id"].as_str().expect("string id").to_owned(), r))

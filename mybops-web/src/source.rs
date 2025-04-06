@@ -1,11 +1,11 @@
 use crate::RawItem;
-use futures::{stream::FuturesUnordered, StreamExt, TryStreamExt};
+use futures::{StreamExt, TryStreamExt, stream::FuturesUnordered};
 use mybops::{
+    Error, InternalError, ItemMetadata, List, RawList, Source, SourceType, Spotify, UserId,
     storage::{
         CreateDocumentBuilder, DocumentWriter, GetDocumentBuilder, ReplaceDocumentBuilder,
         SessionClient, View,
     },
-    Error, InternalError, ItemMetadata, List, RawList, Source, SourceType, Spotify, UserId,
 };
 use serde_json::{Map, Value};
 
@@ -65,7 +65,6 @@ pub async fn update_list(
             document: RawList::from(list),
         }))
         .await
-        .map_err(Error::from)
 }
 
 async fn get_source_and_items(
@@ -196,15 +195,14 @@ pub async fn create_items(
         .collect::<FuturesUnordered<_>>()
         .try_collect()
         .await
-        .map_err(Error::from)
 }
 
 #[cfg(test)]
 mod test {
     use crate::query::test::{Mock, TestSessionClient};
     use mybops::{
-        storage::{DocumentWriter, ReplaceDocumentBuilder},
         List, ListMode, Source, SourceType, UserId,
+        storage::{DocumentWriter, ReplaceDocumentBuilder},
     };
 
     #[tokio::test]

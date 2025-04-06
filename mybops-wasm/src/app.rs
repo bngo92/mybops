@@ -412,12 +412,12 @@ impl Component for ListView {
 
 enum ListState {
     Fetching,
-    Success(List),
+    Success(Box<List>),
     NotFound,
 }
 
 pub enum ListMsg {
-    Load(List),
+    Load(Box<List>),
     NotFound,
     SelectView,
 }
@@ -450,7 +450,7 @@ impl Component for ListComponent {
         };
         ctx.link().send_future(async move {
             if let Some(list) = crate::fetch_list(&id).await.unwrap() {
-                ListMsg::Load(list)
+                ListMsg::Load(Box::new(list))
             } else {
                 ListMsg::NotFound
             }
@@ -504,7 +504,7 @@ impl Component for ListComponent {
                 | ListsRoute::Tournament { id } => id.clone(),
             };
             ctx.link().send_future(async move {
-                ListMsg::Load(crate::fetch_list(&id).await.unwrap().unwrap())
+                ListMsg::Load(Box::new(crate::fetch_list(&id).await.unwrap().unwrap()))
             });
         }
         // Rank dropdown breaks if this is set to false
@@ -552,25 +552,25 @@ impl Component for ListComponent {
         }
         let component = if crate::user_list(list, &ctx.props().user) {
             match view {
-                ListPage::View => html! { <ListView list={list.clone()}/> },
+                ListPage::View => html! { <ListView list={*list.clone()}/> },
                 ListPage::List => {
-                    html! { <ListItems user={Rc::clone(&ctx.props().user)} list={list.clone()} mode={self.mode.clone()}/> }
+                    html! { <ListItems user={Rc::clone(&ctx.props().user)} list={*list.clone()} mode={self.mode.clone()}/> }
                 }
                 ListPage::Edit => {
-                    html! { <Edit logged_in={ctx.props().user.is_some()} list={list.clone()}/> }
+                    html! { <Edit logged_in={ctx.props().user.is_some()} list={*list.clone()}/> }
                 }
                 ListPage::RandomMatches => html! { <RandomMatches id={list.id.clone()}/> },
                 ListPage::RandomRounds => html! { <RandomRounds id={list.id.clone()}/> },
                 ListPage::RandomTournament => {
-                    html! { <RandomTournamentLoader list={list.clone()}/> }
+                    html! { <RandomTournamentLoader list={*list.clone()}/> }
                 }
-                ListPage::Tournament => html! { <TournamentLoader list={list.clone()}/> },
+                ListPage::Tournament => html! { <TournamentLoader list={*list.clone()}/> },
             }
         } else {
             match view {
-                ListPage::View => html! { <ListView list={list.clone()}/> },
+                ListPage::View => html! { <ListView list={*list.clone()}/> },
                 ListPage::List => {
-                    html! { <ListItems user={Rc::clone(&ctx.props().user)} list={list.clone()} mode={self.mode.clone()}/> }
+                    html! { <ListItems user={Rc::clone(&ctx.props().user)} list={*list.clone()} mode={self.mode.clone()}/> }
                 }
                 // TODO: move this up?
                 _ => crate::not_found(),

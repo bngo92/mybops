@@ -1,7 +1,7 @@
 use crate::ITEM_FIELDS;
 use mybops::{
-    storage::{CosmosQuery, QueryDocumentsBuilder, SessionClient, SqlSessionClient, View},
     Error, InternalError, ItemMetadata, Items, List, ListMode, UserId,
+    storage::{CosmosQuery, QueryDocumentsBuilder, SessionClient, SqlSessionClient, View},
 };
 use serde_json::{Map, Value};
 use sqlparser::{
@@ -285,13 +285,13 @@ fn rewrite_identifier(id: Ident) -> Expr {
 pub mod test {
     use async_trait::async_trait;
     use mybops::{
+        Error, ItemMetadata, Items, List, ListMode, UserId,
         storage::{
             CreateDocumentBuilder, DeleteDocumentBuilder, DocumentWriter, GetDocumentBuilder,
             QueryDocumentsBuilder, ReplaceDocumentBuilder, SessionClient,
         },
-        Error, ItemMetadata, Items, List, ListMode, UserId,
     };
-    use serde::{de::DeserializeOwned, Serialize};
+    use serde::{Serialize, de::DeserializeOwned};
     use std::sync::{Arc, Mutex};
 
     pub struct Mock<T, U> {
@@ -515,16 +515,26 @@ pub mod test {
     #[test]
     fn test_where() {
         for (input, expected) in [
-            ("SELECT name, user_score FROM item WHERE user_score >= 1500",
-             "SELECT name, user_score FROM item WHERE user_score >= 1500"),
-            ("SELECT name, user_score FROM item WHERE user_score IN (1500)",
-             "SELECT name, user_score FROM item WHERE user_score IN (1500)"),
-            ("SELECT name, user_score FROM item WHERE album = 'foo'",
-             "SELECT name, user_score FROM item WHERE metadata -> 'album' = 'foo'"),
-            ("SELECT name, user_score FROM item WHERE album = \"foo\"",
-             "SELECT name, user_score FROM item WHERE metadata -> 'album' = \"foo\""),
-            ("SELECT name, user_score FROM item WHERE ARRAY_CONTAINS(artists, \"foo\")",
-             "SELECT name, user_score FROM item WHERE ARRAY_CONTAINS(metadata -> 'artists', \"foo\")"),
+            (
+                "SELECT name, user_score FROM item WHERE user_score >= 1500",
+                "SELECT name, user_score FROM item WHERE user_score >= 1500",
+            ),
+            (
+                "SELECT name, user_score FROM item WHERE user_score IN (1500)",
+                "SELECT name, user_score FROM item WHERE user_score IN (1500)",
+            ),
+            (
+                "SELECT name, user_score FROM item WHERE album = 'foo'",
+                "SELECT name, user_score FROM item WHERE metadata -> 'album' = 'foo'",
+            ),
+            (
+                "SELECT name, user_score FROM item WHERE album = \"foo\"",
+                "SELECT name, user_score FROM item WHERE metadata -> 'album' = \"foo\"",
+            ),
+            (
+                "SELECT name, user_score FROM item WHERE ARRAY_CONTAINS(artists, \"foo\")",
+                "SELECT name, user_score FROM item WHERE ARRAY_CONTAINS(metadata -> 'artists', \"foo\")",
+            ),
         ] {
             let (query, column_names) = super::rewrite_query(input).unwrap();
             assert_eq!(query.to_string(), expected);
@@ -537,7 +547,10 @@ pub mod test {
         let (query, column_names) =
             super::rewrite_query("SELECT artists, AVG(user_score) FROM item GROUP BY artists")
                 .unwrap();
-        assert_eq!(query.to_string(), "SELECT metadata -> 'artists', AVG(user_score) FROM item GROUP BY metadata -> 'artists'");
+        assert_eq!(
+            query.to_string(),
+            "SELECT metadata -> 'artists', AVG(user_score) FROM item GROUP BY metadata -> 'artists'"
+        );
         assert_eq!(column_names, vec!["artists", "AVG(user_score)"]);
     }
 

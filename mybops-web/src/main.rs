@@ -4,32 +4,32 @@ use arrow_ipc::writer::FileWriter;
 use arrow_schema::{FieldRef, Schema};
 use async_trait::async_trait;
 use axum::{
+    Router,
     body::Bytes,
     extract::{Host, OriginalUri, Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Json, Redirect, Response},
     routing::{get, post},
-    Router,
 };
 use axum_login::{
-    tower_sessions::{Expiry, SessionManagerLayer},
     AuthManagerLayerBuilder,
+    tower_sessions::{Expiry, SessionManagerLayer},
 };
-use futures::{stream::FuturesUnordered, TryStreamExt};
+use futures::{TryStreamExt, stream::FuturesUnordered};
 use mybops::{
+    Error, Id, InternalError, Items, List, ListMode, Lists, RawList, UserId,
     spotify::{Playlists, RecentTracks},
     storage::{
         CosmosQuery, CreateDocumentBuilder, DeleteDocumentBuilder, DocumentWriter,
         GetDocumentBuilder, QueryDocumentsBuilder, ReplaceDocumentBuilder, SessionClient,
         SqlSessionClient, View,
     },
-    Error, Id, InternalError, Items, List, ListMode, Lists, RawList, UserId,
 };
 use mybops_web::{
+    Item, RawItem,
     query::{self, IntoQuery},
     source::{self, spotify},
     user::{self, Auth, GoogleClient, SqlStore, User},
-    Item, RawItem,
 };
 use rusqlite::Connection;
 use serde_arrow::schema::{SchemaLike, TracingOptions};
@@ -185,9 +185,10 @@ async fn get_list(
     let user_id = get_user_or_demo_user(auth);
     let mut list = source::get_list(&state.sql_client, &user_id, &id).await?;
     if let ListMode::View(_) = list.mode {
-        list.items = query::get_view_items(&state.sql_client, &user_id, &list)
+        let items = query::get_view_items(&state.sql_client, &user_id, &list)
             .await?
             .collect();
+        list.items = items;
     }
     Ok(Json(list))
 }
@@ -308,8 +309,7 @@ async fn delete_list(
             document_name: id,
             partition_key: user_id,
         }))
-        .await
-        .map_err(Error::from)?;
+        .await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -590,7 +590,6 @@ async fn create_list_doc(
             is_upsert,
         }))
         .await
-        .map_err(Error::from)
 }
 
 async fn update_items(
@@ -624,10 +623,9 @@ async fn update_items(
                     document: RawItem::from(item),
                 }))
                 .await
-                .map_err(Error::from)
         })
         .collect::<FuturesUnordered<_>>()
-        .try_collect()
+        .try_collect::<()>()
         .await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -654,7 +652,7 @@ async fn delete_items(
                 .await
         })
         .collect::<FuturesUnordered<_>>()
-        .try_collect()
+        .try_collect::<()>()
         .await?;
     Ok(StatusCode::NO_CONTENT)
 }
