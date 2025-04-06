@@ -1,11 +1,11 @@
 # mybops
 ## mybops-web
 ```
-COSMOS_MASTER_KEY= COSMOS_ACCOUNT= SPOTIFY_TOKEN= cargo +nightly run --features dev
+SPOTIFY_TOKEN= cargo run --features dev
 ```
 ## mybops-wasm
 ```
-rustup run nightly wasm-pack build --target web
+wasm-pack build --target web
 ```
 ## TODO
 ### P0
