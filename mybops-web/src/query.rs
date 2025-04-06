@@ -339,7 +339,7 @@ pub mod test {
             T: DeserializeOwned + Send + Sync,
         {
             let value = self.get_mock.call(builder);
-            Ok(serde_json::de::from_str(value).unwrap())
+            Ok(serde_json::de::from_str(value)?)
         }
 
         async fn query_documents<T>(&self, builder: QueryDocumentsBuilder) -> Result<Vec<T>, Error>
@@ -347,7 +347,7 @@ pub mod test {
             T: DeserializeOwned + Send + Sync,
         {
             let value = self.query_mock.call(builder);
-            Ok(serde_json::de::from_str(value).unwrap())
+            Ok(serde_json::de::from_str(value)?)
         }
 
         /// CosmosDB creates new session tokens after writes
@@ -358,7 +358,7 @@ pub mod test {
             let builder = match builder {
                 DocumentWriter::Create(builder) => DocumentWriter::Create(CreateDocumentBuilder {
                     collection_name: builder.collection_name,
-                    document: serde_json::to_string(&builder.document).unwrap(),
+                    document: serde_json::to_string(&builder.document)?,
                     is_upsert: builder.is_upsert,
                 }),
                 DocumentWriter::Replace(builder) => {
@@ -366,7 +366,7 @@ pub mod test {
                         collection_name: builder.collection_name,
                         document_name: builder.document_name,
                         partition_key: builder.partition_key,
-                        document: serde_json::to_string(&builder.document).unwrap(),
+                        document: serde_json::to_string(&builder.document)?,
                     })
                 }
                 DocumentWriter::Delete(builder) => DocumentWriter::Delete(DeleteDocumentBuilder {

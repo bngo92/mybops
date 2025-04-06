@@ -10,6 +10,6 @@ async-trait.workspace = true
 azure_core.workspace = true
 azure_data_cosmos.workspace = true
 futures.workspace = true
-mybops = { path = "../mybops/", features = ["full"] }
+mybops = { path = "../mybops", features = ["full"] }
 serde.workspace = true
 serde_json.workspace = true

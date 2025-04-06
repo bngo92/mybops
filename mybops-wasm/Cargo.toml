@@ -13,7 +13,7 @@ crate-type = ["cdylib", "lib"]
 arrow = "53.0.0"
 getrandom = { version = "0.2.12", features = ["js"] }
 js-sys = "0.3.64"
-mybops = { path = "../mybops/" }
+mybops = { path = "../mybops" }
 plotters = { git = "https://github.com/plotters-rs/plotters", default-features = false, features = ["histogram", "line_series"] }
 plotters-canvas = { git = "https://github.com/AE1020/plotters-canvas", rev = "aacc00b" }
 rand = "0.8.3"
