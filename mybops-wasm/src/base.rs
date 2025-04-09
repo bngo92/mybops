@@ -1,6 +1,6 @@
 use mybops::ItemMetadata;
 use std::borrow::Cow;
-use yew::{html, Callback, Component, Context, Html, MouseEvent, NodeRef, Properties};
+use yew::{Callback, Component, Context, Html, MouseEvent, NodeRef, Properties, html};
 
 pub enum IframeCompareMsg {
     Left,

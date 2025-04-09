@@ -2,7 +2,7 @@ use crate::base::IframeCompare;
 use mybops::{ItemMetadata, Items};
 use rand::prelude::SliceRandom;
 use std::borrow::Cow;
-use yew::{html, Component, Context, Html, Properties};
+use yew::{Component, Context, Html, Properties, html};
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct MatchProps {

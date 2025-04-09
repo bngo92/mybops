@@ -6,12 +6,12 @@ use arrow::{
     util::display,
 };
 use plotters::prelude::{
-    ChartBuilder, Circle, Color, Histogram, IntoDrawingArea, IntoSegmentedCoord, LineSeries, BLACK,
+    BLACK, ChartBuilder, Circle, Color, Histogram, IntoDrawingArea, IntoSegmentedCoord, LineSeries,
     RED, WHITE,
 };
 use plotters_canvas::CanvasBackend;
 use std::{collections::HashMap, sync::Arc};
-use yew::{html, Html};
+use yew::{Html, html};
 
 use crate::dataframe::DataFrame;
 

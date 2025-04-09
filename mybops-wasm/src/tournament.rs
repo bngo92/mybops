@@ -3,7 +3,7 @@ use mybops::{ItemMetadata, List};
 use rand::prelude::SliceRandom;
 use std::{borrow::Cow, collections::HashMap};
 use web_sys::HtmlSelectElement;
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
 
 #[derive(Eq, PartialEq, Properties)]
 pub struct TournamentLoaderProps {

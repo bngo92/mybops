@@ -1,4 +1,4 @@
-use yew::{html, Html};
+use yew::{Html, html};
 
 pub fn docs() -> Html {
     crate::nav_content(

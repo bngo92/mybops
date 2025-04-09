@@ -1,5 +1,5 @@
 use mybops::User;
-use yew::{html, Component, Context, Html, Properties};
+use yew::{Component, Context, Html, Properties, html};
 
 #[derive(Eq, PartialEq, Properties)]
 pub struct SettingsProps {

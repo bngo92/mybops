@@ -1,14 +1,14 @@
 use std::{collections::HashMap, rc::Rc};
 
 use crate::{
+    ListMode, ListsRoute, Route, UserProps,
     bootstrap::{Accordion, Collapse},
     dataframe::DataFrame,
-    ListMode, ListsRoute, Route, UserProps,
 };
 use mybops::List;
 use wasm_bindgen::JsValue;
 use web_sys::HtmlSelectElement;
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
 use yew_router::{prelude::Link, scope_ext::RouterScopeExt};
 
 pub enum HomeMsg {

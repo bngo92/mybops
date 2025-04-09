@@ -1,7 +1,7 @@
 use crate::{
+    ListsRoute,
     bootstrap::{Alert, Modal},
     dataframe::DataFrame,
-    ListsRoute,
 };
 use arrow::{array::AsArray, datatypes::UInt64Type};
 use js_sys::Error;
@@ -13,7 +13,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{
     HtmlInputElement, HtmlSelectElement, Request, RequestInit, RequestMode, Response, Url,
 };
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
 use yew_router::prelude::Link;
 
 pub enum Msg {
@@ -169,11 +169,11 @@ impl Component for ListItems {
                 }
                 if !update_ids.is_empty() {
                     let window = web_sys::window().expect("no global `window` exists");
-                    let mut opts = RequestInit::new();
-                    opts.method("POST");
-                    opts.mode(RequestMode::Cors);
+                    let opts = RequestInit::new();
+                    opts.set_method("POST");
+                    opts.set_mode(RequestMode::Cors);
                     let updates = JsValue::from_str(&serde_json::to_string(&update_ids).unwrap());
-                    opts.body(Some(&updates));
+                    opts.set_body(&updates);
                     let request =
                         Request::new_with_str_and_init("/api/?action=updateItems", &opts).unwrap();
                     request

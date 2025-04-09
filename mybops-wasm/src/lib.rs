@@ -5,10 +5,10 @@ use js_sys::Uint8Array;
 use mybops::{Id, Items, List, ListMode, Lists, Spotify, User};
 use regex::Regex;
 use std::{collections::HashSet, io::Cursor};
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::{JsCast, prelude::*};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
-use yew::{html, Component, Context, Html, Properties};
+use yew::{Component, Context, Html, Properties, html};
 use yew_router::Routable;
 
 mod app;
@@ -208,13 +208,16 @@ async fn fetch_list(id: &str) -> Result<Option<List>, JsValue> {
 
 async fn create_list(query: Option<String>) -> Result<List, JsValue> {
     let window = window();
+    let opts = RequestInit::new();
+    opts.set_method("POST");
+    opts.set_mode(RequestMode::Cors);
     let request = Request::new_with_str_and_init(
         &if let Some(query) = query {
             format!("/api/lists?query={query}")
         } else {
             String::from("/api/lists")
         },
-        RequestInit::new().method("POST").mode(RequestMode::Cors),
+        &opts,
     )?;
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
     let resp: Response = resp_value.dyn_into()?;
@@ -224,15 +227,11 @@ async fn create_list(query: Option<String>) -> Result<List, JsValue> {
 
 async fn update_list(list: &List) -> Result<(), JsValue> {
     let window = window();
-    let request = Request::new_with_str_and_init(
-        &format!("/api/lists/{}", list.id),
-        RequestInit::new()
-            .method("PUT")
-            .mode(RequestMode::Cors)
-            .body(Some(&JsValue::from_str(
-                &serde_json::to_string(&list).unwrap(),
-            ))),
-    )?;
+    let opts = RequestInit::new();
+    opts.set_method("PUT");
+    opts.set_mode(RequestMode::Cors);
+    opts.set_body(&JsValue::from_str(&serde_json::to_string(&list).unwrap()));
+    let request = Request::new_with_str_and_init(&format!("/api/lists/{}", list.id), &opts)?;
     request.headers().set("Content-Type", "application/json")?;
     JsFuture::from(window.fetch_with_request(&request)).await?;
     Ok(())
@@ -240,10 +239,10 @@ async fn update_list(list: &List) -> Result<(), JsValue> {
 
 async fn delete_list(id: &str) -> Result<(), JsValue> {
     let window = window();
-    let request = Request::new_with_str_and_init(
-        &format!("/api/lists/{}", id),
-        RequestInit::new().method("DELETE").mode(RequestMode::Cors),
-    )?;
+    let opts = RequestInit::new();
+    opts.set_method("DELETE");
+    opts.set_mode(RequestMode::Cors);
+    let request = Request::new_with_str_and_init(&format!("/api/lists/{}", id), &opts)?;
     JsFuture::from(window.fetch_with_request(&request)).await?;
     Ok(())
 }
@@ -344,9 +343,9 @@ async fn delete_items(ids: &[String]) -> Result<(), JsValue> {
 }
 
 fn query(url: &str, method: &str) -> Result<Request, JsValue> {
-    let mut opts = RequestInit::new();
-    opts.method(method);
-    opts.mode(RequestMode::Cors);
+    let opts = RequestInit::new();
+    opts.set_method(method);
+    opts.set_mode(RequestMode::Cors);
     Request::new_with_str_and_init(url, &opts)
 }
 

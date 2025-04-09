@@ -1,12 +1,12 @@
-use crate::{bootstrap::Accordion, UserProps};
+use crate::{UserProps, bootstrap::Accordion};
 use mybops::{
-    spotify::{Playlists, RecentTracks},
     Spotify,
+    spotify::{Playlists, RecentTracks},
 };
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{HtmlSelectElement, Response};
-use yew::{html, Component, Context, Html, NodeRef};
+use yew::{Component, Context, Html, NodeRef, html};
 
 pub enum Msg {
     None,

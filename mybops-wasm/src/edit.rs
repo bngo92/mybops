@@ -1,6 +1,6 @@
 use mybops::{Id, List, ListMode, Source, SourceType, Spotify};
 use web_sys::{HtmlInputElement, HtmlSelectElement};
-use yew::{html, Component, Context, Html, NodeRef, Properties};
+use yew::{Component, Context, Html, NodeRef, Properties, html};
 use yew_router::scope_ext::RouterScopeExt;
 
 use crate::Route;

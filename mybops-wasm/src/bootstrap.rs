@@ -1,4 +1,4 @@
-use yew::{html, Callback, Children, Component, Context, Html, MouseEvent, Properties};
+use yew::{Callback, Children, Component, Context, Html, MouseEvent, Properties, html};
 
 pub enum AccordionMsg {
     Toggle,

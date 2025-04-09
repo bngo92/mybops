@@ -1,6 +1,6 @@
 use crate::{bootstrap::Collapse, dataframe::DataFrame, plot::DataView};
 use web_sys::{HtmlSelectElement, KeyboardEvent};
-use yew::{html, Component, Context, Html, NodeRef, Properties};
+use yew::{Component, Context, Html, NodeRef, Properties, html};
 
 pub enum SearchMsg {
     ToggleHelp,

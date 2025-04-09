@@ -1,4 +1,5 @@
 use crate::{
+    Content, ListsRoute, Route,
     base::Input,
     bootstrap::Modal,
     dataframe::DataFrame,
@@ -13,15 +14,14 @@ use crate::{
     search::Search,
     settings::Settings,
     tournament::{RandomTournamentLoader, TournamentLoader},
-    Content, ListsRoute, Route,
 };
 use mybops::{List, ListMode, User};
 use std::{collections::HashMap, rc::Rc};
 use web_sys::{HtmlSelectElement, MouseEvent};
-use yew::{html, Callback, Component, Context, Html, NodeRef, Properties};
+use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
 use yew_router::{
-    prelude::{Link, Redirect, RouterScopeExt},
     BrowserRouter, Switch,
+    prelude::{Link, Redirect, RouterScopeExt},
 };
 
 type RouteQuery = &'static [(&'static str, &'static str)];
