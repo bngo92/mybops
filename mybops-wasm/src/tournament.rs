@@ -253,8 +253,8 @@ impl TournamentBracket<usize> {
         i: usize,
         lut: &'a mut [ItemMetadata],
     ) -> Option<(&'a ItemMetadata, &'a ItemMetadata)> {
-        if let Some(item) = self.data[i].clone() {
-            if !item.disabled && !self.data[item.pair].as_ref().unwrap().disabled {
+        if let Some(item) = self.data[i].clone()
+            && !item.disabled && !self.data[item.pair].as_ref().unwrap().disabled {
                 self.data[i].as_mut().unwrap().disabled = true;
                 self.data[item.pair].as_mut().unwrap().disabled = true;
                 lut[self.data[item.pair].as_mut().unwrap().item].rank = Some(
@@ -272,7 +272,6 @@ impl TournamentBracket<usize> {
                 parent.disabled = false;
                 return Some((&lut[win], &lut[self.data[item.pair].as_ref().unwrap().item]));
             }
-        }
         None
     }
 }
@@ -493,8 +492,8 @@ impl Tournament {
             'found: while start_i != fields.bracket.data.len() / 2 {
                 let mut i = start_i;
                 while i < fields.bracket.data.len() {
-                    if let Some(item) = &fields.bracket.data[i] {
-                        if !item.disabled {
+                    if let Some(item) = &fields.bracket.data[i]
+                        && !item.disabled {
                             let pair = fields.bracket.data[item.pair].as_ref().unwrap();
                             if !pair.disabled {
                                 let left_callback = ctx.link().callback(Msg::Update);
@@ -512,7 +511,6 @@ impl Tournament {
                                 break 'found;
                             }
                         }
-                    }
                     i += step;
                 }
                 start_i += step / 2;

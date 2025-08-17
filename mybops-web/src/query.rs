@@ -257,10 +257,10 @@ fn rewrite_expr(expr: &mut Expr) {
             }
             Expr::Function(f) => {
                 for arg in &mut f.args {
-                    if let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = arg {
-                        if let Expr::Identifier(id) = expr.clone() {
-                            *expr = rewrite_identifier(id);
-                        }
+                    if let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = arg
+                        && let Expr::Identifier(id) = expr.clone()
+                    {
+                        *expr = rewrite_identifier(id);
                     }
                 }
             }

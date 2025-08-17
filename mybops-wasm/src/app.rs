@@ -371,11 +371,10 @@ impl Component for ListView {
                 });
             }
         }
-        if let Some(data) = &self.data {
-            if let Err(e) = self.view.draw(data) {
+        if let Some(data) = &self.data
+            && let Err(e) = self.view.draw(data) {
                 self.error = Some(e.to_string());
             }
-        }
         true
     }
 
