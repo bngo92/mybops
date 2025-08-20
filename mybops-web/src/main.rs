@@ -36,8 +36,6 @@ use serde_arrow::schema::{SchemaLike, TracingOptions};
 use serde_json::{Map, Value};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use time::Duration;
-#[cfg(feature = "dev")]
-use tower_http::services::ServeFile;
 use tower_http::trace::TraceLayer;
 use uuid::Uuid;
 
@@ -69,15 +67,7 @@ async fn login_handler(
     auth: AuthContext,
     Host(host): Host,
 ) -> Result<impl IntoResponse, Response> {
-    let origin;
-    #[cfg(feature = "dev")]
-    {
-        origin = format!("http://{}{}", host, original_uri.path());
-    }
-    #[cfg(not(feature = "dev"))]
-    {
-        origin = format!("https://{}{}", host, original_uri.path());
-    }
+    let origin = format!("https://{}{}", host, original_uri.path());
     user::spotify_login(
         Connection::open(state.sql_store.path).map_err(Error::from)?,
         SpotifyClient,
@@ -115,15 +105,7 @@ async fn google_login_handler(
     auth: AuthContext,
     Host(host): Host,
 ) -> Result<impl IntoResponse, Response> {
-    let origin;
-    #[cfg(feature = "dev")]
-    {
-        origin = format!("http://{}{}", host, original_uri.path());
-    }
-    #[cfg(not(feature = "dev"))]
-    {
-        origin = format!("https://{}{}", host, original_uri.path());
-    }
+    let origin = format!("https://{}{}", host, original_uri.path());
     user::google_login(
         Connection::open(state.sql_store.path).map_err(Error::from)?,
         GoogleClient,
@@ -796,22 +778,6 @@ async fn main() {
         .layer(auth_layer)
         .layer(session_layer)
         .layer(TraceLayer::new_for_http());
-    #[cfg(feature = "dev")]
-    let app = {
-        app.route_service(
-            "/mybops_wasm.js",
-            ServeFile::new("../mybops-wasm/pkg/mybops_wasm.js"),
-        )
-        .route_service(
-            "/mybops_wasm_bg.wasm",
-            ServeFile::new("../mybops-wasm/pkg/mybops_wasm_bg.wasm"),
-        )
-        .route_service(
-            "/bootstrap.min.css",
-            ServeFile::new("../mybops-wasm/www/bootstrap.min.css"),
-        )
-        .fallback_service(ServeFile::new("../mybops-wasm/www/index.html"))
-    };
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
