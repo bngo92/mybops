@@ -337,7 +337,7 @@ fn get_insert_stmt(collection_name: &str, is_upsert: bool) -> &str {
 fn get_update_stmt(collection_name: &str) -> (&str, &[&str]) {
     match collection_name {
         "item" => (
-            "UPDATE _item SET rating = :rating, user_score = :user_score, user_wins = :user_wins, user_losses = :user_losses WHERE id = :id AND user_id = :user_id",
+            "UPDATE _item SET rating = :rating, user_score = :user_score, user_wins = :user_wins, user_losses = :user_losses, hidden = :hidden WHERE id = :id AND user_id = :user_id",
             &[
                 "id",
                 "user_id",
@@ -345,6 +345,7 @@ fn get_update_stmt(collection_name: &str) -> (&str, &[&str]) {
                 "user_score",
                 "user_wins",
                 "user_losses",
+                "hidden",
             ],
         ),
         "list" => (
