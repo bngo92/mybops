@@ -39,6 +39,7 @@ pub struct Item {
     pub user_losses: i32,
     pub metadata: Map<String, Value>,
     pub hidden: bool,
+    pub note: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -54,6 +55,7 @@ pub struct RawItem {
     pub user_losses: i32,
     pub metadata: String,
     pub hidden: bool,
+    pub note: String,
 }
 
 impl From<Item> for RawItem {
@@ -70,6 +72,7 @@ impl From<Item> for RawItem {
             user_losses: i.user_losses,
             metadata: serde_json::to_string(&i.metadata).expect("metadata should serialize"),
             hidden: i.hidden,
+            note: i.note,
         }
     }
 }
@@ -89,6 +92,7 @@ impl TryFrom<RawItem> for Item {
             user_losses: i.user_losses,
             metadata: serde_json::from_str(&i.metadata)?,
             hidden: i.hidden,
+            note: i.note,
         })
     }
 }

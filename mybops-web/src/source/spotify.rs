@@ -450,6 +450,7 @@ fn new_spotify_item(track: Track, user_id: &UserId) -> crate::Item {
         user_losses: 0,
         metadata,
         hidden: false,
+        note: String::new(),
     }
 }
 

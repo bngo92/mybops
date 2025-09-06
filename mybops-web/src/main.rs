@@ -593,6 +593,9 @@ async fn update_items(
                     "hidden" => {
                         item.hidden = serde_json::from_value(v)?;
                     }
+                    "note" => {
+                        item.note = serde_json::from_value(v)?;
+                    }
                     _ => {}
                 }
             }

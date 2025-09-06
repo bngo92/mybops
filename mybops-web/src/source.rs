@@ -135,6 +135,7 @@ fn new_custom_item(
         user_losses: 0,
         metadata,
         hidden: false,
+        note: String::new(),
     }
 }
 

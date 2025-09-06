@@ -318,14 +318,14 @@ impl SessionClient for SqlSessionClient {
 fn get_insert_stmt(collection_name: &str, is_upsert: bool) -> &str {
     match (collection_name, is_upsert) {
         ("item", false) => {
-            "INSERT INTO _item (id, user_id, type, name, iframe, rating, user_score, user_wins, user_losses, metadata, hidden) VALUES (:id, :user_id, :type, :name, :iframe, :rating, :user_score, :user_wins, :user_losses, :metadata, :hidden)"
+            "INSERT INTO _item (id, user_id, type, name, iframe, rating, user_score, user_wins, user_losses, metadata, hidden, note) VALUES (:id, :user_id, :type, :name, :iframe, :rating, :user_score, :user_wins, :user_losses, :metadata, :hidden, :note)"
         }
         ("list", false) => {
             "INSERT INTO _list (id, user_id, mode, name, sources, iframe, items, favorite, query, public) VALUES (:id, :user_id, :mode, :name, :sources, :iframe, :items, :favorite, :query, :public)"
         }
         // is_upsert is currently only used to reset demo lists and items
         ("item", true) => {
-            "INSERT INTO _item (id, user_id, type, name, iframe, rating, user_score, user_wins, user_losses, metadata, hidden) VALUES (:id, :user_id, :type, :name, :iframe, :rating, :user_score, :user_wins, :user_losses, :metadata, :hidden) ON CONFLICT(id, user_id) DO UPDATE SET rating=excluded.rating, user_score=excluded.user_score, user_wins=excluded.user_wins, user_losses=excluded.user_losses"
+            "INSERT INTO _item (id, user_id, type, name, iframe, rating, user_score, user_wins, user_losses, metadata, hidden, note) VALUES (:id, :user_id, :type, :name, :iframe, :rating, :user_score, :user_wins, :user_losses, :metadata, :hidden, :note) ON CONFLICT(id, user_id) DO UPDATE SET rating=excluded.rating, user_score=excluded.user_score, user_wins=excluded.user_wins, user_losses=excluded.user_losses"
         }
         ("list", true) => {
             "INSERT INTO _list (id, user_id, mode, name, sources, iframe, items, favorite, query, public) VALUES (:id, :user_id, :mode, :name, :sources, :iframe, :items, :favorite, :query, :public) ON CONFLICT(id, user_id) DO UPDATE SET items=excluded.items, query=excluded.query, public=excluded.public"
@@ -337,7 +337,7 @@ fn get_insert_stmt(collection_name: &str, is_upsert: bool) -> &str {
 fn get_update_stmt(collection_name: &str) -> (&str, &[&str]) {
     match collection_name {
         "item" => (
-            "UPDATE _item SET rating = :rating, user_score = :user_score, user_wins = :user_wins, user_losses = :user_losses, hidden = :hidden WHERE id = :id AND user_id = :user_id",
+            "UPDATE _item SET rating = :rating, user_score = :user_score, user_wins = :user_wins, user_losses = :user_losses, hidden = :hidden, note = :note WHERE id = :id AND user_id = :user_id",
             &[
                 "id",
                 "user_id",
@@ -346,6 +346,7 @@ fn get_update_stmt(collection_name: &str) -> (&str, &[&str]) {
                 "user_wins",
                 "user_losses",
                 "hidden",
+                "note",
             ],
         ),
         "list" => (
