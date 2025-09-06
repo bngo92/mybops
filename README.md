@@ -28,7 +28,7 @@ rustup run nightly wasm-pack build --target web
 - [ ] Add Spotify search support
 - [x] Add chart visualization
 - [ ] Add custom tournaments
-- [ ] Add item notes
+- [x] Add item notes
 - [ ] Add description
 - [x] Add lists as a data source
 - [x] Add time weighted averages

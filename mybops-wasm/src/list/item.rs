@@ -51,12 +51,14 @@ pub struct ListItems {
 struct ListItem {
     item: ItemMetadata,
     hidden_ref: NodeRef,
+    note_ref: NodeRef,
 }
 
 #[derive(Clone, Default)]
 struct State {
     rating: Option<u64>,
     hidden: bool,
+    note: String,
 }
 
 #[derive(Clone, PartialEq)]
@@ -77,7 +79,7 @@ impl Component for ListItems {
                 Msg::Load(
                     crate::query_list(
                         &list,
-                        Some("SELECT id, rating, hidden FROM item".to_owned()),
+                        Some("SELECT id, rating, hidden, note FROM item".to_owned()),
                     )
                     .await
                     .unwrap(),
@@ -93,6 +95,7 @@ impl Component for ListItems {
                 .map(|i| ListItem {
                     item: i.clone(),
                     hidden_ref: NodeRef::default(),
+                    note_ref: NodeRef::default(),
                 })
                 .collect(),
             prev_state: None,
@@ -127,11 +130,18 @@ impl Component for ListItems {
                     vec![None; query.column("rating").unwrap().len()]
                 };
                 let hidden = query.column("hidden").unwrap().as_boolean();
+                let note = query.column("note").unwrap().as_string::<i64>();
                 let mut state = vec![State::default(); self.items.len()];
-                for ((id, &rating), hidden) in ids.iter().zip(ratings.iter()).zip(hidden.iter()) {
+                for (((id, &rating), hidden), note) in ids
+                    .iter()
+                    .zip(ratings.iter())
+                    .zip(hidden.iter())
+                    .zip(note.iter())
+                {
                     state[index[id.unwrap()]] = State {
                         rating,
                         hidden: hidden.unwrap(),
+                        note: note.unwrap().to_owned(),
                     };
                 }
                 self.prev_state = Some(state.clone());
@@ -145,13 +155,23 @@ impl Component for ListItems {
             Msg::Save => {
                 let mut update_ids = HashMap::new();
                 let mut update_indexes = Vec::new();
-                for (i, (ListItem { item, hidden_ref }, rating_hidden)) in self
+                for (
+                    i,
+                    (
+                        ListItem {
+                            item,
+                            hidden_ref,
+                            note_ref,
+                        },
+                        rating_hidden,
+                    ),
+                ) in self
                     .items
                     .iter()
                     .zip(self.state.as_ref().unwrap().iter())
                     .enumerate()
                 {
-                    let State { rating, hidden } = rating_hidden;
+                    let State { rating, hidden, .. } = rating_hidden;
                     let mut updates = HashMap::new();
                     if self.prev_state.as_ref().unwrap()[i].rating != *rating {
                         updates.insert(String::from("rating"), (*rating).into());
@@ -161,6 +181,10 @@ impl Component for ListItems {
                     #[allow(clippy::cmp_owned)]
                     if value != *hidden {
                         updates.insert(String::from("hidden"), value);
+                    }
+                    let value = note_ref.cast::<HtmlInputElement>().unwrap().value();
+                    if self.prev_state.as_ref().unwrap()[i].note != value {
+                        updates.insert(String::from("note"), value.clone().into());
                     }
                     if !updates.is_empty() {
                         update_ids.insert(item.id.clone(), updates.clone());
@@ -217,14 +241,20 @@ impl Component for ListItems {
             Msg::SaveSuccess(updates) => {
                 for (i, update) in updates {
                     for (k, v) in update {
-                        let State { rating, hidden } =
-                            self.state.as_mut().unwrap().get_mut(i).unwrap();
+                        let State {
+                            rating,
+                            hidden,
+                            note,
+                        } = self.state.as_mut().unwrap().get_mut(i).unwrap();
                         match k.as_str() {
                             "rating" => {
                                 *rating = v.as_u64();
                             }
                             "hidden" => {
                                 *hidden = v.as_bool().unwrap();
+                            }
+                            "note" => {
+                                *note = v.as_str().unwrap().to_owned();
                             }
                             _ => unimplemented!(),
                         }
@@ -337,8 +367,8 @@ impl Component for ListItems {
         let (style, grid) = match ctx.props().mode {
             ItemMode::View => ("", "max-height: 800px"),
             ItemMode::Update => (
-                "grid-template-columns: auto max-content max-content",
-                "max-height: 800px; grid-template-columns: subgrid; grid-column: span 3",
+                "grid-template-columns: auto max-content max-content max-content",
+                "max-height: 800px; grid-template-columns: subgrid; grid-column: span 4",
             ),
             ItemMode::Delete => (
                 "grid-template-columns: auto max-content",
@@ -365,19 +395,24 @@ impl Component for ListItems {
                     |(i, ListItem {
                         item,
                         hidden_ref,
+                        note_ref,
                     })| {
                         let open = ctx.link().callback(move |_| Msg::Open(i));
                         html! {
                             <>
                                 <label class="col-form-label"><a href="#" onclick={open}>{&item.name}</a></label>
-                                if let Some(State { rating, hidden }) = self.state.as_ref().and_then(|s| s.get(i)) {
+                                if let Some(State { rating, hidden, note }) = self.state.as_ref().and_then(|s| s.get(i)) {
                                     <div>
                                         <Rating {rating} onchange={ctx.link().callback(move |rating| Msg::UpdateRating(i, rating))} {disabled}/>
                                     </div>
                                     <div class="d-flex justify-content-center">
                                         <input ref={hidden_ref} class="form-check-input mt-2" type="checkbox" checked={*hidden}/>
                                     </div>
+                                    <div>
+                                        <input ref={note_ref} class="form-control" value={Some(note.clone())}/>
+                                    </div>
                                 } else {
+                                    <div></div>
                                     <div></div>
                                     <div></div>
                                 }
@@ -430,6 +465,7 @@ impl Component for ListItems {
                                 <div></div>
                                 <p><strong>{"Rating"}</strong></p>
                                 <p><strong>{"Hidden"}</strong></p>
+                                <p><strong>{"Note"}</strong></p>
                             }
                             <div class="d-grid row-gap-1 overflow-y-auto" style={grid}>
                                 {html}
