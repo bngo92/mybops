@@ -5,7 +5,7 @@ SPOTIFY_TOKEN= cargo run --features dev
 ```
 ## mybops-wasm
 ```
-wasm-pack build --target web
+rustup run nightly wasm-pack build --target web
 ```
 ## TODO
 ### P0
