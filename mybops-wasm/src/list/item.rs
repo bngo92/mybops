@@ -409,7 +409,7 @@ impl Component for ListItems {
                                         <input ref={hidden_ref} class="form-check-input mt-2" type="checkbox" checked={*hidden}/>
                                     </div>
                                     <div>
-                                        <input ref={note_ref} class="form-control" value={Some(note.clone())}/>
+                                        <input ref={note_ref} class="form-control" value={Some(note.clone())} {disabled}/>
                                     </div>
                                 } else {
                                     <div></div>
