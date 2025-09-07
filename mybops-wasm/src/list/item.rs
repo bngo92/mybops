@@ -335,7 +335,7 @@ impl Component for ListItems {
                 </div>
                 if let Some(state) = self.state.as_ref() {
                   <div class="col-2">
-                    <Rating rating={state[i].rating} {onchange} disabled={disabled}/>
+                    <Rating rating={state[i].rating} {onchange}/>
                   </div>
                 }
               </Modal>
@@ -403,10 +403,10 @@ impl Component for ListItems {
                                 <label class="col-form-label"><a href="#" onclick={open}>{&item.name}</a></label>
                                 if let Some(State { rating, hidden, note }) = self.state.as_ref().and_then(|s| s.get(i)) {
                                     <div>
-                                        <Rating {rating} onchange={ctx.link().callback(move |rating| Msg::UpdateRating(i, rating))} {disabled}/>
+                                        <Rating {rating} onchange={ctx.link().callback(move |rating| Msg::UpdateRating(i, rating))}/>
                                     </div>
                                     <div class="d-flex justify-content-center">
-                                        <input ref={hidden_ref} class="form-check-input mt-2" type="checkbox" checked={*hidden}/>
+                                        <input ref={hidden_ref} class="form-check-input mt-2" type="checkbox" checked={*hidden} {disabled}/>
                                     </div>
                                     <div>
                                         <input ref={note_ref} class="form-control" value={Some(note.clone())} {disabled}/>
@@ -494,7 +494,6 @@ impl Component for ListItems {
 struct RatingProps {
     rating: Option<u64>,
     onchange: Callback<Option<u64>>,
-    disabled: bool,
 }
 
 struct Rating {
@@ -526,7 +525,7 @@ impl Component for Rating {
             )
         });
         html! {
-            <select ref={&self.select_ref} {onchange} class="form-select" disabled={ctx.props().disabled}>
+            <select ref={&self.select_ref} {onchange} class="form-select">
                 <option selected={rating.is_none()}></option>
                 <option selected={*rating == Some(0)}>{"0"}</option>
                 <option selected={*rating == Some(1)}>{"1"}</option>
