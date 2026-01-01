@@ -1,4 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    cmp::Ordering,
+    collections::{BTreeMap, HashMap},
+};
 
 use serde::Deserialize;
 use wasm_bindgen::JsCast;
@@ -39,11 +42,11 @@ struct Team {
 }
 
 pub enum NflMsg {
-    Load(HashMap<String, HashMap<String, BTreeMap<i32, String>>>),
+    Load(HashMap<String, HashMap<String, BTreeMap<i32, i32>>>),
 }
 
 pub struct Nfl {
-    games: HashMap<String, HashMap<String, BTreeMap<i32, String>>>,
+    games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>>,
 }
 
 impl Component for Nfl {
@@ -55,7 +58,7 @@ impl Component for Nfl {
             let window = crate::window();
             let opts = RequestInit::new();
             opts.set_mode(RequestMode::Cors);
-            let mut games: HashMap<String, HashMap<String, BTreeMap<i32, String>>> = HashMap::new();
+            let mut games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>> = HashMap::new();
             for week in 1..19 {
                 let request = Request::new_with_str_and_init(
                     &format!("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week={}", week),
@@ -71,8 +74,8 @@ impl Component for Nfl {
                     for competition in event.competitions {
                         let team1 = &competition.competitors[0];
                         let team2 = &competition.competitors[1];
-                        games.entry(team1.team.abbreviation.clone()).or_default().entry(team2.team.abbreviation.clone()).or_default().insert(week, team1.score.clone());
-                        games.entry(team2.team.abbreviation.clone()).or_default().entry(team1.team.abbreviation.clone()).or_default().insert(week, team2.score.clone());
+                        games.entry(team1.team.abbreviation.clone()).or_default().entry(team2.team.abbreviation.clone()).or_default().insert(week, team1.score.parse().unwrap());
+                        games.entry(team2.team.abbreviation.clone()).or_default().entry(team1.team.abbreviation.clone()).or_default().insert(week, team2.score.parse().unwrap());
                     }
                 }
             }
@@ -97,7 +100,7 @@ impl Component for Nfl {
         let games = self.games.keys().flat_map(|team1| {
             std::iter::once(html! { <div>{team1}</div> }).chain(self.games.keys().map(|team2| {
                 let mut scores = Vec::new();
-                for (week, score) in self
+                for (week, score1) in self
                     .games
                     .get(team1)
                     .unwrap()
@@ -106,19 +109,26 @@ impl Component for Nfl {
                     .unwrap_or_default()
                     .iter()
                 {
-                    let score = format!(
-                        "Week {}: {}-{}",
-                        week,
-                        score,
-                        self.games
-                            .get(team2)
-                            .unwrap()
-                            .get(team1)
-                            .unwrap()
-                            .get(week)
-                            .unwrap()
-                    );
-                    scores.push(html! { <div>{score}</div> });
+                    let score2 = self
+                        .games
+                        .get(team2)
+                        .unwrap()
+                        .get(team1)
+                        .unwrap()
+                        .get(week)
+                        .unwrap();
+                    // Assume a game doesn't end 0-0
+                    if *score1 == 0 && *score2 == 0 {
+                        scores.push(html! { <div>{format!("Week {}", week)}</div> });
+                        continue;
+                    }
+                    let score = format!("Week {}: {}-{}", week, score1, score2);
+                    let class = match score1.cmp(score2) {
+                        Ordering::Less => "text-danger",
+                        Ordering::Equal => "text-warning",
+                        Ordering::Greater => "text-success",
+                    };
+                    scores.push(html! { <div {class}>{score}</div> });
                 }
                 html! { <div>{for scores}</div> }
             }))
