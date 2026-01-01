@@ -46,6 +46,7 @@ pub enum NflMsg {
 }
 
 pub struct Nfl {
+    teams: Vec<&'static str>,
     games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>>,
 }
 
@@ -82,6 +83,16 @@ impl Component for Nfl {
             NflMsg::Load(games)
         });
         Nfl {
+            teams: vec![
+                "BUF", "MIA", "NYJ", "NE", // AFC East
+                "BAL", "PIT", "CIN", "CLE", // AFC North
+                "HOU", "IND", "JAX", "TEN", // AFC South
+                "KC", "LAC", "DEN", "LV", // AFC West
+                "PHI", "WSH", "DAL", "NYG", // NFC East
+                "DET", "MIN", "GB", "CHI", // NFC North
+                "TB", "ATL", "CAR", "NO", // NFC South
+                "LAR", "SEA", "ARI", "SF", // NFC West
+            ],
             games: HashMap::new(),
         }
     }
@@ -96,24 +107,25 @@ impl Component for Nfl {
     }
 
     fn view(&self, _: &Context<Self>) -> Html {
-        let teams = self.games.keys().map(|team| html! { <div>{team}</div> });
-        let games = self.games.keys().flat_map(|team1| {
-            std::iter::once(html! { <div>{team1}</div> }).chain(self.games.keys().map(|team2| {
+        let teams = self.teams.iter().map(|team| html! { <div>{team}</div> });
+        let games = self.teams.iter().flat_map(|team1| {
+            std::iter::once(html! { <div>{team1}</div> }).chain(self.teams.iter().map(|team2| {
                 let mut scores = Vec::new();
                 for (week, score1) in self
                     .games
-                    .get(team1)
-                    .unwrap()
-                    .get(team2)
+                    .get(*team1)
+                    .cloned()
+                    .unwrap_or_default()
+                    .get(*team2)
                     .cloned()
                     .unwrap_or_default()
                     .iter()
                 {
                     let score2 = self
                         .games
-                        .get(team2)
+                        .get(*team2)
                         .unwrap()
-                        .get(team1)
+                        .get(*team1)
                         .unwrap()
                         .get(week)
                         .unwrap();
