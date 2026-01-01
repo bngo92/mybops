@@ -972,6 +972,7 @@ dependencies = [
  "plotters-canvas",
  "rand",
  "regex",
+ "serde",
  "serde-wasm-bindgen 0.4.5",
  "serde_json",
  "wasm-bindgen",

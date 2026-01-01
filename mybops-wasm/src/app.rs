@@ -9,6 +9,7 @@ use crate::{
     integrations::spotify::SpotifyIntegration,
     list,
     list::item::{ItemMode, ListItems},
+    nfl::Nfl,
     plot::DataView,
     random::{RandomMatches, RandomRounds},
     search::Search,
@@ -64,6 +65,7 @@ fn switch(
             }
         },
         Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
+        Route::Nfl => html! { <Nfl/> },
     }
 }
 
@@ -372,9 +374,10 @@ impl Component for ListView {
             }
         }
         if let Some(data) = &self.data
-            && let Err(e) = self.view.draw(data) {
-                self.error = Some(e.to_string());
-            }
+            && let Err(e) = self.view.draw(data)
+        {
+            self.error = Some(e.to_string());
+        }
         true
     }
 

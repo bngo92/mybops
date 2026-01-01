@@ -20,6 +20,7 @@ mod edit;
 mod home;
 mod integrations;
 mod list;
+mod nfl;
 mod plot;
 mod random;
 mod search;
@@ -42,6 +43,8 @@ enum Route {
     Settings,
     #[at("/integrations/spotify")]
     Spotify,
+    #[at("/nfl")]
+    Nfl,
 }
 
 #[derive(Clone, Routable, PartialEq)]
