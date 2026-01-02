@@ -108,8 +108,8 @@ impl Component for Nfl {
 
     fn view(&self, _: &Context<Self>) -> Html {
         let teams = self.teams.iter().map(|team| html! { <div>{team}</div> });
-        let games = self.teams.iter().flat_map(|team1| {
-            std::iter::once(html! { <div>{team1}</div> }).chain(self.teams.iter().map(|team2| {
+        let games = self.teams.iter().flat_map(|team2| {
+            std::iter::once(html! { <div>{team2}</div> }).chain(self.teams.iter().map(|team1| {
                 let mut scores = Vec::new();
                 for (week, score1) in self
                     .games
