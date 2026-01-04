@@ -247,14 +247,14 @@ impl Component for Nfl {
             if selected {
                 let (wins, losses, ties) = common_games.get(*team).unwrap_or(&(0, 0, 0));
                 let common_games = if *ties != 0 {
-                    format!("{team} ({wins}-{losses}-{ties})")
+                    format!("Common Games: {wins}-{losses}-{ties}")
                 } else {
-                    format!("{team} ({wins}-{losses})")
+                    format!("Common Games: {wins}-{losses}")
                 };
                 html! {
                   <div>
                     <div>{team_record}</div>
-                    <div><strong>{common_games}</strong></div>
+                    <div>{common_games}</div>
                   </div>
                 }
             } else {
@@ -272,7 +272,12 @@ impl Component for Nfl {
                 continue;
             }
             let team_record = &team_records[team2];
-            games.push(html! { <div>{team_record}</div> });
+            let common_game = play_count.get(team2) == Some(&self.selected_teams.len());
+            games.push(if common_game {
+                html! { <div><strong>{team_record}</strong></div> }
+            } else {
+                html! { <div>{team_record}</div> }
+            });
             for team1 in teams {
                 let mut scores = Vec::new();
                 for (week, (score1, status)) in self
@@ -302,7 +307,7 @@ impl Component for Nfl {
                         Ordering::Equal => "text-warning",
                         Ordering::Greater => "text-success",
                     };
-                    let score = if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                    let score = if common_game {
                         html! { <div {class}><strong>{score}</strong></div> }
                     } else {
                         html! { <div {class}>{score}</div> }
