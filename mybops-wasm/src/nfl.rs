@@ -11,7 +11,7 @@ use web_sys::{HtmlInputElement, Request, RequestInit, RequestMode, Response};
 use yew::{Component, Context, Html, NodeRef, html};
 
 #[derive(Debug, Deserialize)]
-struct Scoreboard {
+pub struct Scoreboard {
     week: Week,
     events: Vec<Event>,
 }
@@ -29,6 +29,7 @@ struct Event {
 #[derive(Debug, Deserialize)]
 struct Competition {
     competitors: Vec<Competitor>,
+    status: Status,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,8 +43,18 @@ struct Team {
     abbreviation: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct Status {
+    r#type: StatusType,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatusType {
+    name: String,
+}
+
 pub enum NflMsg {
-    Load(HashMap<String, HashMap<String, BTreeMap<i32, i32>>>),
+    Load(HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>>),
     Select,
     Clear,
 }
@@ -51,7 +62,7 @@ pub enum NflMsg {
 pub struct Nfl {
     selected_teams: Vec<&'static str>,
     refs: [NodeRef; Self::TEAMS.len()],
-    games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>>,
+    games: HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>>,
 }
 
 impl Nfl {
@@ -76,7 +87,7 @@ impl Component for Nfl {
             let window = crate::window();
             let opts = RequestInit::new();
             opts.set_mode(RequestMode::Cors);
-            let mut games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>> = HashMap::new();
+            let mut games: HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>> = HashMap::new();
             for week in 1..19 {
                 let request = Request::new_with_str_and_init(
                     &format!("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week={}", week),
@@ -92,8 +103,24 @@ impl Component for Nfl {
                     for competition in event.competitions {
                         let team1 = &competition.competitors[0];
                         let team2 = &competition.competitors[1];
-                        games.entry(team1.team.abbreviation.clone()).or_default().entry(team2.team.abbreviation.clone()).or_default().insert(week, team1.score.parse().unwrap());
-                        games.entry(team2.team.abbreviation.clone()).or_default().entry(team1.team.abbreviation.clone()).or_default().insert(week, team2.score.parse().unwrap());
+                        games
+                            .entry(team1.team.abbreviation.clone())
+                            .or_default()
+                            .entry(team2.team.abbreviation.clone())
+                            .or_default()
+                            .insert(
+                                week,
+                                (team1.score.parse().unwrap(), competition.status.r#type.name.clone()),
+                            );
+                        games
+                            .entry(team2.team.abbreviation.clone())
+                            .or_default()
+                            .entry(team1.team.abbreviation.clone())
+                            .or_default()
+                            .insert(
+                                week,
+                                (team2.score.parse().unwrap(), competition.status.r#type.name),
+                            );
                     }
                 }
             }
@@ -165,13 +192,13 @@ impl Component for Nfl {
         }
         let mut games = Vec::new();
         for team2 in Self::TEAMS {
-            if play_count.get(team2) == Some(&0) {
+            if selected && !play_count.contains_key(team2) {
                 continue;
             }
             games.push(html! { <div>{team2}</div> });
             for team1 in teams {
                 let mut scores = Vec::new();
-                for (week, score1) in self
+                for (week, (score1, status)) in self
                     .games
                     .get(*team1)
                     .cloned()
@@ -181,21 +208,13 @@ impl Component for Nfl {
                     .unwrap_or_default()
                     .iter()
                 {
-                    let score2 = self
-                        .games
-                        .get(team2)
-                        .unwrap()
-                        .get(*team1)
-                        .unwrap()
-                        .get(week)
-                        .unwrap();
-                    // Assume a game doesn't end 0-0
-                    if *score1 == 0 && *score2 == 0 {
+                    let (score2, _) = self.games[team2][*team1][week];
+                    if status != "STATUS_FINAL" {
                         scores.push(html! { <div>{format!("Week {}", week)}</div> });
                         continue;
                     }
                     let score = format!("Week {}: {}-{}", week, score1, score2);
-                    let class = match score1.cmp(score2) {
+                    let class = match score1.cmp(&score2) {
                         Ordering::Less => "text-danger",
                         Ordering::Equal => "text-warning",
                         Ordering::Greater => "text-success",
