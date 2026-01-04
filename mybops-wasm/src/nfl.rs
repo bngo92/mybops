@@ -153,22 +153,37 @@ impl Component for Nfl {
                 }
             }
         });
-        let games = Self::TEAMS.iter().flat_map(|team2| {
-            std::iter::once(html! { <div>{team2}</div> }).chain(teams.iter().map(|team1| {
+        let mut play_count = HashMap::new();
+        if selected {
+            for team in teams {
+                if let Some(opponents) = self.games.get(*team) {
+                    for opponent in opponents.keys() {
+                        *play_count.entry(opponent.as_str()).or_default() += 1;
+                    }
+                }
+            }
+        }
+        let mut games = Vec::new();
+        for team2 in Self::TEAMS {
+            if play_count.get(team2) == Some(&0) {
+                continue;
+            }
+            games.push(html! { <div>{team2}</div> });
+            for team1 in teams {
                 let mut scores = Vec::new();
                 for (week, score1) in self
                     .games
                     .get(*team1)
                     .cloned()
                     .unwrap_or_default()
-                    .get(*team2)
+                    .get(team2)
                     .cloned()
                     .unwrap_or_default()
                     .iter()
                 {
                     let score2 = self
                         .games
-                        .get(*team2)
+                        .get(team2)
                         .unwrap()
                         .get(*team1)
                         .unwrap()
@@ -185,11 +200,16 @@ impl Component for Nfl {
                         Ordering::Equal => "text-warning",
                         Ordering::Greater => "text-success",
                     };
-                    scores.push(html! { <div {class}>{score}</div> });
+                    let score = if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                        html! { <div {class}><strong>{score}</strong></div> }
+                    } else {
+                        html! { <div {class}>{score}</div> }
+                    };
+                    scores.push(score);
                 }
-                html! { <div>{for scores}</div> }
-            }))
-        });
+                games.push(html! { <div>{for scores}</div> });
+            }
+        }
         let style = format!(
             "grid-template-columns: repeat({}, max-content)",
             teams.len() + 1
