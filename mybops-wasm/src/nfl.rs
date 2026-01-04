@@ -230,13 +230,20 @@ impl Component for Nfl {
                 }
             }
         }
+        let team_records: HashMap<_, _> = Self::TEAMS
+            .iter()
+            .copied()
+            .map(|team| {
+                let (wins, losses, ties) = self.records.get(team).unwrap_or(&(0, 0, 0));
+                if *ties != 0 {
+                    (team, format!("{team} ({wins}-{losses}-{ties})"))
+                } else {
+                    (team, format!("{team} ({wins}-{losses})"))
+                }
+            })
+            .collect();
         let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
-            let (wins, losses, ties) = self.records.get(*team).unwrap_or(&(0, 0, 0));
-            let team_record = if *ties != 0 {
-                format!("{team} ({wins}-{losses}-{ties})")
-            } else {
-                format!("{team} ({wins}-{losses})")
-            };
+            let team_record = &team_records[team];
             if selected {
                 let (wins, losses, ties) = common_games.get(*team).unwrap_or(&(0, 0, 0));
                 let common_games = if *ties != 0 {
@@ -264,7 +271,8 @@ impl Component for Nfl {
             if selected && !play_count.contains_key(team2) {
                 continue;
             }
-            games.push(html! { <div>{team2}</div> });
+            let team_record = &team_records[team2];
+            games.push(html! { <div>{team_record}</div> });
             for team1 in teams {
                 let mut scores = Vec::new();
                 for (week, (score1, status)) in self
