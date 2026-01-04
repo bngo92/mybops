@@ -1,4 +1,5 @@
 use std::{
+    array,
     cmp::Ordering,
     collections::{BTreeMap, HashMap},
 };
@@ -6,8 +7,8 @@ use std::{
 use serde::Deserialize;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response};
-use yew::{Component, Context, Html, html};
+use web_sys::{HtmlInputElement, Request, RequestInit, RequestMode, Response};
+use yew::{Component, Context, Html, NodeRef, html};
 
 #[derive(Debug, Deserialize)]
 struct Scoreboard {
@@ -43,11 +44,27 @@ struct Team {
 
 pub enum NflMsg {
     Load(HashMap<String, HashMap<String, BTreeMap<i32, i32>>>),
+    Select,
+    Clear,
 }
 
 pub struct Nfl {
-    teams: Vec<&'static str>,
+    selected_teams: Vec<&'static str>,
+    refs: [NodeRef; Self::TEAMS.len()],
     games: HashMap<String, HashMap<String, BTreeMap<i32, i32>>>,
+}
+
+impl Nfl {
+    const TEAMS: [&'static str; 32] = [
+        "BUF", "MIA", "NYJ", "NE", // AFC East
+        "BAL", "PIT", "CIN", "CLE", // AFC North
+        "HOU", "IND", "JAX", "TEN", // AFC South
+        "KC", "LAC", "DEN", "LV", // AFC West
+        "PHI", "WSH", "DAL", "NYG", // NFC East
+        "DET", "MIN", "GB", "CHI", // NFC North
+        "TB", "ATL", "CAR", "NO", // NFC South
+        "LAR", "SEA", "ARI", "SF", // NFC West
+    ];
 }
 
 impl Component for Nfl {
@@ -83,16 +100,8 @@ impl Component for Nfl {
             NflMsg::Load(games)
         });
         Nfl {
-            teams: vec![
-                "BUF", "MIA", "NYJ", "NE", // AFC East
-                "BAL", "PIT", "CIN", "CLE", // AFC North
-                "HOU", "IND", "JAX", "TEN", // AFC South
-                "KC", "LAC", "DEN", "LV", // AFC West
-                "PHI", "WSH", "DAL", "NYG", // NFC East
-                "DET", "MIN", "GB", "CHI", // NFC North
-                "TB", "ATL", "CAR", "NO", // NFC South
-                "LAR", "SEA", "ARI", "SF", // NFC West
-            ],
+            selected_teams: Vec::new(),
+            refs: array::from_fn(|_| NodeRef::default()),
             games: HashMap::new(),
         }
     }
@@ -103,13 +112,49 @@ impl Component for Nfl {
                 self.games = games;
                 true
             }
+            NflMsg::Select => {
+                self.selected_teams = self
+                    .refs
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, team_ref)| {
+                        if team_ref.cast::<HtmlInputElement>().unwrap().checked() {
+                            Some(Self::TEAMS[i])
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                true
+            }
+            NflMsg::Clear => {
+                self.selected_teams.clear();
+                true
+            }
         }
     }
 
-    fn view(&self, _: &Context<Self>) -> Html {
-        let teams = self.teams.iter().map(|team| html! { <div>{team}</div> });
-        let games = self.teams.iter().flat_map(|team2| {
-            std::iter::once(html! { <div>{team2}</div> }).chain(self.teams.iter().map(|team1| {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let selected = !self.selected_teams.is_empty();
+        let teams = if selected {
+            &self.selected_teams
+        } else {
+            Self::TEAMS.as_slice()
+        };
+        let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
+            if selected {
+                html! { <div>{team}</div> }
+            } else {
+                html! {
+                  <div class="form-check">
+                    <label class="form-check-label">{team}</label>
+                    <input ref={team_ref} class="form-check-input" type="checkbox"/>
+                  </div>
+                }
+            }
+        });
+        let games = Self::TEAMS.iter().flat_map(|team2| {
+            std::iter::once(html! { <div>{team2}</div> }).chain(teams.iter().map(|team1| {
                 let mut scores = Vec::new();
                 for (week, score1) in self
                     .games
@@ -145,10 +190,14 @@ impl Component for Nfl {
                 html! { <div>{for scores}</div> }
             }))
         });
+        let style = format!(
+            "grid-template-columns: repeat({}, max-content)",
+            teams.len() + 1
+        );
         let html = html! {
-          <div class="d-grid gap-3" style="grid-template-columns: repeat(33, max-content)">
+          <div class="d-grid gap-3" {style}>
             <div></div>
-            {for teams}
+            {for header}
             {for games}
           </div>
         };
@@ -161,6 +210,11 @@ impl Component for Nfl {
             html! {
               <div>
                 <div class="row mt-3">
+                  <div>
+                    <button type="button" class="btn btn-info" onclick={ctx.link().callback(move |_| if selected {NflMsg::Clear} else {NflMsg::Select})}>
+                    {if selected {"Clear"} else {"Select"}}
+                    </button>
+                  </div>
                   {html}
                 </div>
               </div>
