@@ -70,16 +70,39 @@ pub struct Nfl {
 }
 
 impl Nfl {
-    const DIVISIONS: [(&'static str, [&'static str; 4]); 8] = [
-        ("AFC East", ["BUF", "MIA", "NYJ", "NE"]),
-        ("AFC North", ["BAL", "PIT", "CIN", "CLE"]),
-        ("AFC South", ["HOU", "IND", "JAX", "TEN"]),
-        ("AFC West", ["KC", "LAC", "DEN", "LV"]),
-        ("NFC East", ["PHI", "WSH", "DAL", "NYG"]),
-        ("NFC North", ["DET", "MIN", "GB", "CHI"]),
-        ("NFC South", ["TB", "ATL", "CAR", "NO"]),
-        ("NFC West", ["LAR", "SEA", "ARI", "SF"]),
+    const CONFERENCES: [(&'static str, [(&'static str, [&'static str; 4]); 4]); 2] = [
+        (
+            "AFC",
+            [
+                ("AFC East", ["BUF", "MIA", "NYJ", "NE"]),
+                ("AFC North", ["BAL", "PIT", "CIN", "CLE"]),
+                ("AFC South", ["HOU", "IND", "JAX", "TEN"]),
+                ("AFC West", ["KC", "LAC", "DEN", "LV"]),
+            ],
+        ),
+        (
+            "NFC",
+            [
+                ("NFC East", ["PHI", "WSH", "DAL", "NYG"]),
+                ("NFC North", ["DET", "MIN", "GB", "CHI"]),
+                ("NFC South", ["TB", "ATL", "CAR", "NO"]),
+                ("NFC West", ["LAR", "SEA", "ARI", "SF"]),
+            ],
+        ),
     ];
+    const DIVISIONS: [(&'static str, [&'static str; 4]); 8] = {
+        let mut divisions = [("", [""; 4]); 8];
+        let mut i = 0;
+        while i < 2 {
+            let mut j = 0;
+            while j < 4 {
+                divisions[4 * i + j] = Nfl::CONFERENCES[i].1[j];
+                j += 1;
+            }
+            i += 1;
+        }
+        divisions
+    };
     const TEAMS: [&'static str; 32] = {
         let mut teams = [""; 32];
         let mut i = 0;
@@ -93,6 +116,33 @@ impl Nfl {
         }
         teams
     };
+
+    fn get_conference(team: &str) -> Option<&'static str> {
+        Self::CONFERENCES
+            .iter()
+            .copied()
+            .find_map(|(conference, divisions)| {
+                divisions.iter().copied().find_map(|(division, _)| {
+                    if Some(division) == Self::get_division(team) {
+                        Some(conference)
+                    } else {
+                        None
+                    }
+                })
+            })
+    }
+
+    fn get_conference_divisions(
+        conference: &str,
+    ) -> Option<&'static [(&'static str, [&'static str; 4]); 4]> {
+        Self::CONFERENCES.iter().find_map(|(c, divisions)| {
+            if *c == conference {
+                Some(divisions)
+            } else {
+                None
+            }
+        })
+    }
 
     fn get_division(team: &str) -> Option<&'static str> {
         Self::DIVISIONS
@@ -121,6 +171,7 @@ impl Nfl {
         head_to_head: &mut HashMap<&'static str, (u32, u32, u32)>,
         division_record: &mut HashMap<&'static str, (u32, u32, u32)>,
         common_games: &mut HashMap<&'static str, (u32, u32, u32)>,
+        conference_record: &mut HashMap<&'static str, (u32, u32, u32)>,
     ) {
         let mut divisions = HashSet::new();
         for team in teams {
@@ -156,8 +207,37 @@ impl Nfl {
                     }
                 }
             }
-            if let [division] = divisions.as_slice() {
-                for team2 in Self::get_division_teams(division).unwrap() {
+            for (division, teams) in
+                Self::get_conference_divisions(Self::get_conference(team1).unwrap()).unwrap()
+            {
+                if let [d] = divisions.as_slice()
+                    && d == division
+                {
+                    for team2 in teams {
+                        for (week, (score1, status)) in self
+                            .games
+                            .get(*team1)
+                            .cloned()
+                            .unwrap_or_default()
+                            .get(*team2)
+                            .cloned()
+                            .unwrap_or_default()
+                            .iter()
+                        {
+                            if status != "STATUS_FINAL" {
+                                continue;
+                            }
+                            let (score2, _) = self.games[*team2][*team1][week];
+                            let record = division_record.entry(team1).or_default();
+                            match score1.cmp(&score2) {
+                                Ordering::Less => record.1 += 1,
+                                Ordering::Equal => record.2 += 1,
+                                Ordering::Greater => record.0 += 1,
+                            }
+                        }
+                    }
+                }
+                for team2 in teams {
                     for (week, (score1, status)) in self
                         .games
                         .get(*team1)
@@ -172,7 +252,7 @@ impl Nfl {
                             continue;
                         }
                         let (score2, _) = self.games[*team2][*team1][week];
-                        let record = division_record.entry(team1).or_default();
+                        let record = conference_record.entry(team1).or_default();
                         match score1.cmp(&score2) {
                             Ordering::Less => record.1 += 1,
                             Ordering::Equal => record.2 += 1,
@@ -324,6 +404,7 @@ impl Component for Nfl {
         let mut head_to_head = HashMap::new();
         let mut division_record = HashMap::new();
         let mut common_games = HashMap::new();
+        let mut conference_record = HashMap::new();
         if selected {
             self.calculate_tiebreakers(
                 teams,
@@ -331,6 +412,7 @@ impl Component for Nfl {
                 &mut head_to_head,
                 &mut division_record,
                 &mut common_games,
+                &mut conference_record,
             );
         }
         let team_records: HashMap<_, _> = Self::TEAMS
@@ -361,12 +443,17 @@ impl Component for Nfl {
                     "Common Games",
                     common_games.get(*team).unwrap_or(&(0, 0, 0)),
                 );
+                let conference_record = render_record(
+                    "Conference Record",
+                    conference_record.get(*team).unwrap_or(&(0, 0, 0)),
+                );
                 html! {
                   <div>
                     <div>{team_record}</div>
                     <div>{head_to_head}</div>
                     {division_record}
                     <div>{common_games}</div>
+                    <div>{conference_record}</div>
                   </div>
                 }
             } else {
