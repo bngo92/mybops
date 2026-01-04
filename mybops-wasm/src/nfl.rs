@@ -82,6 +82,74 @@ impl Nfl {
     ];
 }
 
+impl Nfl {
+    fn calculate_tiebreakers<'s>(
+        &'s self,
+        teams: &[&'static str],
+        play_count: &mut HashMap<&'s str, usize>,
+        head_to_head: &mut HashMap<&'static str, (u32, u32, u32)>,
+        common_games: &mut HashMap<&'static str, (u32, u32, u32)>,
+    ) {
+        for team in teams {
+            if let Some(opponents) = self.games.get(*team) {
+                for opponent in opponents.keys() {
+                    *play_count.entry(opponent.as_str()).or_default() += 1;
+                }
+            }
+        }
+        for team1 in teams {
+            for team2 in teams {
+                for (week, (score1, status)) in self
+                    .games
+                    .get(*team1)
+                    .cloned()
+                    .unwrap_or_default()
+                    .get(*team2)
+                    .cloned()
+                    .unwrap_or_default()
+                    .iter()
+                {
+                    if status != "STATUS_FINAL" {
+                        continue;
+                    }
+                    let (score2, _) = self.games[*team2][*team1][week];
+                    let record = head_to_head.entry(team1).or_default();
+                    match score1.cmp(&score2) {
+                        Ordering::Less => record.1 += 1,
+                        Ordering::Equal => record.2 += 1,
+                        Ordering::Greater => record.0 += 1,
+                    }
+                }
+            }
+            for team2 in Self::TEAMS {
+                for (week, (score1, status)) in self
+                    .games
+                    .get(*team1)
+                    .cloned()
+                    .unwrap_or_default()
+                    .get(team2)
+                    .cloned()
+                    .unwrap_or_default()
+                    .iter()
+                {
+                    if status != "STATUS_FINAL" {
+                        continue;
+                    }
+                    let (score2, _) = self.games[team2][*team1][week];
+                    if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                        let record = common_games.entry(team1).or_default();
+                        match score1.cmp(&score2) {
+                            Ordering::Less => record.1 += 1,
+                            Ordering::Equal => record.2 += 1,
+                            Ordering::Greater => record.0 += 1,
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl Component for Nfl {
     type Message = NflMsg;
     type Properties = ();
@@ -193,66 +261,15 @@ impl Component for Nfl {
             Self::TEAMS.as_slice()
         };
         let mut play_count = HashMap::new();
-        let mut head_to_head: HashMap<&'static str, (u32, u32, u32)> = HashMap::new();
-        let mut common_games: HashMap<&'static str, (u32, u32, u32)> = HashMap::new();
+        let mut head_to_head = HashMap::new();
+        let mut common_games = HashMap::new();
         if selected {
-            for team in teams {
-                if let Some(opponents) = self.games.get(*team) {
-                    for opponent in opponents.keys() {
-                        *play_count.entry(opponent.as_str()).or_default() += 1;
-                    }
-                }
-            }
-            for team1 in teams {
-                for team2 in teams {
-                    for (week, (score1, status)) in self
-                        .games
-                        .get(*team1)
-                        .cloned()
-                        .unwrap_or_default()
-                        .get(*team2)
-                        .cloned()
-                        .unwrap_or_default()
-                        .iter()
-                    {
-                        if status != "STATUS_FINAL" {
-                            continue;
-                        }
-                        let (score2, _) = self.games[*team2][*team1][week];
-                        let record = head_to_head.entry(team1).or_default();
-                        match score1.cmp(&score2) {
-                            Ordering::Less => record.1 += 1,
-                            Ordering::Equal => record.2 += 1,
-                            Ordering::Greater => record.0 += 1,
-                        }
-                    }
-                }
-                for team2 in Self::TEAMS {
-                    for (week, (score1, status)) in self
-                        .games
-                        .get(*team1)
-                        .cloned()
-                        .unwrap_or_default()
-                        .get(team2)
-                        .cloned()
-                        .unwrap_or_default()
-                        .iter()
-                    {
-                        if status != "STATUS_FINAL" {
-                            continue;
-                        }
-                        let (score2, _) = self.games[team2][*team1][week];
-                        if play_count.get(team2) == Some(&self.selected_teams.len()) {
-                            let record = common_games.entry(team1).or_default();
-                            match score1.cmp(&score2) {
-                                Ordering::Less => record.1 += 1,
-                                Ordering::Equal => record.2 += 1,
-                                Ordering::Greater => record.0 += 1,
-                            }
-                        }
-                    }
-                }
-            }
+            self.calculate_tiebreakers(
+                teams,
+                &mut play_count,
+                &mut head_to_head,
+                &mut common_games,
+            );
         }
         let team_records: HashMap<_, _> = Self::TEAMS
             .iter()
