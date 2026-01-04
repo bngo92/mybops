@@ -192,6 +192,44 @@ impl Component for Nfl {
         } else {
             Self::TEAMS.as_slice()
         };
+        let mut play_count = HashMap::new();
+        let mut common_games: HashMap<&'static str, (u32, u32, u32)> = HashMap::new();
+        if selected {
+            for team in teams {
+                if let Some(opponents) = self.games.get(*team) {
+                    for opponent in opponents.keys() {
+                        *play_count.entry(opponent.as_str()).or_default() += 1;
+                    }
+                }
+            }
+            for team2 in Self::TEAMS {
+                for team1 in teams {
+                    for (week, (score1, status)) in self
+                        .games
+                        .get(*team1)
+                        .cloned()
+                        .unwrap_or_default()
+                        .get(team2)
+                        .cloned()
+                        .unwrap_or_default()
+                        .iter()
+                    {
+                        if status != "STATUS_FINAL" {
+                            continue;
+                        }
+                        let (score2, _) = self.games[team2][*team1][week];
+                        if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                            let record = common_games.entry(team1).or_default();
+                            match score1.cmp(&score2) {
+                                Ordering::Less => record.1 += 1,
+                                Ordering::Equal => record.2 += 1,
+                                Ordering::Greater => record.0 += 1,
+                            }
+                        }
+                    }
+                }
+            }
+        }
         let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
             let (wins, losses, ties) = self.records.get(*team).unwrap_or(&(0, 0, 0));
             let team_record = if *ties != 0 {
@@ -200,7 +238,18 @@ impl Component for Nfl {
                 format!("{team} ({wins}-{losses})")
             };
             if selected {
-                html! { <div>{team_record}</div> }
+                let (wins, losses, ties) = common_games.get(*team).unwrap_or(&(0, 0, 0));
+                let common_games = if *ties != 0 {
+                    format!("{team} ({wins}-{losses}-{ties})")
+                } else {
+                    format!("{team} ({wins}-{losses})")
+                };
+                html! {
+                  <div>
+                    <div>{team_record}</div>
+                    <div><strong>{common_games}</strong></div>
+                  </div>
+                }
             } else {
                 html! {
                   <div class="form-check">
@@ -210,16 +259,6 @@ impl Component for Nfl {
                 }
             }
         });
-        let mut play_count = HashMap::new();
-        if selected {
-            for team in teams {
-                if let Some(opponents) = self.games.get(*team) {
-                    for opponent in opponents.keys() {
-                        *play_count.entry(opponent.as_str()).or_default() += 1;
-                    }
-                }
-            }
-        }
         let mut games = Vec::new();
         for team2 in Self::TEAMS {
             if selected && !play_count.contains_key(team2) {
