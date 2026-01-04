@@ -1,7 +1,7 @@
 use std::{
     array,
     cmp::Ordering,
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
 };
 
 use serde::Deserialize;
@@ -70,16 +70,47 @@ pub struct Nfl {
 }
 
 impl Nfl {
-    const TEAMS: [&'static str; 32] = [
-        "BUF", "MIA", "NYJ", "NE", // AFC East
-        "BAL", "PIT", "CIN", "CLE", // AFC North
-        "HOU", "IND", "JAX", "TEN", // AFC South
-        "KC", "LAC", "DEN", "LV", // AFC West
-        "PHI", "WSH", "DAL", "NYG", // NFC East
-        "DET", "MIN", "GB", "CHI", // NFC North
-        "TB", "ATL", "CAR", "NO", // NFC South
-        "LAR", "SEA", "ARI", "SF", // NFC West
+    const DIVISIONS: [(&'static str, [&'static str; 4]); 8] = [
+        ("AFC East", ["BUF", "MIA", "NYJ", "NE"]),
+        ("AFC North", ["BAL", "PIT", "CIN", "CLE"]),
+        ("AFC South", ["HOU", "IND", "JAX", "TEN"]),
+        ("AFC West", ["KC", "LAC", "DEN", "LV"]),
+        ("NFC East", ["PHI", "WSH", "DAL", "NYG"]),
+        ("NFC North", ["DET", "MIN", "GB", "CHI"]),
+        ("NFC South", ["TB", "ATL", "CAR", "NO"]),
+        ("NFC West", ["LAR", "SEA", "ARI", "SF"]),
     ];
+    const TEAMS: [&'static str; 32] = {
+        let mut teams = [""; 32];
+        let mut i = 0;
+        while i < 8 {
+            let mut j = 0;
+            while j < 4 {
+                teams[4 * i + j] = Nfl::DIVISIONS[i].1[j];
+                j += 1;
+            }
+            i += 1;
+        }
+        teams
+    };
+
+    fn get_division(team: &str) -> Option<&'static str> {
+        Self::DIVISIONS
+            .iter()
+            .copied()
+            .find_map(|(division, teams)| {
+                teams
+                    .iter()
+                    .copied()
+                    .find_map(|t| if t == team { Some(division) } else { None })
+            })
+    }
+
+    fn get_division_teams(division: &str) -> Option<&'static [&'static str; 4]> {
+        Self::DIVISIONS
+            .iter()
+            .find_map(|(d, teams)| if *d == division { Some(teams) } else { None })
+    }
 }
 
 impl Nfl {
@@ -88,15 +119,19 @@ impl Nfl {
         teams: &[&'static str],
         play_count: &mut HashMap<&'s str, usize>,
         head_to_head: &mut HashMap<&'static str, (u32, u32, u32)>,
+        division_record: &mut HashMap<&'static str, (u32, u32, u32)>,
         common_games: &mut HashMap<&'static str, (u32, u32, u32)>,
     ) {
+        let mut divisions = HashSet::new();
         for team in teams {
+            divisions.insert(Self::get_division(team).unwrap());
             if let Some(opponents) = self.games.get(*team) {
                 for opponent in opponents.keys() {
                     *play_count.entry(opponent.as_str()).or_default() += 1;
                 }
             }
         }
+        let divisions: Vec<_> = divisions.into_iter().collect();
         for team1 in teams {
             for team2 in teams {
                 for (week, (score1, status)) in self
@@ -118,6 +153,31 @@ impl Nfl {
                         Ordering::Less => record.1 += 1,
                         Ordering::Equal => record.2 += 1,
                         Ordering::Greater => record.0 += 1,
+                    }
+                }
+            }
+            if let [division] = divisions.as_slice() {
+                for team2 in Self::get_division_teams(division).unwrap() {
+                    for (week, (score1, status)) in self
+                        .games
+                        .get(*team1)
+                        .cloned()
+                        .unwrap_or_default()
+                        .get(*team2)
+                        .cloned()
+                        .unwrap_or_default()
+                        .iter()
+                    {
+                        if status != "STATUS_FINAL" {
+                            continue;
+                        }
+                        let (score2, _) = self.games[*team2][*team1][week];
+                        let record = division_record.entry(team1).or_default();
+                        match score1.cmp(&score2) {
+                            Ordering::Less => record.1 += 1,
+                            Ordering::Equal => record.2 += 1,
+                            Ordering::Greater => record.0 += 1,
+                        }
                     }
                 }
             }
@@ -262,12 +322,14 @@ impl Component for Nfl {
         };
         let mut play_count = HashMap::new();
         let mut head_to_head = HashMap::new();
+        let mut division_record = HashMap::new();
         let mut common_games = HashMap::new();
         if selected {
             self.calculate_tiebreakers(
                 teams,
                 &mut play_count,
                 &mut head_to_head,
+                &mut division_record,
                 &mut common_games,
             );
         }
@@ -286,22 +348,24 @@ impl Component for Nfl {
         let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
             let team_record = &team_records[team];
             if selected {
-                let (wins, losses, ties) = head_to_head.get(*team).unwrap_or(&(0, 0, 0));
-                let head_to_head = if *ties != 0 {
-                    format!("Head-to-Head: {wins}-{losses}-{ties}")
+                let head_to_head = render_record(
+                    "Head-to-Head",
+                    head_to_head.get(*team).unwrap_or(&(0, 0, 0)),
+                );
+                let division_record = if let Some(record) = division_record.get(team) {
+                    Some(render_record("Divison Record", record))
                 } else {
-                    format!("Head-to-Head: {wins}-{losses}")
+                    None
                 };
-                let (wins, losses, ties) = common_games.get(*team).unwrap_or(&(0, 0, 0));
-                let common_games = if *ties != 0 {
-                    format!("Common Games: {wins}-{losses}-{ties}")
-                } else {
-                    format!("Common Games: {wins}-{losses}")
-                };
+                let common_games = render_record(
+                    "Common Games",
+                    common_games.get(*team).unwrap_or(&(0, 0, 0)),
+                );
                 html! {
                   <div>
                     <div>{team_record}</div>
                     <div>{head_to_head}</div>
+                    {division_record}
                     <div>{common_games}</div>
                   </div>
                 }
@@ -395,5 +459,13 @@ impl Component for Nfl {
               </div>
             },
         )
+    }
+}
+
+fn render_record(label: &str, (wins, losses, ties): &(u32, u32, u32)) -> String {
+    if *ties != 0 {
+        format!("{label}: {wins}-{losses}-{ties}")
+    } else {
+        format!("{label}: {wins}-{losses}")
     }
 }
