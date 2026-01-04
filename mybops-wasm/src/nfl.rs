@@ -544,14 +544,16 @@ impl Component for Nfl {
             },
             html! {
               <div>
-                <div class="row mt-3">
-                  <div>
-                    <button type="button" class="btn btn-info" onclick={ctx.link().callback(move |_| if selected {NflMsg::Clear} else {NflMsg::Select})}>
-                    {if selected {"Clear"} else {"Select"}}
-                    </button>
-                  </div>
-                  {html}
-                </div>
+                <form class="d-flex">
+                  <label class="col-form-label pe-2">{"Sort by:"}</label>
+                  <select class="form-select" style="width: auto">
+                    <option>{"Previous Division Standings"}</option>
+                  </select>
+                </form>
+                <button type="button" class="btn btn-info" onclick={ctx.link().callback(move |_| if selected {NflMsg::Clear} else {NflMsg::Select})}>
+                  {if selected {"Clear"} else {"Select"}}
+                </button>
+                {html}
               </div>
             },
         )
