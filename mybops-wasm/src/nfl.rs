@@ -490,9 +490,9 @@ impl Component for Nfl {
                     .iter()
                 {
                     let (score2, _) = self.games[team2][*team1][week];
-                    if status != "STATUS_FINAL" {
+                    if status == "STATUS_SCHEDULED" {
                         let score = format!("Week {}", week);
-                        let score = if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                        let score = if common_game {
                             html! { <div><strong>{score}</strong></div> }
                         } else {
                             html! { <div>{score}</div> }
@@ -501,6 +501,15 @@ impl Component for Nfl {
                         continue;
                     }
                     let score = format!("Week {}: {}-{}", week, score1, score2);
+                    if status == "STATUS_IN_PROGRESS" {
+                        let score = if common_game {
+                            html! { <div><strong>{score}</strong></div> }
+                        } else {
+                            html! { <div>{score}</div> }
+                        };
+                        scores.push(score);
+                        continue;
+                    }
                     let class = match score1.cmp(&score2) {
                         Ordering::Less => "text-danger",
                         Ordering::Equal => "text-warning",
