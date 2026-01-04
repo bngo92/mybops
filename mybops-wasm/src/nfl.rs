@@ -240,7 +240,13 @@ impl Component for Nfl {
                 {
                     let (score2, _) = self.games[team2][*team1][week];
                     if status != "STATUS_FINAL" {
-                        scores.push(html! { <div>{format!("Week {}", week)}</div> });
+                        let score = format!("Week {}", week);
+                        let score = if play_count.get(team2) == Some(&self.selected_teams.len()) {
+                            html! { <div><strong>{score}</strong></div> }
+                        } else {
+                            html! { <div>{score}</div> }
+                        };
+                        scores.push(score);
                         continue;
                     }
                     let score = format!("Week {}: {}-{}", week, score1, score2);
