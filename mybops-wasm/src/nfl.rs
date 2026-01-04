@@ -54,7 +54,10 @@ struct StatusType {
 }
 
 pub enum NflMsg {
-    Load(HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>>),
+    Load(
+        HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>>,
+        HashMap<String, (u32, u32, u32)>,
+    ),
     Select,
     Clear,
 }
@@ -63,6 +66,7 @@ pub struct Nfl {
     selected_teams: Vec<&'static str>,
     refs: [NodeRef; Self::TEAMS.len()],
     games: HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>>,
+    records: HashMap<String, (u32, u32, u32)>,
 }
 
 impl Nfl {
@@ -88,6 +92,7 @@ impl Component for Nfl {
             let opts = RequestInit::new();
             opts.set_mode(RequestMode::Cors);
             let mut games: HashMap<String, HashMap<String, BTreeMap<i32, (i32, String)>>> = HashMap::new();
+            let mut records: HashMap<String, (u32, u32, u32)> = HashMap::new();
             for week in 1..19 {
                 let request = Request::new_with_str_and_init(
                     &format!("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week={}", week),
@@ -103,6 +108,23 @@ impl Component for Nfl {
                     for competition in event.competitions {
                         let team1 = &competition.competitors[0];
                         let team2 = &competition.competitors[1];
+                        let score1: i32 = team1.score.parse().unwrap();
+                        let score2: i32 = team2.score.parse().unwrap();
+                        if competition.status.r#type.name == "STATUS_FINAL" {
+                            let cmp = score1.cmp(&score2);
+                            let record1 = records.entry(team1.team.abbreviation.clone()).or_default();
+                            match cmp {
+                                Ordering::Less => record1.1 += 1,
+                                Ordering::Equal => record1.2 += 1,
+                                Ordering::Greater => record1.0 += 1,
+                            }
+                            let record2 = records.entry(team2.team.abbreviation.clone()).or_default();
+                            match cmp {
+                                Ordering::Less => record2.0 += 1,
+                                Ordering::Equal => record2.2 += 1,
+                                Ordering::Greater => record2.1 += 1,
+                            }
+                        }
                         games
                             .entry(team1.team.abbreviation.clone())
                             .or_default()
@@ -110,7 +132,7 @@ impl Component for Nfl {
                             .or_default()
                             .insert(
                                 week,
-                                (team1.score.parse().unwrap(), competition.status.r#type.name.clone()),
+                                (score1, competition.status.r#type.name.clone()),
                             );
                         games
                             .entry(team2.team.abbreviation.clone())
@@ -119,24 +141,26 @@ impl Component for Nfl {
                             .or_default()
                             .insert(
                                 week,
-                                (team2.score.parse().unwrap(), competition.status.r#type.name),
+                                (score2, competition.status.r#type.name),
                             );
                     }
                 }
             }
-            NflMsg::Load(games)
+            NflMsg::Load(games, records)
         });
         Nfl {
             selected_teams: Vec::new(),
             refs: array::from_fn(|_| NodeRef::default()),
             games: HashMap::new(),
+            records: HashMap::new(),
         }
     }
 
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            NflMsg::Load(games) => {
+            NflMsg::Load(games, records) => {
                 self.games = games;
+                self.records = records;
                 true
             }
             NflMsg::Select => {
@@ -169,12 +193,18 @@ impl Component for Nfl {
             Self::TEAMS.as_slice()
         };
         let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
+            let (wins, losses, ties) = self.records.get(*team).unwrap_or(&(0, 0, 0));
+            let team_record = if *ties != 0 {
+                format!("{team} ({wins}-{losses}-{ties})")
+            } else {
+                format!("{team} ({wins}-{losses})")
+            };
             if selected {
-                html! { <div>{team}</div> }
+                html! { <div>{team_record}</div> }
             } else {
                 html! {
                   <div class="form-check">
-                    <label class="form-check-label">{team}</label>
+                    <label class="form-check-label">{team_record}</label>
                     <input ref={team_ref} class="form-check-input" type="checkbox"/>
                   </div>
                 }
