@@ -193,6 +193,7 @@ impl Component for Nfl {
             Self::TEAMS.as_slice()
         };
         let mut play_count = HashMap::new();
+        let mut head_to_head: HashMap<&'static str, (u32, u32, u32)> = HashMap::new();
         let mut common_games: HashMap<&'static str, (u32, u32, u32)> = HashMap::new();
         if selected {
             for team in teams {
@@ -202,8 +203,31 @@ impl Component for Nfl {
                     }
                 }
             }
-            for team2 in Self::TEAMS {
-                for team1 in teams {
+            for team1 in teams {
+                for team2 in teams {
+                    for (week, (score1, status)) in self
+                        .games
+                        .get(*team1)
+                        .cloned()
+                        .unwrap_or_default()
+                        .get(*team2)
+                        .cloned()
+                        .unwrap_or_default()
+                        .iter()
+                    {
+                        if status != "STATUS_FINAL" {
+                            continue;
+                        }
+                        let (score2, _) = self.games[*team2][*team1][week];
+                        let record = head_to_head.entry(team1).or_default();
+                        match score1.cmp(&score2) {
+                            Ordering::Less => record.1 += 1,
+                            Ordering::Equal => record.2 += 1,
+                            Ordering::Greater => record.0 += 1,
+                        }
+                    }
+                }
+                for team2 in Self::TEAMS {
                     for (week, (score1, status)) in self
                         .games
                         .get(*team1)
@@ -245,6 +269,12 @@ impl Component for Nfl {
         let header = teams.iter().zip(&self.refs).map(|(team, team_ref)| {
             let team_record = &team_records[team];
             if selected {
+                let (wins, losses, ties) = head_to_head.get(*team).unwrap_or(&(0, 0, 0));
+                let head_to_head = if *ties != 0 {
+                    format!("Head-to-Head: {wins}-{losses}-{ties}")
+                } else {
+                    format!("Head-to-Head: {wins}-{losses}")
+                };
                 let (wins, losses, ties) = common_games.get(*team).unwrap_or(&(0, 0, 0));
                 let common_games = if *ties != 0 {
                     format!("Common Games: {wins}-{losses}-{ties}")
@@ -254,6 +284,7 @@ impl Component for Nfl {
                 html! {
                   <div>
                     <div>{team_record}</div>
+                    <div>{head_to_head}</div>
                     <div>{common_games}</div>
                   </div>
                 }
