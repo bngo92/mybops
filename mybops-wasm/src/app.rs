@@ -19,7 +19,7 @@ use crate::{
 use mybops::{List, ListMode, User};
 use std::{collections::HashMap, rc::Rc};
 use web_sys::{HtmlSelectElement, MouseEvent};
-use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
+use yew::{Callback, Component, Context, Html, NodeRef, Properties, Suspense, html};
 use yew_router::{
     BrowserRouter, Switch,
     prelude::{Link, Redirect, RouterScopeExt},
@@ -65,7 +65,7 @@ fn switch(
             }
         },
         Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
-        Route::Nfl => html! { <Nfl/> },
+        Route::Nfl => html! { <Suspense><Nfl/></Suspense> },
     }
 }
 

@@ -187,9 +187,10 @@ impl Component for SearchPane {
             }
         }
         if let Some(df) = &self.query
-            && let Err(e) = self.view.draw(df) {
-                self.error = Some(e.to_string());
-            }
+            && let Err(e) = self.view.draw(df)
+        {
+            self.error = Some(e.to_string());
+        }
         true
     }
 

@@ -254,24 +254,26 @@ impl TournamentBracket<usize> {
         lut: &'a mut [ItemMetadata],
     ) -> Option<(&'a ItemMetadata, &'a ItemMetadata)> {
         if let Some(item) = self.data[i].clone()
-            && !item.disabled && !self.data[item.pair].as_ref().unwrap().disabled {
-                self.data[i].as_mut().unwrap().disabled = true;
-                self.data[item.pair].as_mut().unwrap().disabled = true;
-                lut[self.data[item.pair].as_mut().unwrap().item].rank = Some(
-                    (1 << (self.complete_depth - self.data[item.pair].as_ref().unwrap().depth)) + 1,
-                );
-                self.finished[self.finished_index] = self.data[item.pair].as_ref().map(|i| i.item);
-                self.finished_index -= 1;
-                let win = self.data[i].as_ref().unwrap().item;
-                let parent = self.data[(i + item.pair) / 2].as_mut().unwrap();
-                if parent.pair == usize::MAX {
-                    lut[win].rank = Some(1);
-                    self.finished[self.finished_index] = Some(win);
-                }
-                parent.item = win;
-                parent.disabled = false;
-                return Some((&lut[win], &lut[self.data[item.pair].as_ref().unwrap().item]));
+            && !item.disabled
+            && !self.data[item.pair].as_ref().unwrap().disabled
+        {
+            self.data[i].as_mut().unwrap().disabled = true;
+            self.data[item.pair].as_mut().unwrap().disabled = true;
+            lut[self.data[item.pair].as_mut().unwrap().item].rank = Some(
+                (1 << (self.complete_depth - self.data[item.pair].as_ref().unwrap().depth)) + 1,
+            );
+            self.finished[self.finished_index] = self.data[item.pair].as_ref().map(|i| i.item);
+            self.finished_index -= 1;
+            let win = self.data[i].as_ref().unwrap().item;
+            let parent = self.data[(i + item.pair) / 2].as_mut().unwrap();
+            if parent.pair == usize::MAX {
+                lut[win].rank = Some(1);
+                self.finished[self.finished_index] = Some(win);
             }
+            parent.item = win;
+            parent.disabled = false;
+            return Some((&lut[win], &lut[self.data[item.pair].as_ref().unwrap().item]));
+        }
         None
     }
 }
@@ -493,24 +495,25 @@ impl Tournament {
                 let mut i = start_i;
                 while i < fields.bracket.data.len() {
                     if let Some(item) = &fields.bracket.data[i]
-                        && !item.disabled {
-                            let pair = fields.bracket.data[item.pair].as_ref().unwrap();
-                            if !pair.disabled {
-                                let left_callback = ctx.link().callback(Msg::Update);
-                                let on_left_select = Callback::from(move |_| left_callback.emit(i));
-                                let right_callback = ctx.link().callback(Msg::Update);
-                                let pair_i = item.pair;
-                                let on_right_select =
-                                    Callback::from(move |_| right_callback.emit(pair_i));
-                                found = Some((
-                                    fields.list.items[item.item].clone(),
-                                    on_left_select,
-                                    fields.list.items[pair.item].clone(),
-                                    on_right_select,
-                                ));
-                                break 'found;
-                            }
+                        && !item.disabled
+                    {
+                        let pair = fields.bracket.data[item.pair].as_ref().unwrap();
+                        if !pair.disabled {
+                            let left_callback = ctx.link().callback(Msg::Update);
+                            let on_left_select = Callback::from(move |_| left_callback.emit(i));
+                            let right_callback = ctx.link().callback(Msg::Update);
+                            let pair_i = item.pair;
+                            let on_right_select =
+                                Callback::from(move |_| right_callback.emit(pair_i));
+                            found = Some((
+                                fields.list.items[item.item].clone(),
+                                on_left_select,
+                                fields.list.items[pair.item].clone(),
+                                on_right_select,
+                            ));
+                            break 'found;
                         }
+                    }
                     i += step;
                 }
                 start_i += step / 2;
