@@ -13,8 +13,8 @@ use web_sys::{
     HtmlInputElement, HtmlSelectElement, Request, RequestInit, RequestMode, Response, Url,
 };
 use yew::{
-    Callback, Component, Context, Html, HtmlResult, NodeRef, Properties, function_component, html,
-    suspense::use_future, use_state,
+    Callback, Html, HtmlResult, NodeRef, Properties, function_component, html,
+    suspense::use_future, use_node_ref, use_state,
 };
 use yew_router::prelude::Link;
 
@@ -469,25 +469,13 @@ struct RatingProps {
     onchange: Callback<Option<u64>>,
 }
 
-struct Rating {
-    select_ref: NodeRef,
-}
-
-impl Component for Rating {
-    type Message = ();
-    type Properties = RatingProps;
-
-    fn create(_: &Context<Self>) -> Self {
-        Rating {
-            select_ref: NodeRef::default(),
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let rating = &ctx.props().rating;
-        let onchange = ctx.props().onchange.clone();
-        let select_ref = self.select_ref.clone();
-        let onchange = ctx.link().callback(move |_| {
+#[function_component]
+fn Rating(RatingProps { rating, onchange }: &RatingProps) -> Html {
+    let select_ref = use_node_ref();
+    let onchange = {
+        let onchange = onchange.clone();
+        let select_ref = select_ref.clone();
+        Callback::from(move |_| {
             onchange.emit(
                 select_ref
                     .cast::<HtmlSelectElement>()
@@ -496,22 +484,22 @@ impl Component for Rating {
                     .parse()
                     .ok(),
             )
-        });
-        html! {
-            <select ref={&self.select_ref} {onchange} class="form-select">
-                <option selected={rating.is_none()}></option>
-                <option selected={*rating == Some(0)}>{"0"}</option>
-                <option selected={*rating == Some(1)}>{"1"}</option>
-                <option selected={*rating == Some(2)}>{"2"}</option>
-                <option selected={*rating == Some(3)}>{"3"}</option>
-                <option selected={*rating == Some(4)}>{"4"}</option>
-                <option selected={*rating == Some(5)}>{"5"}</option>
-                <option selected={*rating == Some(6)}>{"6"}</option>
-                <option selected={*rating == Some(7)}>{"7"}</option>
-                <option selected={*rating == Some(8)}>{"8"}</option>
-                <option selected={*rating == Some(9)}>{"9"}</option>
-                <option selected={*rating == Some(10)}>{"10"}</option>
-            </select>
-        }
+        })
+    };
+    html! {
+        <select ref={select_ref} {onchange} class="form-select">
+            <option selected={rating.is_none()}></option>
+            <option selected={*rating == Some(0)}>{"0"}</option>
+            <option selected={*rating == Some(1)}>{"1"}</option>
+            <option selected={*rating == Some(2)}>{"2"}</option>
+            <option selected={*rating == Some(3)}>{"3"}</option>
+            <option selected={*rating == Some(4)}>{"4"}</option>
+            <option selected={*rating == Some(5)}>{"5"}</option>
+            <option selected={*rating == Some(6)}>{"6"}</option>
+            <option selected={*rating == Some(7)}>{"7"}</option>
+            <option selected={*rating == Some(8)}>{"8"}</option>
+            <option selected={*rating == Some(9)}>{"9"}</option>
+            <option selected={*rating == Some(10)}>{"10"}</option>
+        </select>
     }
 }
