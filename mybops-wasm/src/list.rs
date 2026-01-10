@@ -1,77 +1,47 @@
 use crate::{ListsRoute, UserProps};
-use mybops::List;
-use yew::{Component, Context, Html, function_component, html};
-use yew_router::{prelude::Link, scope_ext::RouterScopeExt};
+use yew::{Callback, HtmlResult, function_component, html, suspense::use_future};
+use yew_router::{hooks::use_navigator, prelude::Link};
 
 pub mod item;
 
-pub enum ListsMsg {
-    Load(Vec<List>),
-    Create,
-}
+#[function_component]
+pub fn Lists(UserProps { logged_in }: &UserProps) -> HtmlResult {
+    let lists = &*use_future(|| async move { crate::fetch_lists(false).await.unwrap() })?;
+    let navigator = use_navigator().unwrap();
 
-pub struct Lists {
-    lists: Vec<List>,
-}
-
-impl Component for Lists {
-    type Message = ListsMsg;
-    type Properties = UserProps;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        ctx.link().send_future(async move {
-            let lists = crate::fetch_lists(false).await.unwrap();
-            ListsMsg::Load(lists)
+    let create = Callback::from(move |_| {
+        let navigator = navigator.clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            let list = crate::create_list(None).await.unwrap();
+            navigator.push(&ListsRoute::Edit { id: list.id });
         });
-        Lists { lists: Vec::new() }
-    }
+    });
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            ListsMsg::Load(lists) => {
-                self.lists = lists;
-                true
-            }
-            ListsMsg::Create => {
-                let navigator = ctx.link().navigator().unwrap();
-                ctx.link().send_future_batch(async move {
-                    let list = crate::create_list(None).await.unwrap();
-                    navigator.push(&ListsRoute::Edit { id: list.id });
-                    None
-                });
-                false
-            }
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let list_html = self.lists.iter().map(|l| {
-            html! {
-                <div class="col-12 col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <Link<ListsRoute> to={ListsRoute::View{id: l.id.clone()}}>{&l.name}</Link<ListsRoute>>
-                        </div>
+    let list_html = lists.iter().map(|l| {
+        html! {
+            <div class="col-12 col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <Link<ListsRoute> to={ListsRoute::View{id: l.id.clone()}}>{&l.name}</Link<ListsRoute>>
                     </div>
                 </div>
-            }
-        });
-        let disabled = !ctx.props().logged_in;
-        let create = ctx.link().callback(|_| ListsMsg::Create);
-        crate::nav_content(
-            html! {
-              <ul class="navbar-nav me-auto">
-                <li class="navbar-brand">{"All Lists"}</li>
-              </ul>
-            },
-            html! {
-              <div>
-                <div class="row mt-3">
-                  {for list_html}
-                </div>
-                <button type="button" class="btn btn-primary" onclick={create} {disabled}>{"Create List"}</button>
-              </div>
-            },
-        )
-    }
+            </div>
+        }
+    });
+    let disabled = !logged_in;
+    Ok(crate::nav_content(
+        html! {
+          <ul class="navbar-nav me-auto">
+            <li class="navbar-brand">{"All Lists"}</li>
+          </ul>
+        },
+        html! {
+          <div>
+            <div class="row mt-3">
+              {for list_html}
+            </div>
+            <button type="button" class="btn btn-primary" onclick={create} {disabled}>{"Create List"}</button>
+          </div>
+        },
+    ))
 }
