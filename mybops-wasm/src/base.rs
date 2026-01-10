@@ -1,6 +1,6 @@
 use mybops::ItemMetadata;
 use std::borrow::Cow;
-use yew::{Callback, Component, Context, Html, MouseEvent, NodeRef, Properties, html};
+use yew::{Callback, Html, MouseEvent, NodeRef, Properties, function_component, html, use_state};
 
 pub enum IframeCompareMsg {
     Left,
@@ -15,45 +15,34 @@ pub struct IframeCompareProps {
     pub on_right_select: Callback<MouseEvent>,
 }
 
-pub struct IframeCompare {
-    flag: IframeCompareMsg,
-}
-
-impl Component for IframeCompare {
-    type Message = IframeCompareMsg;
-    type Properties = IframeCompareProps;
-
-    fn create(_: &Context<Self>) -> Self {
-        IframeCompare {
-            flag: IframeCompareMsg::Left,
-        }
-    }
-
-    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        self.flag = msg;
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let IframeCompareProps {
-            left,
-            on_left_select,
-            right,
-            on_right_select,
-        } = ctx.props();
-        let (left_class, right_class, src) = match self.flag {
-            IframeCompareMsg::Left => ("nav-link active", "nav-link", left.iframe.clone()),
-            IframeCompareMsg::Right => ("nav-link", "nav-link active", right.iframe.clone()),
-        };
-        html! {
+#[function_component]
+pub fn IframeCompare(
+    IframeCompareProps {
+        left,
+        on_left_select,
+        right,
+        on_right_select,
+    }: &IframeCompareProps,
+) -> Html {
+    let flag = use_state(|| IframeCompareMsg::Left);
+    let (left_class, right_class, src) = match *flag {
+        IframeCompareMsg::Left => ("nav-link active", "nav-link", left.iframe.clone()),
+        IframeCompareMsg::Right => ("nav-link", "nav-link active", right.iframe.clone()),
+    };
+    let left_cb = {
+        let flag = flag.clone();
+        Callback::from(move |_| flag.set(IframeCompareMsg::Left))
+    };
+    let right_cb = Callback::from(move |_| flag.set(IframeCompareMsg::Right));
+    html! {
         <div class="row">
           <div class="col-12 d-lg-none">
             <ul class="nav nav-tabs nav-justified">
               <li class="nav-item">
-                <a class={left_class} aria-label="Show left item" href="# " onclick={ctx.link().callback(|_| IframeCompareMsg::Left)}>{&left.name}</a>
+                <a class={left_class} aria-label="Show left item" href="# " onclick={left_cb}>{&left.name}</a>
               </li>
               <li class="nav-item">
-                <a class={right_class} href="# " onclick={ctx.link().callback(|_| IframeCompareMsg::Right)}>{&right.name}</a>
+                <a class={right_class} href="# " onclick={right_cb}>{&right.name}</a>
               </li>
             </ul>
             <iframe width="100%" height="380" frameborder="0" {src}></iframe>
@@ -71,7 +60,6 @@ impl Component for IframeCompare {
             <button type="button" class="btn btn-warning text-truncate w-100" onclick={on_right_select.clone()}>{&right.name}</button>
           </div>
         </div>
-        }
     }
 }
 
@@ -85,39 +73,38 @@ pub struct InputProps {
     pub disabled: bool,
 }
 
-pub struct Input;
-
-impl Component for Input {
-    type Message = ();
-    type Properties = InputProps;
-
-    fn create(_: &Context<Self>) -> Self {
-        Input
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let (class, error) = if let Some(error) = &ctx.props().error {
-            (
-                "is-invalid",
-                Some(html! {<div class="invalid-feedback">{error}</div>}),
-            )
-        } else {
-            ("", None)
-        };
-        html! {
-            <div class="d-flex gap-2">
-                <div style="flex-basis: 800px">
-                    // Copy only the styles from .form-control that are needed for sizing
-                    <input ref={&ctx.props().input_ref} type="text" {class} style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%" placeholder={ctx.props().default} value={ctx.props().value.clone()} disabled={ctx.props().disabled}/>
-                    if let Some(error) = error {
-                        {error}
-                    }
-                </div>
-                <div>
-                    <button type="button" class="btn btn-success" onclick={&ctx.props().onclick} disabled={ctx.props().disabled}>{"Search"}</button>
-                </div>
+#[function_component]
+pub fn Input(
+    InputProps {
+        input_ref,
+        default,
+        value,
+        onclick,
+        error,
+        disabled,
+    }: &InputProps,
+) -> Html {
+    let (class, error) = if let Some(error) = error {
+        (
+            "is-invalid",
+            Some(html! {<div class="invalid-feedback">{error}</div>}),
+        )
+    } else {
+        ("", None)
+    };
+    html! {
+        <div class="d-flex gap-2">
+            <div style="flex-basis: 800px">
+                // Copy only the styles from .form-control that are needed for sizing
+                <input ref={input_ref} type="text" {class} style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%" placeholder={*default} value={value.clone()} disabled={*disabled}/>
+                if let Some(error) = error {
+                    {error}
+                }
             </div>
-        }
+            <div>
+                <button type="button" class="btn btn-success" onclick={onclick} disabled={*disabled}>{"Search"}</button>
+            </div>
+        </div>
     }
 }
 
