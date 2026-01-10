@@ -65,7 +65,7 @@ fn switch(
             }
         },
         Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
-        Route::Nfl => html! { <Suspense><Nfl/></Suspense> },
+        Route::Nfl => html! { <Nfl/> },
     }
 }
 
@@ -261,9 +261,11 @@ impl Component for App {
                   </div>
                 </div>
                 if self.user_loaded {
-                  <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
-                    <Switch<Route> {render} />
-                  </div>
+                  <Suspense>
+                    <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+                      <Switch<Route> {render} />
+                    </div>
+                  </Suspense>
                 }
               </div>
               if self.login {

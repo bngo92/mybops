@@ -1,6 +1,6 @@
 use crate::{ListsRoute, UserProps};
 use mybops::List;
-use yew::{Component, Context, Html, html};
+use yew::{Component, Context, Html, function_component, html};
 use yew_router::{prelude::Link, scope_ext::RouterScopeExt};
 
 pub mod item;
