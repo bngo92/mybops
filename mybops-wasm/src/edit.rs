@@ -1,18 +1,9 @@
 use mybops::{Id, List, ListMode, Source, SourceType, Spotify};
 use web_sys::{HtmlInputElement, HtmlSelectElement};
-use yew::{Component, Context, Html, NodeRef, Properties, html};
-use yew_router::scope_ext::RouterScopeExt;
+use yew::{Callback, Html, NodeRef, Properties, function_component, html, use_node_ref, use_state};
+use yew_router::hooks::use_navigator;
 
 use crate::Route;
-
-pub enum Msg {
-    None,
-    AddSource,
-    DeleteSource(usize),
-    Save,
-    Delete,
-    DeleteAll,
-}
 
 // TODO: need to refresh list after edit
 #[derive(Eq, PartialEq, Properties)]
@@ -21,25 +12,11 @@ pub struct EditProps {
     pub list: List,
 }
 
-pub struct Edit {
-    counter: i32,
-    list: List,
-    sources: Vec<(i32, NodeRef, NodeRef, Option<SourceType>)>,
-    name_ref: NodeRef,
-    external_ref: NodeRef,
-    query_ref: NodeRef,
-    favorite_ref: NodeRef,
-    public_ref: NodeRef,
-}
-
-impl Component for Edit {
-    type Message = Msg;
-    type Properties = EditProps;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        let mut list = ctx.props().list.clone();
-        let sources: Vec<_> = list
-            .sources
+#[function_component]
+pub fn Edit(EditProps { logged_in, list }: &EditProps) -> Html {
+    let mut list = list.clone();
+    let sources = use_state(|| {
+        list.sources
             .drain(..)
             .enumerate()
             .map(|(i, s)| {
@@ -50,288 +27,243 @@ impl Component for Edit {
                     Some(s.source_type),
                 )
             })
-            .collect();
-        Edit {
-            counter: sources.len() as i32,
-            list,
-            sources,
-            name_ref: NodeRef::default(),
-            external_ref: NodeRef::default(),
-            query_ref: NodeRef::default(),
-            favorite_ref: NodeRef::default(),
-            public_ref: NodeRef::default(),
-        }
-    }
+            .collect::<Vec<_>>()
+    });
+    let counter = use_state(|| sources.len() as i32);
+    let list = use_state(|| list);
+    let name_ref = use_node_ref();
+    let external_ref = use_node_ref();
+    let query_ref = use_node_ref();
+    let favorite_ref = use_node_ref();
+    let public_ref = use_node_ref();
+    let navigator = use_navigator();
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::None => false,
-            Msg::AddSource => {
-                self.sources
-                    .push((self.counter, NodeRef::default(), NodeRef::default(), None));
-                self.counter += 1;
-                true
+    let add_source = {
+        let sources = sources.clone();
+        Callback::from(move |_| {
+            let mut sources_copy = (*sources).clone();
+            sources_copy.push((*counter, NodeRef::default(), NodeRef::default(), None));
+            sources.set(sources_copy);
+            counter.set(*counter + 1);
+        })
+    };
+    let delete_source = {
+        let sources = sources.clone();
+        Callback::from(move |i| {
+            let mut sources_copy = (*sources).clone();
+            sources_copy.remove(i);
+            sources.set(sources_copy);
+        })
+    };
+    let save = {
+        let sources = sources.clone();
+        let list = list.clone();
+        let name_ref = name_ref.clone();
+        let external_ref = external_ref.clone();
+        let query_ref = query_ref.clone();
+        let favorite_ref = favorite_ref.clone();
+        let public_ref = public_ref.clone();
+        Callback::from(move |_| {
+            let mut list_copy = (*list).clone();
+            if !matches!(list_copy.mode, ListMode::External) {
+                list_copy.name = name_ref.cast::<HtmlInputElement>().unwrap().value();
             }
-            Msg::DeleteSource(i) => {
-                self.sources.remove(i);
-                true
+            if let ListMode::User(external_id) | ListMode::View(external_id) = &mut list_copy.mode {
+                let id = external_ref.cast::<HtmlInputElement>().unwrap().value();
+                if id.is_empty() {
+                    *external_id = None;
+                } else if let Some(Spotify::Playlist(id)) = crate::parse_spotify_source(id) {
+                    *external_id = Some(id);
+                }
             }
-            Msg::Save => {
-                if !matches!(self.list.mode, ListMode::External) {
-                    self.list.name = self.name_ref.cast::<HtmlInputElement>().unwrap().value();
-                }
-                if let ListMode::User(external_id) | ListMode::View(external_id) =
-                    &mut self.list.mode
-                {
-                    let id = self
-                        .external_ref
-                        .cast::<HtmlInputElement>()
-                        .unwrap()
-                        .value();
-                    if id.is_empty() {
-                        *external_id = None;
-                    } else if let Some(Spotify::Playlist(id)) = crate::parse_spotify_source(id) {
-                        *external_id = Some(id);
-                    }
-                }
-                self.list.query = self.query_ref.cast::<HtmlInputElement>().unwrap().value();
-                self.list.favorite = self
-                    .favorite_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .checked();
-                self.list.public = self
-                    .public_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .checked();
-                self.list.sources.clear();
-                for (_, source, id, _) in &self.sources {
-                    let source = source.cast::<HtmlSelectElement>().unwrap().value();
-                    let id = id.cast::<HtmlInputElement>().unwrap().value();
-                    match &*source {
-                        "Spotify" => {
-                            if let Some(source) = crate::parse_spotify_source(id) {
-                                self.list.sources.push(Source {
-                                    source_type: SourceType::Spotify(source),
-                                    name: String::new(),
-                                });
-                            } else {
-                                return false;
-                            }
-                        }
-                        "Custom" => {
-                            if let Ok(json) = serde_json::from_str(&id) {
-                                self.list.sources.push(Source {
-                                    source_type: SourceType::Custom(json),
-                                    name: String::new(),
-                                });
-                            } else {
-                                return false;
-                            }
-                        }
-                        "Setlist" => {
-                            if let Some(id) = crate::parse_setlist_source(id) {
-                                self.list.sources.push(Source {
-                                    source_type: SourceType::Setlist(id),
-                                    name: String::new(),
-                                });
-                            } else {
-                                return false;
-                            }
-                        }
-                        "List Items" => {
-                            self.list.sources.push(Source {
-                                source_type: SourceType::ListItems(id),
+            list_copy.query = query_ref.cast::<HtmlInputElement>().unwrap().value();
+            list_copy.favorite = favorite_ref.cast::<HtmlInputElement>().unwrap().checked();
+            list_copy.public = public_ref.cast::<HtmlInputElement>().unwrap().checked();
+            list_copy.sources.clear();
+            for (_, source, id, _) in &*sources {
+                let source = source.cast::<HtmlSelectElement>().unwrap().value();
+                let id = id.cast::<HtmlInputElement>().unwrap().value();
+                match &*source {
+                    "Spotify" => {
+                        if let Some(source) = crate::parse_spotify_source(id) {
+                            list_copy.sources.push(Source {
+                                source_type: SourceType::Spotify(source),
                                 name: String::new(),
                             });
-                        }
-                        _ => {
-                            return false;
-                        }
-                    };
-                }
-                let list = self.list.clone();
-                ctx.link().send_future(async move {
-                    crate::update_list(&list).await.unwrap();
-                    Msg::None
-                });
-                false
-            }
-            Msg::Delete => {
-                let id = self.list.id.clone();
-                if crate::window()
-                    .confirm_with_message(&format!("Delete {id}?"))
-                    .unwrap()
-                {
-                    let navigator = ctx.link().navigator().unwrap();
-                    ctx.link().send_future_batch(async move {
-                        crate::delete_list(&id).await.unwrap();
-                        navigator.push(&Route::Home);
-                        None
-                    });
-                }
-                false
-            }
-            Msg::DeleteAll => {
-                let id = self.list.id.clone();
-                let items: Vec<_> = self.list.items.iter().map(|i| i.id.clone()).collect();
-                if crate::window()
-                    .confirm_with_message(&format!("Delete all items in {id} and list?"))
-                    .unwrap()
-                {
-                    let navigator = ctx.link().navigator().unwrap();
-                    ctx.link().send_future_batch(async move {
-                        crate::delete_items(&items).await.unwrap();
-                        crate::delete_list(&id).await.unwrap();
-                        navigator.push(&Route::Home);
-                        None
-                    });
-                }
-                false
-            }
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let disabled = !ctx.props().logged_in;
-        let source_html = self.sources
-            .iter()
-            .enumerate()
-            .map(|(i, (key, source_ref, id, source))| {
-                let mut selected = [false; 4];
-                match source {
-                    None => selected[1] = true,
-                    Some(SourceType::Custom(_)) => selected[0] = true,
-                    Some(SourceType::Spotify(_)) => selected[1] = true,
-                    Some(SourceType::Setlist(_)) => selected[2] = true,
-                    Some(SourceType::ListItems(_)) => selected[3] = true,
-                };
-                let onclick = ctx.link().callback(move |_| Msg::DeleteSource(i));
-                html! {
-                    <div class="row mb-1" key={*key}>
-                        <div class="col-4 col-sm-3 col-md-2">
-                            <select ref={source_ref} class="form-select">
-                                <option selected={selected[0]}>{"Custom"}</option>
-                                <option selected={selected[1]}>{"Spotify"}</option>
-                                <option selected={selected[2]}>{"Setlist"}</option>
-                                <option selected={selected[3]}>{"List Items"}</option>
-                            </select>
-                        </div>
-                        <input class="col-9 col-sm-7 col-md-8" ref={id}/>
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-danger" {onclick}>{"Delete"}</button>
-                        </div>
-                    </div>
-                }
-            });
-        let mode = match self.list.mode {
-            ListMode::User(_) => "User",
-            ListMode::External => "External",
-            ListMode::View(_) => "View",
-        };
-        let add_source = ctx.link().callback(|_| Msg::AddSource);
-        let save = ctx.link().callback(|_| Msg::Save);
-        let delete = ctx.link().callback(|_| Msg::Delete);
-        let delete_all = ctx.link().callback(|_| Msg::DeleteAll);
-        html! {
-            <div>
-                <h4>{"List Settings"}</h4>
-                <form class="mb-4" style="max-width: 800px">
-                    <div class="form-floating mb-2">
-                        if let ListMode::External = &self.list.mode {
-                            <input type="text" readonly=true class="form-control-plaintext" id="name" value={self.list.name.clone()} placeholder=""/>
                         } else {
-                            <input type="text" class="form-control" id="name" ref={&self.name_ref} placeholder=""/>
+                            return;
                         }
-                        <label for="name">{"List name"}</label>
-                    </div>
-                    <div class="form-floating mb-2">
-                        <input type="text" readonly=true class="form-control-plaintext" id="mode" value={mode} placeholder=""/>
-                        <label for="mode">{"List mode"}</label>
-                    </div>
-                    if let ListMode::User(_) | ListMode::View(_) = &self.list.mode {
-                        <div class="form-floating mb-3">
-                            <input class="form-control" id="externalId" ref={&self.external_ref} placeholder="External ID"/>
-                            <label for="externalId">{"External ID"}</label>
-                        </div>
                     }
-                    <div class="form-floating mb-3">
-                        <input class="form-control" id="query" ref={&self.query_ref} placeholder="External ID"/>
-                        <label for="query">{"Query"}</label>
-                    </div>
-                    <div class="form-check">
-                        <label class="form-check-label" for="favorite">{"Favorite"}</label>
-                        <input ref={&self.favorite_ref} class="form-check-input" type="checkbox" id="favorite"/>
-                    </div>
-                    <div class="form-check">
-                        <label class="form-check-label" for="public">{"Public"}</label>
-                        <input ref={&self.public_ref} class="form-check-input" type="checkbox" id="public"/>
-                    </div>
-                </form>
-                <h4>{"Data Sources"}</h4>
-                <div class="mb-3">
-                    {for source_html}
-                </div>
-                <div class="d-flex gap-3">
-                    <button type="button" class="btn btn-primary" onclick={add_source}>{"Add source"}</button>
-                </div>
-                <hr/>
-                <button type="button" class="btn btn-success mb-3" onclick={save} {disabled}>{"Save all settings"}</button>
-                <div class="d-flex gap-3">
-                    <button type="button" class="btn btn-danger" onclick={delete} {disabled}>{"Delete"}</button>
-                    <button type="button" class="btn btn-danger" onclick={delete_all} {disabled}>{"Delete All"}</button>
-                </div>
-            </div>
-        }
-    }
-
-    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
-        if first_render {
-            if !matches!(self.list.mode, ListMode::External) {
-                self.name_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_value(&self.list.name);
-            }
-            if let ListMode::User(Some(external_id)) | ListMode::View(Some(external_id)) =
-                &self.list.mode
-            {
-                self.external_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_value(&external_id.raw_id);
-            }
-            self.query_ref
-                .cast::<HtmlInputElement>()
-                .unwrap()
-                .set_value(&self.list.query);
-            if self.list.favorite {
-                self.favorite_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_checked(true);
-            }
-            if self.list.public {
-                self.public_ref
-                    .cast::<HtmlInputElement>()
-                    .unwrap()
-                    .set_checked(true);
-            }
-            for (_, _, id, source) in self.sources.iter() {
-                let value = match source {
-                    None => String::new(),
-                    Some(SourceType::Custom(value)) => value.to_string(),
-                    Some(
-                        SourceType::Spotify(Spotify::Playlist(Id { raw_id, .. }))
-                        | SourceType::Spotify(Spotify::Album(Id { raw_id, .. }))
-                        | SourceType::Spotify(Spotify::Track(Id { raw_id, .. })),
-                    ) => raw_id.clone(),
-                    Some(SourceType::Setlist(Id { raw_id, .. })) => raw_id.clone(),
-                    Some(SourceType::ListItems(id)) => id.clone(),
+                    "Custom" => {
+                        if let Ok(json) = serde_json::from_str(&id) {
+                            list_copy.sources.push(Source {
+                                source_type: SourceType::Custom(json),
+                                name: String::new(),
+                            });
+                        } else {
+                            return;
+                        }
+                    }
+                    "Setlist" => {
+                        if let Some(id) = crate::parse_setlist_source(id) {
+                            list_copy.sources.push(Source {
+                                source_type: SourceType::Setlist(id),
+                                name: String::new(),
+                            });
+                        } else {
+                            return;
+                        }
+                    }
+                    "List Items" => {
+                        list_copy.sources.push(Source {
+                            source_type: SourceType::ListItems(id),
+                            name: String::new(),
+                        });
+                    }
+                    _ => {
+                        return;
+                    }
                 };
-                id.cast::<HtmlInputElement>().unwrap().set_value(&value);
             }
-        }
+            list.set(list_copy.clone());
+            wasm_bindgen_futures::spawn_local(async move {
+                crate::update_list(&list_copy).await.unwrap();
+            });
+        })
+    };
+    let delete = {
+        let list = list.clone();
+        let navigator = navigator.clone();
+        Callback::from(move |_| {
+            let id = list.id.clone();
+            if crate::window()
+                .confirm_with_message(&format!("Delete {id}?"))
+                .unwrap()
+            {
+                let navigator = navigator.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    crate::delete_list(&id).await.unwrap();
+                    navigator.unwrap().push(&Route::Home);
+                });
+            }
+        })
+    };
+    let delete_all = {
+        let list = list.clone();
+        let navigator = navigator.clone();
+        Callback::from(move |_| {
+            let id = list.id.clone();
+            let items: Vec<_> = list.items.iter().map(|i| i.id.clone()).collect();
+            if crate::window()
+                .confirm_with_message(&format!("Delete all items in {id} and list?"))
+                .unwrap()
+            {
+                let navigator = navigator.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    crate::delete_items(&items).await.unwrap();
+                    crate::delete_list(&id).await.unwrap();
+                    navigator.unwrap().push(&Route::Home);
+                });
+            }
+        })
+    };
+
+    let disabled = !logged_in;
+    let source_html = sources
+        .iter()
+        .enumerate()
+        .map(|(i, (key, source_ref, id, source))| {
+            let mut selected = [false; 4];
+            match source {
+                None => selected[1] = true,
+                Some(SourceType::Custom(_)) => selected[0] = true,
+                Some(SourceType::Spotify(_)) => selected[1] = true,
+                Some(SourceType::Setlist(_)) => selected[2] = true,
+                Some(SourceType::ListItems(_)) => selected[3] = true,
+            };
+            let delete_source = delete_source.clone();
+            let onclick = Callback::from(move |_| delete_source.emit(i));
+            let value = match source {
+                None => String::new(),
+                Some(SourceType::Custom(value)) => value.to_string(),
+                Some(
+                    SourceType::Spotify(Spotify::Playlist(Id { raw_id, .. }))
+                    | SourceType::Spotify(Spotify::Album(Id { raw_id, .. }))
+                    | SourceType::Spotify(Spotify::Track(Id { raw_id, .. })),
+                ) => raw_id.clone(),
+                Some(SourceType::Setlist(Id { raw_id, .. })) => raw_id.clone(),
+                Some(SourceType::ListItems(id)) => id.clone(),
+            };
+            html! {
+                <div class="row mb-1" key={*key}>
+                    <div class="col-4 col-sm-3 col-md-2">
+                        <select ref={source_ref} class="form-select">
+                            <option selected={selected[0]}>{"Custom"}</option>
+                            <option selected={selected[1]}>{"Spotify"}</option>
+                            <option selected={selected[2]}>{"Setlist"}</option>
+                            <option selected={selected[3]}>{"List Items"}</option>
+                        </select>
+                    </div>
+                    <input class="col-9 col-sm-7 col-md-8" ref={id} {value}/>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-danger" {onclick}>{"Delete"}</button>
+                    </div>
+                </div>
+            }
+        });
+    let mode = match list.mode {
+        ListMode::User(_) => "User",
+        ListMode::External => "External",
+        ListMode::View(_) => "View",
+    };
+    html! {
+        <div>
+            <h4>{"List Settings"}</h4>
+            <form class="mb-4" style="max-width: 800px">
+                <div class="form-floating mb-2">
+                    if let ListMode::External = &list.mode {
+                        <input type="text" readonly=true class="form-control-plaintext" id="name" value={list.name.clone()} placeholder=""/>
+                    } else {
+                        <input type="text" class="form-control" id="name" ref={&name_ref} value={list.name.clone()} placeholder=""/>
+                    }
+                    <label for="name">{"List name"}</label>
+                </div>
+                <div class="form-floating mb-2">
+                    <input type="text" readonly=true class="form-control-plaintext" id="mode" value={mode} placeholder=""/>
+                    <label for="mode">{"List mode"}</label>
+                </div>
+                if let ListMode::User(external_id) | ListMode::View(external_id) = &list.mode {
+                    <div class="form-floating mb-3">
+                        <input class="form-control" id="externalId" ref={&external_ref} placeholder="External ID" value={external_id.as_ref().map(|i| i.raw_id.clone()).unwrap_or_default()}/>
+                        <label for="externalId">{"External ID"}</label>
+                    </div>
+                }
+                <div class="form-floating mb-3">
+                    <input class="form-control" id="query" ref={&query_ref} placeholder="External ID" value={list.query.clone()}/>
+                    <label for="query">{"Query"}</label>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label" for="favorite">{"Favorite"}</label>
+                    <input ref={&favorite_ref} class="form-check-input" type="checkbox" id="favorite" checked={list.favorite}/>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label" for="public">{"Public"}</label>
+                    <input ref={&public_ref} class="form-check-input" type="checkbox" id="public" checked={list.public}/>
+                </div>
+            </form>
+            <h4>{"Data Sources"}</h4>
+            <div class="mb-3">
+                {for source_html}
+            </div>
+            <div class="d-flex gap-3">
+                <button type="button" class="btn btn-primary" onclick={add_source}>{"Add source"}</button>
+            </div>
+            <hr/>
+            <button type="button" class="btn btn-success mb-3" onclick={save} {disabled}>{"Save all settings"}</button>
+            <div class="d-flex gap-3">
+                <button type="button" class="btn btn-danger" onclick={delete} {disabled}>{"Delete"}</button>
+                <button type="button" class="btn btn-danger" onclick={delete_all} {disabled}>{"Delete All"}</button>
+            </div>
+        </div>
     }
 }
