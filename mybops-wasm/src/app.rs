@@ -19,7 +19,10 @@ use crate::{
 use mybops::{List, ListMode, User};
 use std::{collections::HashMap, rc::Rc};
 use web_sys::{HtmlSelectElement, MouseEvent};
-use yew::{Callback, Component, Context, Html, NodeRef, Properties, Suspense, html};
+use yew::{
+    Callback, Component, Context, Html, HtmlResult, NodeRef, Properties, Suspense,
+    function_component, html, suspense::use_future, use_state,
+};
 use yew_router::{
     BrowserRouter, Switch,
     prelude::{Link, Redirect, RouterScopeExt},
@@ -69,217 +72,191 @@ fn switch(
     }
 }
 
-pub enum Msg {
-    Demo,
-    Success(User),
-    Sidebar,
-    HideSidebar,
-    Login,
-    HideLogin,
-    Dropdown,
-    ResetDropdown,
-    ListDropdown,
-    IntegrationsDropdown,
-    //Logout,
-    //Reload,
+#[function_component]
+pub fn App() -> Html {
+    html! {
+        <Suspense>
+            <AppImpl/>
+        </Suspense>
+    }
 }
 
-pub struct App {
-    user_loaded: bool,
-    user: Rc<Option<User>>,
-    sidebar: bool,
-    login: bool,
-    dropdown: bool,
-    list_dropdown: bool,
-    integrations_dropdown: bool,
-}
-
-impl Component for App {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(ctx: &Context<Self>) -> Self {
-        ctx.link().send_future(async move {
+#[function_component]
+fn AppImpl() -> HtmlResult {
+    let user = Rc::new(
+        (*use_future(|| async move {
             match crate::get_user().await {
-                Ok(user) => Msg::Success(user),
-                Err(_) => Msg::Demo,
+                Ok(user) => Some(user),
+                Err(_) => None,
             }
+        })?)
+        .clone(),
+    );
+    let sidebar = use_state(|| false);
+    let login = use_state(|| false);
+    let dropdown = use_state(|| false);
+    let list_dropdown = use_state(|| false);
+    let integrations_dropdown = use_state(|| false);
+
+    let show_sidebar = {
+        let sidebar = sidebar.clone();
+        Callback::from(move |_| sidebar.set(true))
+    };
+    let hide_sidebar = {
+        let sidebar = sidebar.clone();
+        Callback::from(move |_| sidebar.set(false))
+    };
+    let show_login = {
+        let login = login.clone();
+        Callback::from(move |_| login.set(true))
+    };
+    let hide_login = {
+        let login = login.clone();
+        Callback::from(move |_| login.set(false))
+    };
+    // We need to check which dropdown is clicked instead of relying on stop_propagation
+    // TODO: fix multiple open dropdowns
+    let reset_dropdown = {
+        let dropdown = dropdown.clone();
+        let list_dropdown = list_dropdown.clone();
+        let integrations_dropdown = integrations_dropdown.clone();
+        Callback::from(move |_| {
+            dropdown.set(false);
+            list_dropdown.set(false);
+            integrations_dropdown.set(false);
+        })
+    };
+    /*Msg::Logout => {
+        ctx.link().clone().send_future(async move {
+            let window = web_sys::window().expect("no global `window` exists");
+            let request = query("/api/logout", "POST").unwrap();
+            JsFuture::from(window.fetch_with_request(&request))
+                .await
+                .unwrap();
+            Msg::Reload
         });
-        App {
-            user_loaded: false,
-            user: Rc::new(None),
-            sidebar: false,
-            login: false,
-            dropdown: false,
-            list_dropdown: false,
-            integrations_dropdown: false,
-        }
+        false
     }
+    Msg::Reload => true,*/
 
-    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::Demo => self.user_loaded = true,
-            Msg::Success(user) => {
-                self.user_loaded = true;
-                self.user = Rc::new(Some(user))
-            }
-            Msg::Sidebar => self.sidebar = true,
-            Msg::HideSidebar => self.sidebar = false,
-            Msg::Login => self.login = true,
-            Msg::HideLogin => self.login = false,
-            Msg::Dropdown => self.dropdown = !self.dropdown,
-            // We need to check which dropdown is clicked instead of relying on stop_propagation
-            // TODO: fix multiple open dropdowns
-            Msg::ResetDropdown => {
-                self.dropdown = false;
-                self.list_dropdown = false;
-                self.integrations_dropdown = false;
-            }
-            Msg::ListDropdown => self.list_dropdown = !self.list_dropdown,
-            Msg::IntegrationsDropdown => self.integrations_dropdown = !self.integrations_dropdown,
-            /*Msg::Logout => {
-                ctx.link().clone().send_future(async move {
-                    let window = web_sys::window().expect("no global `window` exists");
-                    let request = query("/api/logout", "POST").unwrap();
-                    JsFuture::from(window.fetch_with_request(&request))
-                        .await
-                        .unwrap();
-                    Msg::Reload
-                });
-                false
-            }
-            Msg::Reload => true,*/
-        }
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let window = crate::window();
-        let location = window.location();
-        //let onclick = ctx.link().callback(|_| Msg::Logout);
-        // TODO: make anchors active if active
-        let search = /*if location.pathname().unwrap() == "/search" {
+    let window = crate::window();
+    let location = window.location();
+    //let onclick = ctx.link().callback(|_| Msg::Logout);
+    // TODO: make anchors active if active
+    let search = /*if location.pathname().unwrap() == "/search" {
             "nav-link active"
         } else */{
             "nav-link text-white"
         };
-        let (toggle_class, menu_class) = dropdown_class(self.dropdown);
-        let (int_toggle_class, int_menu_class) = dropdown_class(self.integrations_dropdown);
-        let dropdown = ctx.link().callback(|e: MouseEvent| {
-            // Prevent reset_dropdown from triggering
-            e.stop_propagation();
-            Msg::Dropdown
-        });
-        let int_dropdown = ctx.link().callback(|e: MouseEvent| {
-            e.stop_propagation();
-            Msg::IntegrationsDropdown
-        });
-        let sidebar_class = if self.sidebar {
-            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
-        } else {
-            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
-        };
-        let sidebar = ctx.link().callback(|_| Msg::Sidebar);
-        let hide_sidebar = ctx.link().callback(|_| Msg::HideSidebar);
-        let login = ctx.link().callback(|_| Msg::Login);
-        let hide = ctx.link().callback(|_| Msg::HideLogin);
-        let reset_dropdown = ctx.link().callback(|_| Msg::ResetDropdown);
-        let render = {
-            let user = Rc::clone(&self.user);
-            let list_dropdown = self.list_dropdown;
-            let show_list_dropdown = Rc::new(ctx.link().callback(|e: MouseEvent| {
+    let (toggle_class, menu_class) = dropdown_class(*dropdown);
+    let (int_toggle_class, int_menu_class) = dropdown_class(*integrations_dropdown);
+    let toggle_dropdown = Callback::from(move |e: MouseEvent| {
+        // Prevent reset_dropdown from triggering
+        e.stop_propagation();
+        dropdown.set(!*dropdown);
+    });
+    let int_dropdown = Callback::from(move |e: MouseEvent| {
+        e.stop_propagation();
+        integrations_dropdown.set(!*integrations_dropdown);
+    });
+    let sidebar_class = if *sidebar {
+        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
+    } else {
+        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
+    };
+    let render = {
+        let user = Rc::clone(&user);
+        let show_list_dropdown = {
+            let list_dropdown = list_dropdown.clone();
+            Rc::new(Callback::from(move |e: MouseEvent| {
                 e.stop_propagation();
-                Msg::ListDropdown
-            }));
-            move |routes| {
-                switch(
-                    routes,
-                    Rc::clone(&user),
-                    list_dropdown,
-                    Rc::clone(&show_list_dropdown),
-                )
-            }
+                list_dropdown.set(!*list_dropdown);
+            }))
         };
-        html! {
-          <div onclick={reset_dropdown}>
-            <BrowserRouter>
-              <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
-                <div class="container-lg d-flex justify-content-start gap-3">
-                  <button type="button" class="border-0" style="background-color: transparent; color: rgba(255,255,255,0.85)" onclick={sidebar}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-                    </svg>
-                  </button>
-                  <Link<Route> classes="navbar-brand" to={Route::Home}>{"mybops"}</Link<Route>>
-                </div>
-              </nav>
-              <div class="d-flex vh-100 min-vh-100 align-items-stretch">
-                <div class={sidebar_class} style="width: 200px;">
-                  <div class="h-100 offcanvas-body d-flex flex-column">
-                    <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
-                      <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"mybops"}</Link<Route>>
-                      <button type="button" class="btn-close d-sm-none" onclick={hide_sidebar}></button>
-                    </div>
-                    <hr/>
-                    <ul class="nav nav-pills flex-column mb-auto">
-                      <li class="nav-item">
-                        <Link<Route> classes={search} to={Route::ListsRoot}>{"Lists"}</Link<Route>>
-                      </li>
-                      <li class="nav-item">
-                        <Link<Route> classes={search} to={Route::Search}>{"Query"}</Link<Route>>
-                      </li>
-                      <li class="nav-item dropdown">
-                        <a class={int_toggle_class} href="#" onclick={int_dropdown}>{"Integrations"}</a>
-                        <ul class={int_menu_class}>
-                          <li><Link<Route> classes="dropdown-item" to={Route::Spotify}>{"Spotify"}</Link<Route>></li>
-                        </ul>
-                      </li>
-                      <li class="nav-item">
-                        <Link<Route> classes={search} to={Route::Docs}>{"Docs"}</Link<Route>>
-                      </li>
-                    </ul>
-                    if self.user_loaded {
-                      <hr/>
-                      <div>
-                        <ul class="nav nav-pills flex-column">
-                          if let Some(user) = &*self.user {
-                            <li class="nav-item dropdown">
-                              <a class={toggle_class} href="#" onclick={dropdown}>{&user.user_id}</a>
-                              <ul class={menu_class} style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)">
-                                <li><Link<Route> classes="dropdown-item" to={Route::Settings}>{"Settings"}</Link<Route>></li>
-                                <li><a class="dropdown-item" href="/api/logout">{"Log out"}</a></li>
-                              </ul>
-                            </li>
-                          } else {
-                            <li class="nav-item">
-                              <a class={search} href="#" onclick={login}>{"Log in"}</a>
-                            </li>
-                          }
-                        </ul>
-                      </div>
-                    }
-                  </div>
-                </div>
-                if self.user_loaded {
-                  <Suspense>
-                    <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
-                      <Switch<Route> {render} />
-                    </div>
-                  </Suspense>
-                }
-              </div>
-              if self.login {
-                <Modal header={"Log in"} {hide}>
-                  <div class="modal-body d-grid gap-2">
-                    <a class="btn btn-success" href={format!("https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private", location.origin().unwrap().as_str())}>{"Log in with Spotify"}</a>
-                    <a class="btn btn-success" href={format!("https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email", location.origin().unwrap().as_str())}>{"Log in with Google"}</a>
-                  </div>
-                </Modal>
-              }
-            </BrowserRouter>
-          </div>
+        move |routes| {
+            switch(
+                routes,
+                Rc::clone(&user),
+                *list_dropdown,
+                Rc::clone(&show_list_dropdown),
+            )
         }
-    }
+    };
+    Ok(html! {
+      <div onclick={reset_dropdown}>
+        <BrowserRouter>
+          <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
+            <div class="container-lg d-flex justify-content-start gap-3">
+              <button type="button" class="border-0" style="background-color: transparent; color: rgba(255,255,255,0.85)" onclick={show_sidebar}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                </svg>
+              </button>
+              <Link<Route> classes="navbar-brand" to={Route::Home}>{"mybops"}</Link<Route>>
+            </div>
+          </nav>
+          <div class="d-flex vh-100 min-vh-100 align-items-stretch">
+            <div class={sidebar_class} style="width: 200px;">
+              <div class="h-100 offcanvas-body d-flex flex-column">
+                <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
+                  <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"mybops"}</Link<Route>>
+                  <button type="button" class="btn-close d-sm-none" onclick={hide_sidebar}></button>
+                </div>
+                <hr/>
+                <ul class="nav nav-pills flex-column mb-auto">
+                  <li class="nav-item">
+                    <Link<Route> classes={search} to={Route::ListsRoot}>{"Lists"}</Link<Route>>
+                  </li>
+                  <li class="nav-item">
+                    <Link<Route> classes={search} to={Route::Search}>{"Query"}</Link<Route>>
+                  </li>
+                  <li class="nav-item dropdown">
+                    <a class={int_toggle_class} href="#" onclick={int_dropdown}>{"Integrations"}</a>
+                    <ul class={int_menu_class}>
+                      <li><Link<Route> classes="dropdown-item" to={Route::Spotify}>{"Spotify"}</Link<Route>></li>
+                    </ul>
+                  </li>
+                  <li class="nav-item">
+                    <Link<Route> classes={search} to={Route::Docs}>{"Docs"}</Link<Route>>
+                  </li>
+                </ul>
+                <hr/>
+                <div>
+                  <ul class="nav nav-pills flex-column">
+                    if let Some(user) = &*user {
+                      <li class="nav-item dropdown">
+                        <a class={toggle_class} href="#" onclick={toggle_dropdown}>{&user.user_id}</a>
+                        <ul class={menu_class} style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)">
+                          <li><Link<Route> classes="dropdown-item" to={Route::Settings}>{"Settings"}</Link<Route>></li>
+                          <li><a class="dropdown-item" href="/api/logout">{"Log out"}</a></li>
+                        </ul>
+                      </li>
+                    } else {
+                      <li class="nav-item">
+                        <a class={search} href="#" onclick={show_login}>{"Log in"}</a>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <Suspense>
+              <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+                <Switch<Route> {render} />
+              </div>
+            </Suspense>
+          </div>
+          if *login {
+            <Modal header={"Log in"} hide={hide_login}>
+              <div class="modal-body d-grid gap-2">
+                <a class="btn btn-success" href={format!("https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private", location.origin().unwrap().as_str())}>{"Log in with Spotify"}</a>
+                <a class="btn btn-success" href={format!("https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email", location.origin().unwrap().as_str())}>{"Log in with Google"}</a>
+              </div>
+            </Modal>
+          }
+        </BrowserRouter>
+      </div>
+    })
 }
 
 fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
