@@ -8,7 +8,7 @@ use std::{collections::HashSet, io::Cursor};
 use wasm_bindgen::{JsCast, prelude::*};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
-use yew::{Component, Context, Html, Properties, html};
+use yew::{Callback, Html, Properties, function_component, html, use_state};
 use yew_router::Routable;
 
 mod app;
@@ -117,10 +117,6 @@ fn nav_content(nav: Html, content: Html) -> Html {
     }
 }
 
-enum ContentMsg {
-    Toggle,
-}
-
 #[derive(PartialEq, Properties)]
 struct ContentProps {
     heading: String,
@@ -128,55 +124,53 @@ struct ContentProps {
     content: Html,
 }
 
-struct Content {
-    collapse: bool,
-}
+#[function_component]
+fn Content(
+    ContentProps {
+        heading,
+        nav,
+        content,
+    }: &ContentProps,
+) -> Html {
+    let collapse = use_state(|| true);
 
-impl Component for Content {
-    type Message = ContentMsg;
-    type Properties = ContentProps;
+    let toggle = {
+        let collapse = collapse.clone();
+        Callback::from(move |_| {
+            collapse.set(!*collapse);
+        })
+    };
 
-    fn create(_: &Context<Self>) -> Self {
-        Content { collapse: true }
-    }
-
-    fn update(&mut self, _: &Context<Self>, _: Self::Message) -> bool {
-        self.collapse = !self.collapse;
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let class = if self.collapse {
-            "collapse navbar-collapse"
-        } else {
-            "navbar-collapse"
-        };
-        html! {
-          <>
-            <nav class="navbar navbar-expand-sm navbar-bg py-2" style="background-color: #2fb380;">
-              <div class="container-fluid">
-                <a class="navbar-brand" href="#">{&ctx.props().heading}</a>
-                <button class="navbar-toggler" type="button" onclick={ctx.link().callback(|_| ContentMsg::Toggle)}>
-                  if self.collapse {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-                    </svg>
-                  } else {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-lg" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"/>
-                    </svg>
-                  }
-                </button>
-                <div {class}>
-                  {ctx.props().nav.clone()}
-                </div>
-              </div>
-            </nav>
-            <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
-              {ctx.props().content.clone()}
+    let class = if *collapse {
+        "collapse navbar-collapse"
+    } else {
+        "navbar-collapse"
+    };
+    html! {
+      <>
+        <nav class="navbar navbar-expand-sm navbar-bg py-2" style="background-color: #2fb380;">
+          <div class="container-fluid">
+            <a class="navbar-brand" href="#">{heading}</a>
+            <button class="navbar-toggler" type="button" onclick={toggle}>
+              if *collapse {
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+                </svg>
+              } else {
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-lg" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"/>
+                </svg>
+              }
+            </button>
+            <div {class}>
+              {nav.clone()}
             </div>
-          </>
-        }
+          </div>
+        </nav>
+        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
+          {content.clone()}
+        </div>
+      </>
     }
 }
 
