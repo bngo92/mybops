@@ -3,78 +3,48 @@ use mybops::{ItemMetadata, List};
 use rand::prelude::SliceRandom;
 use std::{borrow::Cow, collections::HashMap};
 use web_sys::HtmlSelectElement;
-use yew::{Callback, Component, Context, Html, NodeRef, Properties, html};
+use yew::{
+    Callback, Event, Html, NodeRef, Properties, function_component, html, use_node_ref, use_state,
+};
 
 #[derive(Eq, PartialEq, Properties)]
 pub struct TournamentLoaderProps {
     pub list: List,
 }
 
-pub struct TournamentLoader;
-
-impl Component for TournamentLoader {
-    type Message = ();
-    type Properties = TournamentLoaderProps;
-
-    fn create(_: &Context<Self>) -> Self {
-        TournamentLoader
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let mut items: Vec<_> = (0..ctx.props().list.items.len()).collect();
-        items.sort_by_key(|&i| -ctx.props().list.items[i].score);
-        let previous_ranks = ctx
-            .props()
-            .list
-            .items
-            .iter()
-            .map(|i| (i.id.clone(), i.rank))
-            .collect();
-        let bracket = TournamentBracket::new(items, usize::MAX);
-        let state = TournamentFields {
-            state: TournamentState::Tournament,
-            view_state: ViewState::Tournament,
-            list: ctx.props().list.clone(),
-            previous_ranks,
-            bracket,
-        };
-        html! {
-            <Tournament {state}/>
-        }
+#[function_component]
+pub fn TournamentLoader(TournamentLoaderProps { list }: &TournamentLoaderProps) -> Html {
+    let mut items: Vec<_> = (0..list.items.len()).collect();
+    items.sort_by_key(|&i| -list.items[i].score);
+    let previous_ranks = list.items.iter().map(|i| (i.id.clone(), i.rank)).collect();
+    let bracket = TournamentBracket::new(items, usize::MAX);
+    let state = TournamentFields {
+        state: TournamentState::Tournament,
+        view_state: ViewState::Tournament,
+        list: list.clone(),
+        previous_ranks,
+        bracket,
+    };
+    html! {
+        <Tournament {state}/>
     }
 }
 
-pub struct RandomTournamentLoader;
-
-impl Component for RandomTournamentLoader {
-    type Message = ();
-    type Properties = TournamentLoaderProps;
-
-    fn create(_: &Context<Self>) -> Self {
-        RandomTournamentLoader
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let mut items: Vec<_> = (0..ctx.props().list.items.len()).collect();
-        items.shuffle(&mut rand::thread_rng());
-        let previous_ranks = ctx
-            .props()
-            .list
-            .items
-            .iter()
-            .map(|i| (i.id.clone(), i.rank))
-            .collect();
-        let bracket = TournamentBracket::new(items, usize::MAX);
-        let state = TournamentFields {
-            state: TournamentState::Tournament,
-            view_state: ViewState::Tournament,
-            list: ctx.props().list.clone(),
-            previous_ranks,
-            bracket,
-        };
-        html! {
-            <Tournament {state}/>
-        }
+#[function_component]
+pub fn RandomTournamentLoader(TournamentLoaderProps { list }: &TournamentLoaderProps) -> Html {
+    let mut items: Vec<_> = (0..list.items.len()).collect();
+    items.shuffle(&mut rand::thread_rng());
+    let previous_ranks = list.items.iter().map(|i| (i.id.clone(), i.rank)).collect();
+    let bracket = TournamentBracket::new(items, usize::MAX);
+    let state = TournamentFields {
+        state: TournamentState::Tournament,
+        view_state: ViewState::Tournament,
+        list: list.clone(),
+        previous_ranks,
+        bracket,
+    };
+    html! {
+        <Tournament {state}/>
     }
 }
 
@@ -348,223 +318,228 @@ pub struct TournamentProps {
     pub state: TournamentFields,
 }
 
-pub struct Tournament {
-    state: TournamentFields,
-    select_ref: NodeRef,
-}
+#[function_component]
+pub fn Tournament(TournamentProps { state }: &TournamentProps) -> Html {
+    let state = use_state(|| state.clone());
+    let select_ref = use_node_ref();
 
-impl Component for Tournament {
-    type Message = Msg;
-    type Properties = TournamentProps;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        Tournament {
-            state: ctx.props().state.clone(),
-            select_ref: NodeRef::default(),
-        }
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        let fields = &mut self.state;
-        match msg {
-            Msg::Update(i) => {
-                if let Some((win, lose)) = fields.bracket.update(i, &mut fields.list.items) {
-                    let id = fields.list.id.clone();
-                    let win = win.id.clone();
-                    let lose = lose.id.clone();
-                    let updated_ranks = if fields.bracket.winner().is_some() {
-                        fields.list.items.iter().map(|i| i.rank).collect()
-                    } else {
-                        Vec::new()
-                    };
-                    ctx.link().send_future_batch(async move {
-                        crate::update_stats(&id, &win, &lose).await.unwrap();
-                        if !updated_ranks.is_empty() {
-                            // TODO: handle state syncing better
-                            let mut list = crate::fetch_list(&id).await.unwrap().unwrap();
-                            for (item, rank) in &mut list.items.iter_mut().zip(updated_ranks) {
-                                item.rank = rank;
-                            }
-                            crate::update_list(&list).await.unwrap();
-                        }
-                        Vec::new()
-                    });
-                }
-            }
-            Msg::Toggle => {
-                fields.state = match fields.state {
-                    TournamentState::Tournament => TournamentState::Match,
-                    TournamentState::Match => TournamentState::Tournament,
-                };
-            }
-            Msg::SelectView => {
-                fields.view_state = match self
-                    .select_ref
-                    .cast::<HtmlSelectElement>()
-                    .map(|s| s.value())
-                    .as_deref()
-                    .unwrap_or("Tournament View")
-                {
-                    "Tournament View" => ViewState::Tournament,
-                    "List View" => ViewState::List,
-                    _ => unreachable!(),
-                };
-            }
-            Msg::Reset => {
-                fields.bracket.data = fields.bracket.initial_data.clone();
-                for item in &mut fields.bracket.finished {
-                    *item = None;
-                }
-                fields.bracket.finished_index = fields.bracket.finished.len() - 1;
-            }
-        }
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let fields = &self.state;
-        let (toggle, html) = match &fields.state {
-            TournamentState::Tournament => ("Match Mode", {
-                let winner = if let Some(winner) = fields.bracket.winner() {
-                    fields.list.items.get(*winner)
+    let update = {
+        let state = state.clone();
+        Callback::from(move |i| {
+            let mut fields = (*state).clone();
+            if let Some((win, lose)) = fields.bracket.update(i, &mut fields.list.items) {
+                let id = fields.list.id.clone();
+                let win = win.id.clone();
+                let lose = lose.id.clone();
+                let updated_ranks = if fields.bracket.winner().is_some() {
+                    fields.list.items.iter().map(|i| i.rank).collect()
                 } else {
-                    None
+                    Vec::new()
                 };
-                html! {
-                    <div>
-                        if let Some(winner) = winner {
-                            <h2>{format!("Winner: {}", winner.name)}</h2>
-                            // TODO: only show if iframe exists
-                            <div class="row">
-                                <div class="col-6">
-                                    <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
-                                </div>
-                            </div>
+                wasm_bindgen_futures::spawn_local(async move {
+                    crate::update_stats(&id, &win, &lose).await.unwrap();
+                    if !updated_ranks.is_empty() {
+                        // TODO: handle state syncing better
+                        let mut list = crate::fetch_list(&id).await.unwrap().unwrap();
+                        for (item, rank) in &mut list.items.iter_mut().zip(updated_ranks) {
+                            item.rank = rank;
                         }
-                        <div class="overflow-scroll">
-                        {tournament_bracket_view(&fields.bracket, &fields.list.items, ctx.link().callback(Msg::Update), false)}
-                        </div>
-                        if let Some(src) = fields.list.iframe.clone() {
-                            <div class="row">
-                                <div class="col-12 col-lg-10 col-xl-8">
-                                    <iframe width="100%" height="380" frameborder="0" {src}></iframe>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            }),
-            TournamentState::Match => ("Tournament Mode", self.match_view(fields, ctx)),
-        };
-        html! {
-            <div>
-                <div class="d-flex gap-3">
-                    <button type="button" class="btn btn-primary mb-1" onclick={ctx.link().callback(|_| Msg::Toggle)} style="width: 156.58px">{toggle}</button>
-                    <button type="button" class="btn btn-danger mb-1" onclick={ctx.link().callback(|_| Msg::Reset)}>{"Reset"}</button>
-                </div>
-                {html}
-            </div>
-        }
-    }
-}
+                        crate::update_list(&list).await.unwrap();
+                    }
+                });
+            }
+            state.set(fields);
+        })
+    };
+    let toggle_state = {
+        let state = state.clone();
+        Callback::from(move |_| {
+            let mut fields = (*state).clone();
+            fields.state = match fields.state {
+                TournamentState::Tournament => TournamentState::Match,
+                TournamentState::Match => TournamentState::Tournament,
+            };
+            state.set(fields);
+        })
+    };
+    let select_view = {
+        let state = state.clone();
+        let select_ref = select_ref.clone();
+        Callback::from(move |_| {
+            let mut fields = (*state).clone();
+            fields.view_state = match select_ref
+                .cast::<HtmlSelectElement>()
+                .map(|s| s.value())
+                .as_deref()
+                .unwrap_or("Tournament View")
+            {
+                "Tournament View" => ViewState::Tournament,
+                "List View" => ViewState::List,
+                _ => unreachable!(),
+            };
+            state.set(fields);
+        })
+    };
+    let reset = {
+        let state = state.clone();
+        Callback::from(move |_| {
+            let mut fields = (*state).clone();
+            fields.bracket.data = fields.bracket.initial_data.clone();
+            for item in &mut fields.bracket.finished {
+                *item = None;
+            }
+            fields.bracket.finished_index = fields.bracket.finished.len() - 1;
+            state.set(fields);
+        })
+    };
 
-impl Tournament {
-    fn match_view(&self, fields: &TournamentFields, ctx: &Context<Self>) -> Html {
-        let winner = if let Some(winner) = fields.bracket.winner() {
-            fields.list.items.get(*winner)
-        } else {
-            None
-        };
-        let select = if let Some(winner) = winner {
+    let fields = &*state;
+    let (toggle, html) = match &fields.state {
+        TournamentState::Tournament => ("Match Mode", {
+            let winner = if let Some(winner) = fields.bracket.winner() {
+                fields.list.items.get(*winner)
+            } else {
+                None
+            };
             html! {
                 <div>
-                    <h2>{format!("Winner: {}", winner.name)}</h2>
-                    <div class="row">
-                        <div class="col-6">
-                            <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
+                    if let Some(winner) = winner {
+                        <h2>{format!("Winner: {}", winner.name)}</h2>
+                        // TODO: only show if iframe exists
+                        <div class="row">
+                            <div class="col-6">
+                                <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            }
-        } else {
-            // TODO: save last position instead of always starting from the beginning
-            let mut start_i = 0;
-            let mut step = 2;
-            let mut found = None;
-            'found: while start_i != fields.bracket.data.len() / 2 {
-                let mut i = start_i;
-                while i < fields.bracket.data.len() {
-                    if let Some(item) = &fields.bracket.data[i]
-                        && !item.disabled
-                    {
-                        let pair = fields.bracket.data[item.pair].as_ref().unwrap();
-                        if !pair.disabled {
-                            let left_callback = ctx.link().callback(Msg::Update);
-                            let on_left_select = Callback::from(move |_| left_callback.emit(i));
-                            let right_callback = ctx.link().callback(Msg::Update);
-                            let pair_i = item.pair;
-                            let on_right_select =
-                                Callback::from(move |_| right_callback.emit(pair_i));
-                            found = Some((
-                                fields.list.items[item.item].clone(),
-                                on_left_select,
-                                fields.list.items[pair.item].clone(),
-                                on_right_select,
-                            ));
-                            break 'found;
-                        }
                     }
-                    i += step;
-                }
-                start_i += step / 2;
-                step *= 2;
-            }
-            let (left, on_left_select, right, on_right_select) = found.unwrap();
-            html! {<IframeCompare {left} {on_left_select} {right} {on_right_select}/>}
-        };
-        let view = if let ViewState::Tournament = fields.view_state {
-            html! {
-                <div class="overflow-scroll">
-                {tournament_bracket_view(&fields.bracket, &fields.list.items, ctx.link().callback(Msg::Update), true)}
+                    <div class="overflow-scroll">
+                    {tournament_bracket_view(&fields.bracket, &fields.list.items, update, false)}
+                    </div>
+                    if let Some(src) = fields.list.iframe.clone() {
+                        <div class="row">
+                            <div class="col-12 col-lg-10 col-xl-8">
+                                <iframe width="100%" height="380" frameborder="0" {src}></iframe>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        } else {
-            let items = fields
-                .bracket
-                .finished
-                .iter()
-                .map(|i| {
-                    i.as_ref().map(|i| {
-                        let i = &fields.list.items[*i];
-                        (
-                            i.rank.unwrap(),
-                            Cow::from(vec![
-                                i.name.clone(),
-                                fields.previous_ranks[&i.id]
-                                    .map(|i| i.to_string())
-                                    .unwrap_or_default(),
-                                i.score.to_string(),
-                            ]),
-                        )
-                    })
-                })
-                .collect();
-            crate::base::responsive_table_view(&["Track", "Prev. Rank", "Score"], items)
-        };
+        }),
+        TournamentState::Match => (
+            "Tournament Mode",
+            match_view(fields, update, &select_ref, select_view),
+        ),
+    };
+    html! {
+        <div>
+            <div class="d-flex gap-3">
+                <button type="button" class="btn btn-primary mb-1" onclick={toggle_state} style="width: 156.58px">{toggle}</button>
+                <button type="button" class="btn btn-danger mb-1" onclick={reset}>{"Reset"}</button>
+            </div>
+            {html}
+        </div>
+    }
+}
+
+fn match_view(
+    fields: &TournamentFields,
+    update: Callback<usize>,
+    select_ref: &NodeRef,
+    select_view: Callback<Event>,
+) -> Html {
+    let winner = if let Some(winner) = fields.bracket.winner() {
+        fields.list.items.get(*winner)
+    } else {
+        None
+    };
+    let select = if let Some(winner) = winner {
         html! {
             <div>
-                {select}
-                <div class="row mt-4">
-                    <div class="col-auto">
-                        <select ref={self.select_ref.clone()} class="form-select" onchange={ctx.link().callback(|_| Msg::SelectView)}>
-                            <option selected={matches!(fields.view_state, ViewState::Tournament)}>{"Tournament View"}</option>
-                            <option selected={matches!(fields.view_state, ViewState::List)}>{"List View"}</option>
-                        </select>
+                <h2>{format!("Winner: {}", winner.name)}</h2>
+                <div class="row">
+                    <div class="col-6">
+                        <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
                     </div>
                 </div>
-                {view}
             </div>
         }
+    } else {
+        // TODO: save last position instead of always starting from the beginning
+        let mut start_i = 0;
+        let mut step = 2;
+        let mut found = None;
+        'found: while start_i != fields.bracket.data.len() / 2 {
+            let mut i = start_i;
+            while i < fields.bracket.data.len() {
+                if let Some(item) = &fields.bracket.data[i]
+                    && !item.disabled
+                {
+                    let pair = fields.bracket.data[item.pair].as_ref().unwrap();
+                    if !pair.disabled {
+                        let left_callback = update.clone();
+                        let on_left_select = Callback::from(move |_| left_callback.emit(i));
+                        let right_callback = update.clone();
+                        let pair_i = item.pair;
+                        let on_right_select = Callback::from(move |_| right_callback.emit(pair_i));
+                        found = Some((
+                            fields.list.items[item.item].clone(),
+                            on_left_select,
+                            fields.list.items[pair.item].clone(),
+                            on_right_select,
+                        ));
+                        break 'found;
+                    }
+                }
+                i += step;
+            }
+            start_i += step / 2;
+            step *= 2;
+        }
+        let (left, on_left_select, right, on_right_select) = found.unwrap();
+        html! {<IframeCompare {left} {on_left_select} {right} {on_right_select}/>}
+    };
+    let view = if let ViewState::Tournament = fields.view_state {
+        html! {
+            <div class="overflow-scroll">
+            {tournament_bracket_view(&fields.bracket, &fields.list.items, update, true)}
+            </div>
+        }
+    } else {
+        let items = fields
+            .bracket
+            .finished
+            .iter()
+            .map(|i| {
+                i.as_ref().map(|i| {
+                    let i = &fields.list.items[*i];
+                    (
+                        i.rank.unwrap(),
+                        Cow::from(vec![
+                            i.name.clone(),
+                            fields.previous_ranks[&i.id]
+                                .map(|i| i.to_string())
+                                .unwrap_or_default(),
+                            i.score.to_string(),
+                        ]),
+                    )
+                })
+            })
+            .collect();
+        crate::base::responsive_table_view(&["Track", "Prev. Rank", "Score"], items)
+    };
+    html! {
+        <div>
+            {select}
+            <div class="row mt-4">
+                <div class="col-auto">
+                    <select ref={select_ref.clone()} class="form-select" onchange={select_view}>
+                        <option selected={matches!(fields.view_state, ViewState::Tournament)}>{"Tournament View"}</option>
+                        <option selected={matches!(fields.view_state, ViewState::List)}>{"List View"}</option>
+                    </select>
+                </div>
+            </div>
+            {view}
+        </div>
     }
 }
 
