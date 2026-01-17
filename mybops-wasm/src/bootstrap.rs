@@ -40,10 +40,10 @@ pub fn Accordion(
 
 #[component]
 pub fn Alert(
-    result: ReadSignal<Result<String, String>>,
+    result: Result<String, String>,
     hide: impl FnMut(MouseEvent) + 'static,
 ) -> impl IntoView {
-    let (alert_class, body) = match result.get() {
+    let (alert_class, body) = match result {
         Ok(msg) => ("alert alert-success alert-dismissible", msg),
         Err(msg) => ("alert alert-danger alert-dismissible", msg),
     };
@@ -70,7 +70,7 @@ pub fn Collapse(children: Children, collapsed: ReadSignal<bool>) -> impl IntoVie
 
 #[component]
 pub fn Modal(
-    header: &'static str,
+    header: String,
     children: Children,
     hide: impl FnMut(MouseEvent) + 'static + Clone,
 ) -> impl IntoView {

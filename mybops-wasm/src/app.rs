@@ -266,7 +266,7 @@ fn AppImpl() -> impl IntoView {
               let origin = location().origin().unwrap();
               Some(
                 view! {
-                  <Modal header="Log in" hide=move |_| set_login.set(false)>
+                  <Modal header="Log in".to_owned() hide=move |_| set_login.set(false)>
                     <div class="modal-body d-grid gap-2">
                       <a
                         class="btn btn-success"

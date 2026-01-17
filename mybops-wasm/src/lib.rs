@@ -20,7 +20,7 @@ mod dataframe;
 // mod edit;
 // mod home;
 // mod integrations;
-// mod list;
+mod list;
 mod nfl;
 // mod plot;
 // mod random;
