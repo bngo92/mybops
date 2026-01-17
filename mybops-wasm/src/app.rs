@@ -1,33 +1,28 @@
 use crate::{
-    Content, ListsRoute, Route,
-    base::Input,
+    Content,
+    ListsRoute,
+    // Route,
+    // base::Input,
     bootstrap::Modal,
-    dataframe::DataFrame,
-    docs,
-    edit::Edit,
-    home::Home,
-    integrations::spotify::SpotifyIntegration,
-    list,
-    list::item::{ItemMode, ListItems},
+    // dataframe::DataFrame,
+    // docs,
+    // edit::Edit,
+    // home::Home,
+    // integrations::spotify::SpotifyIntegration,
+    // list,
+    // list::item::{ItemMode, ListItems},
     nfl::Nfl,
-    plot::DataView,
-    random::{RandomMatches, RandomRounds},
-    search::Search,
-    settings::Settings,
-    tournament::{RandomTournamentLoader, TournamentLoader},
+    // plot::DataView,
+    // random::{RandomMatches, RandomRounds},
+    // search::Search,
+    // settings::Settings,
+    // tournament::{RandomTournamentLoader, TournamentLoader},
 };
+use leptos::{either::Either, prelude::*};
+use leptos_router::{components::*, path};
 use mybops::{List, ListMode, User};
 use std::{borrow::Borrow, collections::HashMap, rc::Rc};
-use web_sys::{HtmlSelectElement, MouseEvent};
-use yew::{
-    Callback, Component, Context, Html, HtmlResult, NodeRef, Properties, Suspense,
-    function_component, html, suspense::use_future, use_node_ref, use_state,
-};
-use yew_router::{
-    BrowserRouter, Switch,
-    hooks::use_location,
-    prelude::{Link, Redirect},
-};
+use web_sys::MouseEvent;
 
 type RouteQuery = &'static [(&'static str, &'static str)];
 
@@ -41,7 +36,7 @@ pub enum ListPage {
     RandomTournament,
 }
 
-fn switch(
+/* fn switch(
     routes: Route,
     user: Rc<Option<User>>,
     list_dropdown: bool,
@@ -71,53 +66,34 @@ fn switch(
         Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
         Route::Nfl => html! { <Nfl/> },
     }
-}
+} */
 
-#[function_component]
-pub fn App() -> Html {
-    html! {
-        <Suspense>
-            <AppImpl/>
-        </Suspense>
+#[component]
+pub fn App() -> impl IntoView {
+    view! {
+      <Transition>
+        <Router>
+          <AppImpl />
+        </Router>
+      </Transition>
     }
 }
 
-#[function_component]
-fn AppImpl() -> HtmlResult {
-    let user = Rc::new((*use_future(|| async move { crate::get_user().await.ok() })?).clone());
-    let sidebar = use_state(|| false);
-    let login = use_state(|| false);
-    let dropdown = use_state(|| false);
-    let list_dropdown = use_state(|| false);
-    let integrations_dropdown = use_state(|| false);
+#[component]
+fn AppImpl() -> impl IntoView {
+    let user = LocalResource::new(|| async { crate::get_user().await.ok() });
+    let (sidebar, set_sidebar) = signal(false);
+    let (login, set_login) = signal(false);
+    let (dropdown, set_dropdown) = signal(false);
+    let (list_dropdown, set_list_dropdown) = signal(false);
+    let (integrations_dropdown, set_integrations_dropdown) = signal(false);
 
-    let show_sidebar = {
-        let sidebar = sidebar.clone();
-        Callback::from(move |_| sidebar.set(true))
-    };
-    let hide_sidebar = {
-        let sidebar = sidebar.clone();
-        Callback::from(move |_| sidebar.set(false))
-    };
-    let show_login = {
-        let login = login.clone();
-        Callback::from(move |_| login.set(true))
-    };
-    let hide_login = {
-        let login = login.clone();
-        Callback::from(move |_| login.set(false))
-    };
     // We need to check which dropdown is clicked instead of relying on stop_propagation
     // TODO: fix multiple open dropdowns
-    let reset_dropdown = {
-        let dropdown = dropdown.clone();
-        let list_dropdown = list_dropdown.clone();
-        let integrations_dropdown = integrations_dropdown.clone();
-        Callback::from(move |_| {
-            dropdown.set(false);
-            list_dropdown.set(false);
-            integrations_dropdown.set(false);
-        })
+    let reset_dropdown = move |_| {
+        set_dropdown.set(false);
+        set_list_dropdown.set(false);
+        set_integrations_dropdown.set(false);
     };
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
@@ -132,124 +108,195 @@ fn AppImpl() -> HtmlResult {
     }
     Msg::Reload => true,*/
 
-    let window = crate::window();
-    let location = window.location();
     //let onclick = ctx.link().callback(|_| Msg::Logout);
     // TODO: make anchors active if active
     let search = /*if location.pathname().unwrap() == "/search" {
-            "nav-link active"
-        } else */{
-            "nav-link text-white"
-        };
-    let (toggle_class, menu_class) = dropdown_class(*dropdown);
-    let (int_toggle_class, int_menu_class) = dropdown_class(*integrations_dropdown);
-    let toggle_dropdown = Callback::from(move |e: MouseEvent| {
+        "nav-link active"
+    } else */{
+        "nav-link text-white"
+    };
+    let toggle_dropdown = move |e: MouseEvent| {
         // Prevent reset_dropdown from triggering
         e.stop_propagation();
-        dropdown.set(!*dropdown);
-    });
-    let int_dropdown = Callback::from(move |e: MouseEvent| {
-        e.stop_propagation();
-        integrations_dropdown.set(!*integrations_dropdown);
-    });
-    let sidebar_class = if *sidebar {
-        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
-    } else {
-        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
+        set_dropdown.set(!dropdown.get());
     };
-    let render = {
-        let user = Rc::clone(&user);
-        let show_list_dropdown = {
-            let list_dropdown = list_dropdown.clone();
-            Rc::new(Callback::from(move |e: MouseEvent| {
-                e.stop_propagation();
-                list_dropdown.set(!*list_dropdown);
-            }))
-        };
-        move |routes| {
-            switch(
-                routes,
-                Rc::clone(&user),
-                *list_dropdown,
-                Rc::clone(&show_list_dropdown),
-            )
+    let int_dropdown = move |e: MouseEvent| {
+        e.stop_propagation();
+        set_integrations_dropdown.set(!integrations_dropdown.get());
+    };
+    let sidebar_class = move || {
+        if sidebar.get() {
+            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
+        } else {
+            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
         }
     };
-    Ok(html! {
-      <div onclick={reset_dropdown}>
-        <BrowserRouter>
-          <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
-            <div class="container-lg d-flex justify-content-start gap-3">
-              <button type="button" class="border-0" style="background-color: transparent; color: rgba(255,255,255,0.85)" onclick={show_sidebar}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-                </svg>
-              </button>
-              <Link<Route> classes="navbar-brand" to={Route::Home}>{"mybops"}</Link<Route>>
-            </div>
-          </nav>
-          <div class="d-flex vh-100 min-vh-100 align-items-stretch">
-            <div class={sidebar_class} style="width: 200px;">
-              <div class="h-100 offcanvas-body d-flex flex-column">
-                <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
-                  <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"mybops"}</Link<Route>>
-                  <button type="button" class="btn-close d-sm-none" onclick={hide_sidebar}></button>
-                </div>
-                <hr/>
-                <ul class="nav nav-pills flex-column mb-auto">
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::ListsRoot}>{"Lists"}</Link<Route>>
-                  </li>
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::Search}>{"Query"}</Link<Route>>
-                  </li>
-                  <li class="nav-item dropdown">
-                    <a class={int_toggle_class} href="#" onclick={int_dropdown}>{"Integrations"}</a>
-                    <ul class={int_menu_class}>
-                      <li><Link<Route> classes="dropdown-item" to={Route::Spotify}>{"Spotify"}</Link<Route>></li>
-                    </ul>
-                  </li>
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::Docs}>{"Docs"}</Link<Route>>
-                  </li>
-                </ul>
-                <hr/>
-                <div>
-                  <ul class="nav nav-pills flex-column">
-                    if let Some(user) = &*user {
-                      <li class="nav-item dropdown">
-                        <a class={toggle_class} href="#" onclick={toggle_dropdown}>{&user.user_id}</a>
-                        <ul class={menu_class} style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)">
-                          <li><Link<Route> classes="dropdown-item" to={Route::Settings}>{"Settings"}</Link<Route>></li>
-                          <li><a class="dropdown-item" href="/api/logout">{"Log out"}</a></li>
-                        </ul>
-                      </li>
-                    } else {
-                      <li class="nav-item">
-                        <a class={search} href="#" onclick={show_login}>{"Log in"}</a>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <Suspense>
-              <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
-                <Switch<Route> {render} />
-              </div>
-            </Suspense>
+    view! {
+      <div on:click=reset_dropdown>
+        <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
+          <div class="container-lg d-flex justify-content-start gap-3">
+            <button
+              type="button"
+              class="border-0"
+              style="background-color: transparent; color: rgba(255,255,255,0.85)"
+              on:click=move |_| set_sidebar.set(true)
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-list"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"
+                />
+              </svg>
+            </button>
+            <a class="navbar-brand" href="/">
+              "mybops"
+            </a>
           </div>
-          if *login {
-            <Modal header={"Log in"} hide={hide_login}>
-              <div class="modal-body d-grid gap-2">
-                <a class="btn btn-success" href={format!("https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private", location.origin().unwrap().as_str())}>{"Log in with Spotify"}</a>
-                <a class="btn btn-success" href={format!("https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email", location.origin().unwrap().as_str())}>{"Log in with Google"}</a>
+        </nav>
+        <div class="d-flex vh-100 min-vh-100 align-items-stretch">
+          <div class=sidebar_class style="width: 200px;">
+            <div class="h-100 offcanvas-body d-flex flex-column">
+              <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
+                <a class="text-white text-decoration-none fs-5" href="/">
+                  "mybops"
+                </a>
+                <button
+                  type="button"
+                  class="btn-close d-sm-none"
+                  on:click=move |_| set_sidebar.set(false)
+                ></button>
               </div>
-            </Modal>
-          }
-        </BrowserRouter>
+              <hr />
+              <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                  <a class=search href="/lists">
+                    "Lists"
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class=search href="/search">
+                    "Query"
+                  </a>
+                </li>
+                <li class="nav-item dropdown">
+                  <a
+                    class=dropdown_class(integrations_dropdown.get()).0
+                    href="#"
+                    on:click=int_dropdown
+                  >
+                    "Integrations"
+                  </a>
+                  <ul class=move || dropdown_class(integrations_dropdown.get()).1>
+                    <li>
+                      <a class="dropdown-item" href="/integrations/spotify">
+                        "Spotify"
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a class=search href="/docs">
+                    "Docs"
+                  </a>
+                </li>
+              </ul>
+              <hr />
+              <div>
+                <ul class="nav nav-pills flex-column">
+                  {move || {
+                    if let Some(user) = user.get().flatten() {
+                      Either::Left(
+                        view! {
+                          <li class="nav-item dropdown">
+                            <a
+                              class=move || dropdown_class(dropdown.get()).0
+                              href="#"
+                              on:click=toggle_dropdown
+                            >
+                              {user.user_id}
+                            </a>
+                            <ul
+                              class=move || dropdown_class(dropdown.get()).1
+                              style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)"
+                            >
+                              <li>
+                                <a class="dropdown-item" href="/settings">
+                                  "Settings"
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item" href="/api/logout" rel="external">
+                                  "Log out"
+                                </a>
+                              </li>
+                            </ul>
+                          </li>
+                        },
+                      )
+                    } else {
+                      Either::Right(
+                        view! {
+                          <li class="nav-item">
+                            <a class=search href="#" on:click=move |_| set_login.set(true)>
+                              "Log in"
+                            </a>
+                          </li>
+                        },
+                      )
+                    }
+                  }}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+            <Routes fallback=crate::not_found>
+              <Route path=path!("/nfl") view=Nfl />
+            </Routes>
+          </div>
+          {move || {
+            if login.get() {
+              let origin = location().origin().unwrap();
+              Some(
+                view! {
+                  <Modal header="Log in" hide=move |_| set_login.set(false)>
+                    <div class="modal-body d-grid gap-2">
+                      <a
+                        class="btn btn-success"
+                        href=format!(
+                          "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
+                          origin.as_str(),
+                        )
+                      >
+                        "Log in with Spotify"
+                      </a>
+                      <a
+                        class="btn btn-success"
+                        href=format!(
+                          "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                          origin.as_str(),
+                        )
+                      >
+                        "Log in with Google"
+                      </a>
+                    </div>
+                  </Modal>
+                },
+              )
+            } else {
+              None
+            }
+          }}
+        </div>
       </div>
-    })
+    }
 }
 
 fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
@@ -265,7 +312,7 @@ fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
     }
 }
 
-enum ListViewMsg {
+/* enum ListViewMsg {
     Success(Option<DataFrame>),
     Failed(String),
     Select,
@@ -582,4 +629,4 @@ pub fn ListComponent(
           </>
         }}/>
     })
-}
+} */

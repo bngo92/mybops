@@ -2,7 +2,8 @@
 use crate::{app::App, dataframe::DataFrame};
 use arrow::array::AsArray;
 use js_sys::Uint8Array;
-use mybops::{Id, Items, List, ListMode, Lists, Spotify, User};
+use leptos::prelude::*;
+use mybops::{Id, Items, List, Lists, Spotify, User};
 use regex::Regex;
 use std::{collections::HashSet, io::Cursor};
 use wasm_bindgen::{JsCast, prelude::*};
@@ -12,20 +13,20 @@ use yew::{Callback, Html, Properties, function_component, html, use_state};
 use yew_router::Routable;
 
 mod app;
-mod base;
+// mod base;
 mod bootstrap;
 mod dataframe;
-mod docs;
-mod edit;
-mod home;
-mod integrations;
-mod list;
+// mod docs;
+// mod edit;
+// mod home;
+// mod integrations;
+// mod list;
 mod nfl;
-mod plot;
-mod random;
-mod search;
-mod settings;
-pub mod tournament;
+// mod plot;
+// mod random;
+// mod search;
+// mod settings;
+// pub mod tournament;
 
 #[derive(Clone, Routable, PartialEq)]
 enum Route {
@@ -102,18 +103,14 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
     };
 }
 
-fn nav_content(nav: Html, content: Html) -> Html {
-    html! {
-        <>
-            <nav class="navbar navbar-expand navbar-bg py-2">
-                <div class="container-fluid">
-                    {nav}
-                </div>
-            </nav>
-            <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
-                {content}
-            </div>
-        </>
+fn nav_content(nav: AnyView, content: AnyView) -> impl IntoView {
+    view! {
+      <>
+        <nav class="navbar navbar-expand navbar-bg py-2">
+          <div class="container-fluid">{nav}</div>
+        </nav>
+        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
+      </>
     }
 }
 
@@ -177,7 +174,8 @@ fn Content(
 // Called by our JS entry point to run the example
 #[wasm_bindgen(start)]
 pub async fn run() -> Result<(), JsValue> {
-    yew::Renderer::<App>::new().render();
+    console_error_panic_hook::set_once();
+    leptos::mount::mount_to_body(|| view! { <App /> });
     Ok(())
 }
 
@@ -360,10 +358,8 @@ fn user_list(list: &List, user: &Option<User>) -> bool {
         || (user.is_none() && list.user_id == "demo")
 }
 
-fn not_found() -> Html {
-    html! {
-        <h1>{"Not found"}</h1>
-    }
+fn not_found() -> impl IntoView {
+    view! { <h1>"Not found"</h1> }
 }
 
 fn window() -> Window {
