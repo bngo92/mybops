@@ -20,11 +20,22 @@ struct ListItem {
     note_ref: NodeRef<Input>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 struct State {
     rating: RwSignal<Option<u64>>,
     hidden: bool,
     note: String,
+}
+
+impl Clone for State {
+    fn clone(&self) -> Self {
+        Self {
+            // RwSignal clones shallowly
+            rating: RwSignal::new(self.rating.get()),
+            hidden: self.hidden,
+            note: self.note.clone(),
+        }
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -336,7 +347,7 @@ pub fn ListItems(
             "max-height: 800px; grid-template-columns: subgrid; grid-column: span 2",
         ),
     };
-    let html = match mode.get() {
+    let html = move || match mode.get() {
         ItemMode::View => items
             .read()
             .iter()

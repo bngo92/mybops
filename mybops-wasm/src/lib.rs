@@ -51,15 +51,15 @@ enum Route {
 #[derive(Clone, Routable, PartialEq)]
 pub enum ListsRoute {
     #[at("/lists/:id")]
-    View { id: String },
+    View,
     #[at("/lists/:id/items")]
-    List { id: String },
+    List,
     #[at("/lists/:id/edit")]
-    Edit { id: String },
+    Edit,
     #[at("/lists/:id/match")]
-    Match { id: String },
+    Match,
     #[at("/lists/:id/tournament")]
-    Tournament { id: String },
+    Tournament,
 }
 
 #[derive(Eq, PartialEq, Properties)]

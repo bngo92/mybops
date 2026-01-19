@@ -270,6 +270,19 @@ fn AppImpl() -> impl IntoView {
                     }
                   }
                 />
+                <Route
+                  path=path!(":id/items")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::List
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
               </ParentRoute>
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
@@ -482,9 +495,9 @@ pub fn ListComponent(
         let component = if crate::user_list(&list, &*user.read()) {
             match view {
                 ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
-                // ListPage::List => {
-                //     view! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
-                // }
+                ListPage::List => {
+                    view! { <ListItems user=user list=list_signal mode=mode/> }.into_any()
+                }
                 // ListPage::Edit => {
                 //     view! { <Edit logged_in={user.is_some()} list={*list.clone()}/> }
                 // }
