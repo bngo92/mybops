@@ -23,7 +23,7 @@ mod edit;
 mod list;
 mod nfl;
 mod plot;
-// mod random;
+mod random;
 // mod search;
 // mod settings;
 // pub mod tournament;

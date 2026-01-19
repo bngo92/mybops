@@ -6,6 +6,7 @@ use crate::{
     list::item::{ItemMode, ListItems},
     nfl::Nfl,
     plot::{DataView, DataViewRender},
+    random::{RandomMatches, RandomRounds},
 };
 use leptos::{either::Either, html, prelude::*};
 use leptos_router::{
@@ -297,6 +298,19 @@ fn AppImpl() -> impl IntoView {
                     }
                   }
                 />
+                <Route
+                  path=path!(":id/match")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Match
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
               </ParentRoute>
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
@@ -516,8 +530,10 @@ pub fn ListComponent(
                     view! { <Edit logged_in=move || user.read().is_some() list=list_signal /> }
                         .into_any()
                 }
-                // ListPage::RandomMatches => view! { <RandomMatches id={list.id.clone()}/> },
-                // ListPage::RandomRounds => view! { <RandomRounds id={list.id.clone()}/> },
+                ListPage::RandomMatches => {
+                    view! { <RandomMatches id=list.id.clone() /> }.into_any()
+                }
+                ListPage::RandomRounds => view! { <RandomRounds id=list.id.clone() /> }.into_any(),
                 // ListPage::RandomTournament => {
                 //     view! { <RandomTournamentLoader list={*list.clone()}/> }
                 // }
@@ -554,46 +570,48 @@ pub fn ListComponent(
         };
         // TODO: handle GROUP BY queries
         let show_dropdown = show_dropdown.clone();
-        let dropdown_html = move || {
-            if let ListMode::View(_) = list_signal().mode {
-                None
-            } else {
-                Some(view! {
-                  <li class="nav-item dropdown">
-                    <a class=toggle_class href="#" on:click=show_dropdown.clone()>
-                      {toggle}
-                    </a>
-                    <ul class=menu_class>
-                      <li>
-                        <a>
-                          classes="dropdown-item"href=format!("/lists/{}/tournament", list.id)>
-                          "Tournament"
+        let dropdown_html = {
+            let list = list.clone();
+            move || {
+                if let ListMode::View(_) = list_signal().mode {
+                    None
+                } else {
+                    Some(view! {
+                      <li class="nav-item dropdown">
+                        <a class=toggle_class href="#" on:click=show_dropdown.clone()>
+                          {toggle}
                         </a>
-                        >
+                        <ul class=menu_class>
+                          <li>
+                            <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                              "Tournament"
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="dropdown-item"
+                              href=format!("/lists/{}/tournament?mode=random", list.id)
+                            >
+                              "Random Tournament"
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                              "Random Matches"
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="dropdown-item"
+                              href=format!("/lists/{}/match?mode=rounds", list.id)
+                            >
+                              "Random Rounds"
+                            </a>
+                          </li>
+                        </ul>
                       </li>
-                      <li>
-                        <a>
-                          classes="dropdown-item"
-                          href=format!("/lists/{}/tournament?mode=random", list.id)>
-                          "Random Tournament"
-                        </a>
-                      </li>
-                      <li>
-                        <a>
-                          classes="dropdown-item"href=format!("/lists/{}/tournament", list.id)>
-                          "Random Matches"
-                        </a>
-                        >
-                      </li>
-                      <li>
-                        <a>
-                          classes="dropdown-item"
-                          href=format!("/lists/{}/tournament?mode=rounds", list.id)>"Random Rounds"
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                })
+                    })
+                }
             }
         };
         let user = crate::user_list(&list, &*user.read());
