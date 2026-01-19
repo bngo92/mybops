@@ -17,7 +17,7 @@ mod base;
 mod bootstrap;
 mod dataframe;
 // mod docs;
-// mod edit;
+mod edit;
 // mod home;
 // mod integrations;
 mod list;

@@ -2,6 +2,7 @@ use crate::{
     Content, ListsRoute,
     base::Input,
     bootstrap::Modal,
+    edit::Edit,
     list::item::{ItemMode, ListItems},
     nfl::Nfl,
     plot::{DataView, DataViewRender},
@@ -283,6 +284,19 @@ fn AppImpl() -> impl IntoView {
                     }
                   }
                 />
+                <Route
+                  path=path!(":id/edit")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Edit
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
               </ParentRoute>
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
@@ -496,11 +510,12 @@ pub fn ListComponent(
             match view {
                 ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
                 ListPage::List => {
-                    view! { <ListItems user=user list=list_signal mode=mode/> }.into_any()
+                    view! { <ListItems user=user list=list_signal mode=mode /> }.into_any()
                 }
-                // ListPage::Edit => {
-                //     view! { <Edit logged_in={user.is_some()} list={*list.clone()}/> }
-                // }
+                ListPage::Edit => {
+                    view! { <Edit logged_in=move || user.read().is_some() list=list_signal /> }
+                        .into_any()
+                }
                 // ListPage::RandomMatches => view! { <RandomMatches id={list.id.clone()}/> },
                 // ListPage::RandomRounds => view! { <RandomRounds id={list.id.clone()}/> },
                 // ListPage::RandomTournament => {
