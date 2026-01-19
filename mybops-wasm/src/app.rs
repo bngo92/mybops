@@ -1,28 +1,21 @@
 use crate::{
-    Content,
-    ListsRoute,
-    // Route,
-    // base::Input,
+    Content, ListsRoute,
+    base::Input,
     bootstrap::Modal,
-    // dataframe::DataFrame,
-    // docs,
-    // edit::Edit,
-    // home::Home,
-    // integrations::spotify::SpotifyIntegration,
-    // list,
-    // list::item::{ItemMode, ListItems},
+    list::item::{ItemMode, ListItems},
     nfl::Nfl,
-    // plot::DataView,
-    // random::{RandomMatches, RandomRounds},
-    // search::Search,
-    // settings::Settings,
-    // tournament::{RandomTournamentLoader, TournamentLoader},
+    plot::{DataView, DataViewRender},
 };
-use leptos::{either::Either, prelude::*};
-use leptos_router::{components::*, path};
+use leptos::{either::Either, html, prelude::*};
+use leptos_router::{
+    components::*,
+    hooks::{use_params, use_query_map},
+    params::Params,
+    path,
+};
 use mybops::{List, ListMode, User};
 use std::{borrow::Borrow, collections::HashMap, rc::Rc};
-use web_sys::MouseEvent;
+use web_sys::{HtmlSelectElement, MouseEvent};
 
 type RouteQuery = &'static [(&'static str, &'static str)];
 
@@ -90,10 +83,14 @@ fn AppImpl() -> impl IntoView {
 
     // We need to check which dropdown is clicked instead of relying on stop_propagation
     // TODO: fix multiple open dropdowns
-    let reset_dropdown = move |_| {
-        set_dropdown.set(false);
-        set_list_dropdown.set(false);
-        set_integrations_dropdown.set(false);
+    // let reset_dropdown = move |_| {
+    //     set_dropdown.set(false);
+    //     set_list_dropdown.set(false);
+    //     set_integrations_dropdown.set(false);
+    // };
+    let show_list_dropdown = move |e: MouseEvent| {
+        e.stop_propagation();
+        set_list_dropdown.set(!list_dropdown.get());
     };
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
@@ -132,7 +129,8 @@ fn AppImpl() -> impl IntoView {
         }
     };
     view! {
-      <div on:click=reset_dropdown>
+      // <div on:click=reset_dropdown>
+      <div>
         <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
           <div class="container-lg d-flex justify-content-start gap-3">
             <button
@@ -258,6 +256,21 @@ fn AppImpl() -> impl IntoView {
           </div>
           <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
             <Routes fallback=crate::not_found>
+              <ParentRoute path=path!("/lists") view=Outlet>
+                <Route
+                  path=path!(":id")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::View
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+              </ParentRoute>
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
           </div>
@@ -312,123 +325,83 @@ fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
     }
 }
 
-/* enum ListViewMsg {
-    Success(Option<DataFrame>),
-    Failed(String),
-    Select,
-    Query,
-}
+#[component]
+fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
+    let (view, set_view) = signal(DataView::Table);
+    let (query, set_query) = signal(None);
+    let (error, set_error) = signal(None);
+    let query_ref = NodeRef::<html::Input>::new();
 
-#[derive(PartialEq, Properties)]
-pub struct ListViewProps {
-    list: List,
-}
-
-struct ListView {
-    data: Option<DataFrame>,
-    select_ref: NodeRef,
-    view: DataView,
-    query_ref: NodeRef,
-    error: Option<String>,
-}
-
-impl Component for ListView {
-    type Message = ListViewMsg;
-    type Properties = ListViewProps;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        let list = ctx.props().list.clone();
-        ctx.link().send_future(async move {
-            match crate::query_list(&list, None).await {
-                Ok(data) => ListViewMsg::Success(data),
-                Err(e) => ListViewMsg::Failed(e.as_string().unwrap()),
-            }
-        });
-        Self {
-            data: None,
-            select_ref: NodeRef::default(),
-            view: DataView::Table,
-            query_ref: NodeRef::default(),
-            error: None,
-        }
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            ListViewMsg::Success(data) => {
-                let Some(data) = data else {
-                    return false;
-                };
-                self.data = {
-                    let mut data = data.clone();
+    let data = LocalResource::new(move || {
+        let list = list.clone();
+        async move {
+            match crate::query_list(&list.read(), query.get()).await {
+                Ok(None) => None,
+                Ok(Some(mut data)) => {
+                    set_error.set(None);
                     data.drop_in_place("id");
                     Some(data)
-                };
-                self.error = None;
-            }
-            ListViewMsg::Failed(e) => {
-                self.error = Some(e);
-            }
-            ListViewMsg::Select => {
-                let view = self.select_ref.cast::<HtmlSelectElement>().unwrap().value();
-                self.view = match &*view {
-                    "Table" => DataView::Table,
-                    "Column Graph" => DataView::ColumnGraph,
-                    "Line Graph" => DataView::LineGraph,
-                    "Scatter Plot" => DataView::ScatterPlot,
-                    "Cumulative Line Graph" => DataView::CumLineGraph,
-                    "CSV" => DataView::Csv,
-                    _ => unreachable!(),
-                };
-            }
-            ListViewMsg::Query => {
-                let query = self.query_ref.cast::<HtmlSelectElement>().unwrap().value();
-                let list = ctx.props().list.clone();
-                ctx.link().send_future(async move {
-                    match crate::query_list(&list, Some(query)).await {
-                        Ok(data) => ListViewMsg::Success(data),
-                        Err(e) => ListViewMsg::Failed(e.as_string().unwrap()),
-                    }
-                });
-            }
-        }
-        if let Some(data) = &self.data
-            && let Err(e) = self.view.draw(data)
-        {
-            self.error = Some(e.to_string());
-        }
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let onchange = ctx.link().callback(|_| ListViewMsg::Select);
-        let query = ctx.link().callback(|_| ListViewMsg::Query);
-        html! {
-            <div class="row">
-                <div class="col-auto">
-                    <select ref={self.select_ref.clone()} class="form-select mb-3" {onchange}>
-                        <option selected=true>{"Table"}</option>
-                        <option>{"Column Graph"}</option>
-                        <option>{"Line Graph"}</option>
-                        <option>{"Scatter Plot"}</option>
-                        <option>{"Cumulative Line Graph"}</option>
-                        <option>{"CSV"}</option>
-                    </select>
-                </div>
-                <Input input_ref={self.query_ref.clone()} onclick={query.clone()} error={self.error.clone()} disabled={matches!(ctx.props().list.mode, ListMode::View(_))}/>
-                if let Some(data) = &self.data {
-                    {self.view.render(data)}
                 }
-            </div>
+                Err(e) => {
+                    set_error.set(e.as_string());
+                    None
+                }
+            }
         }
-    }
+    });
 
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        if first_render || matches!(ctx.props().list.mode, ListMode::View(_)) {
-            let query = self.query_ref.cast::<HtmlSelectElement>().unwrap();
-            query.set_value(&ctx.props().list.query);
-        }
+    view! {
+      <div class="row">
+        <div class="col-auto">
+          <select
+            class="form-select mb-3"
+            on:change:target=move |ev| {
+              let view = match ev.target().value().as_str() {
+                "Table" => DataView::Table,
+                "Column Graph" => DataView::ColumnGraph,
+                "Line Graph" => DataView::LineGraph,
+                "Scatter Plot" => DataView::ScatterPlot,
+                "Cumulative Line Graph" => DataView::CumLineGraph,
+                "CSV" => DataView::Csv,
+                _ => unreachable!(),
+              };
+              set_view.set(view)
+            }
+          >
+            <option selected=true>"Table"</option>
+            <option>"Column Graph"</option>
+            <option>"Line Graph"</option>
+            <option>"Scatter Plot"</option>
+            <option>"Cumulative Line Graph"</option>
+            <option>"CSV"</option>
+          </select>
+        </div>
+        <Input
+          input_ref=query_ref
+          value=if matches!(list.read().mode, ListMode::View(_)) {
+            Some(list.get().query)
+          } else {
+            None
+          }
+          onclick=move |_| set_query.set(query_ref.get().map(|query| query.value()))
+          error=error
+          disabled=matches!(list.read().mode, ListMode::View(_))
+        />
+        {move || {
+          data
+            .get()
+            .flatten()
+            .map(|data| {
+              view! { <DataViewRender view=view df=move || data.clone() set_error=set_error /> }
+            })
+        }}
+      </div>
     }
+}
+
+#[derive(Params, PartialEq)]
+struct ListParams {
+    id: Option<String>,
 }
 
 enum ListState {
@@ -436,197 +409,242 @@ enum ListState {
     NotFound,
 }
 
-#[derive(PartialEq, Properties)]
-pub struct ListProps {
-    pub view: ListsRoute,
-    pub user: Rc<Option<User>>,
-    pub dropdown: bool,
-    pub show_dropdown: Rc<Callback<MouseEvent>>,
-}
-
-#[function_component]
+#[component]
 pub fn ListComponent(
-    ListProps {
-        view,
-        user,
-        dropdown,
-        show_dropdown,
-    }: &ListProps,
-) -> HtmlResult {
-    let id = match view {
-        ListsRoute::List { id }
-        | ListsRoute::View { id }
-        | ListsRoute::Edit { id }
-        | ListsRoute::Match { id }
-        | ListsRoute::Tournament { id } => id.clone(),
+    view: ListsRoute,
+    #[prop(into)] user: Signal<Option<User>>,
+    dropdown: ReadSignal<bool>,
+    show_dropdown: impl FnMut(MouseEvent) + 'static + Send + Clone,
+) -> impl IntoView {
+    let params = use_params::<ListParams>();
+    let id = move || {
+        params
+            .read()
+            .as_ref()
+            .ok()
+            .and_then(|params| params.id.clone())
+            .unwrap_or_default()
     };
-    let select_ref = use_node_ref();
-    let (ref state, ref mode) = *use_future(|| async move {
-        if let Some(list) = crate::fetch_list(&id).await.unwrap() {
-            let mode = if let ListMode::View(_) = list.mode {
+    let (mode, set_mode) = signal(ItemMode::View);
+    let state = LocalResource::new(move || async move {
+        if let Some(list) = crate::fetch_list(&id()).await.unwrap() {
+            set_mode.set(if let ListMode::View(_) = &list.mode {
                 ItemMode::View
             } else {
                 ItemMode::Update
-            };
-            (ListState::Success(Box::new(list)), mode)
+            });
+            ListState::Success(Box::new(list))
         } else {
-            (ListState::NotFound, ItemMode::View)
+            ListState::NotFound
         }
-    })?;
-    let mode = use_state(|| mode.clone());
-    let location = use_location();
-    let select_view = {
-        let select_ref = select_ref.clone();
-        let mode = mode.clone();
-        Callback::from(move |_| {
-            mode.set(
-                match select_ref
-                    .cast::<HtmlSelectElement>()
-                    .map(|s| s.value())
-                    .as_deref()
-                    .unwrap_or("Update")
-                {
-                    "Update" => ItemMode::Update,
-                    "Delete" => ItemMode::Delete,
-                    _ => unreachable!(),
-                },
-            )
-        })
-    };
+    });
 
-    let list = match state {
-        ListState::NotFound => return Ok(crate::not_found()),
-        ListState::Success(list) => list,
-    };
-    let query = location
-        .unwrap()
-        .query::<HashMap<String, String>>()
-        .unwrap_or_default();
-    let view = match view.clone() {
-        ListsRoute::View { .. } => ListPage::View,
-        ListsRoute::List { .. } => ListPage::List,
-        ListsRoute::Edit { .. } => ListPage::Edit,
-        ListsRoute::Tournament { .. } => {
-            if query.get("mode").map(String::as_str) == Some("random") {
-                ListPage::RandomTournament
-            } else {
-                ListPage::Tournament
+    let show_dropdown = show_dropdown.clone();
+    move || {
+        let list = match &*state.read() {
+            None => return None,
+            Some(ListState::NotFound) => return None,
+            Some(ListState::Success(list)) => list.clone(),
+        };
+        let list_signal = move || match &*state.read() {
+            None => unreachable!(),
+            Some(ListState::NotFound) => unreachable!(),
+            Some(ListState::Success(list)) => *list.clone(),
+        };
+        let query = use_query_map();
+        let view = match view {
+            ListsRoute::View { .. } => ListPage::View,
+            ListsRoute::List { .. } => ListPage::List,
+            ListsRoute::Edit { .. } => ListPage::Edit,
+            ListsRoute::Tournament { .. } => {
+                if query.read().get("mode").as_deref() == Some("random") {
+                    ListPage::RandomTournament
+                } else {
+                    ListPage::Tournament
+                }
             }
-        }
-        ListsRoute::Match { .. } => {
-            if query.get("mode").map(String::as_str) == Some("rounds") {
-                ListPage::RandomRounds
-            } else {
-                ListPage::RandomMatches
+            ListsRoute::Match { .. } => {
+                if query.read().get("mode").as_deref() == Some("rounds") {
+                    ListPage::RandomRounds
+                } else {
+                    ListPage::RandomMatches
+                }
             }
-        }
-    };
-    let mut tabs = ["nav-link"; 3];
-    let active = "nav-link active";
-    match view {
-        ListPage::View => tabs[0] = active,
-        ListPage::List => tabs[1] = active,
-        ListPage::Edit => tabs[2] = active,
-        _ => {}
-    }
-    let component = if crate::user_list(list, user) {
+        };
+        let mut tabs = ["nav-link"; 3];
+        let active = "nav-link active";
         match view {
-            ListPage::View => html! { <ListView list={*list.clone()}/> },
-            ListPage::List => {
-                html! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
-            }
-            ListPage::Edit => {
-                html! { <Edit logged_in={user.is_some()} list={*list.clone()}/> }
-            }
-            ListPage::RandomMatches => html! { <RandomMatches id={list.id.clone()}/> },
-            ListPage::RandomRounds => html! { <RandomRounds id={list.id.clone()}/> },
-            ListPage::RandomTournament => {
-                html! { <RandomTournamentLoader list={*list.clone()}/> }
-            }
-            ListPage::Tournament => html! { <TournamentLoader list={*list.clone()}/> },
+            ListPage::View => tabs[0] = active,
+            ListPage::List => tabs[1] = active,
+            ListPage::Edit => tabs[2] = active,
+            _ => {}
         }
-    } else {
-        match view {
-            ListPage::View => html! { <ListView list={*list.clone()}/> },
-            ListPage::List => {
-                html! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
+        let component = if crate::user_list(&list, &*user.read()) {
+            match view {
+                ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
+                // ListPage::List => {
+                //     view! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
+                // }
+                // ListPage::Edit => {
+                //     view! { <Edit logged_in={user.is_some()} list={*list.clone()}/> }
+                // }
+                // ListPage::RandomMatches => view! { <RandomMatches id={list.id.clone()}/> },
+                // ListPage::RandomRounds => view! { <RandomRounds id={list.id.clone()}/> },
+                // ListPage::RandomTournament => {
+                //     view! { <RandomTournamentLoader list={*list.clone()}/> }
+                // }
+                // ListPage::Tournament => view! { <TournamentLoader list={*list.clone()}/> },
+                _ => todo!(),
             }
-            // TODO: move this up?
-            _ => crate::not_found(),
-        }
-    };
-    let toggle = match view {
-        ListPage::RandomMatches => "Random Matches",
-        ListPage::RandomRounds => "Random Rounds",
-        ListPage::Tournament => "Tournament",
-        ListPage::RandomTournament => "Random Tournament",
-        _ => "Rank",
-    };
-    let toggle_class = match (toggle, dropdown) {
-        ("Rank", false) => "nav-link dropdown-toggle",
-        ("Rank", true) => "nav-link dropdown-toggle show",
-        (_, false) => "nav-link active dropdown-toggle",
-        (_, true) => "nav-link active dropdown-toggle show",
-    };
-    let menu_class = if *dropdown {
-        "dropdown-menu show"
-    } else {
-        "dropdown-menu"
-    };
-    // TODO: handle GROUP BY queries
-    let dropdown_html = if let ListMode::View(_) = list.mode {
-        html! {}
-    } else {
-        html! {
-            <li class="nav-item dropdown">
-                <a class={toggle_class} href="#" onclick={Borrow::<Callback<_>>::borrow(show_dropdown).clone()}>{toggle}</a>
-                <ul class={menu_class}>
-                    <li><Link<ListsRoute> classes="dropdown-item" to={ListsRoute::Tournament{ id: list.id.clone() }}>{"Tournament"}</Link<ListsRoute>></li>
-                    <li><Link<ListsRoute, RouteQuery> classes="dropdown-item" to={ListsRoute::Tournament{ id: list.id.clone() }} query={Some(&[("mode", "random")][..])}>{"Random Tournament"}</Link<ListsRoute, RouteQuery>></li>
-                    <li><Link<ListsRoute> classes="dropdown-item" to={ListsRoute::Match{ id: list.id.clone() }}>{"Random Matches"}</Link<ListsRoute>></li>
-                    <li><Link<ListsRoute, RouteQuery> classes="dropdown-item" to={ListsRoute::Match{ id: list.id.clone() }} query={Some(&[("mode", "rounds")][..])}>{"Random Rounds"}</Link<ListsRoute, RouteQuery>></li>
+        } else {
+            match view {
+                ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
+                ListPage::List => {
+                    view! { <ListItems user=user list=list_signal mode=mode /> }.into_any()
+                }
+                // TODO: move this up?
+                _ => crate::not_found().into_any(),
+            }
+        };
+        let toggle = match view {
+            ListPage::RandomMatches => "Random Matches",
+            ListPage::RandomRounds => "Random Rounds",
+            ListPage::Tournament => "Tournament",
+            ListPage::RandomTournament => "Random Tournament",
+            _ => "Rank",
+        };
+        let toggle_class = match (toggle, dropdown.get()) {
+            ("Rank", false) => "nav-link dropdown-toggle",
+            ("Rank", true) => "nav-link dropdown-toggle show",
+            (_, false) => "nav-link active dropdown-toggle",
+            (_, true) => "nav-link active dropdown-toggle show",
+        };
+        let menu_class = if dropdown.get() {
+            "dropdown-menu show"
+        } else {
+            "dropdown-menu"
+        };
+        // TODO: handle GROUP BY queries
+        let show_dropdown = show_dropdown.clone();
+        let dropdown_html = move || {
+            if let ListMode::View(_) = list_signal().mode {
+                None
+            } else {
+                Some(view! {
+                  <li class="nav-item dropdown">
+                    <a class=toggle_class href="#" on:click=show_dropdown.clone()>
+                      {toggle}
+                    </a>
+                    <ul class=menu_class>
+                      <li>
+                        <a>
+                          classes="dropdown-item"href=format!("/lists/{}/tournament", list.id)>
+                          "Tournament"
+                        </a>
+                        >
+                      </li>
+                      <li>
+                        <a>
+                          classes="dropdown-item"
+                          href=format!("/lists/{}/tournament?mode=random", list.id)>
+                          "Random Tournament"
+                        </a>
+                      </li>
+                      <li>
+                        <a>
+                          classes="dropdown-item"href=format!("/lists/{}/tournament", list.id)>
+                          "Random Matches"
+                        </a>
+                        >
+                      </li>
+                      <li>
+                        <a>
+                          classes="dropdown-item"
+                          href=format!("/lists/{}/tournament?mode=rounds", list.id)>"Random Rounds"
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                })
+            }
+        };
+        let user = crate::user_list(&list, &*user.read());
+        Some(view! {
+          <Content
+            heading=list.name.clone()
+            nav=view! {
+              <>
+                <ul class="navbar-nav me-auto">
+                  <li class="nav-item">
+                    <a class=tabs[0] href=format!("/lists/{}", list.id)>
+                      "View"
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class=tabs[1] href=format!("/lists/{}/items", list.id)>
+                      "Items"
+                    </a>
+                  </li>
+                  {move || {
+                    if user {
+                      Some(
+                        view! {
+                          {dropdown_html.clone()}
+                          <li class="nav-item">
+                            <a class=tabs[2] href=format!("/lists/{}/edit", list_signal().id)>
+                              "Settings"
+                            </a>
+                          </li>
+                        },
+                      )
+                    } else {
+                      None
+                    }
+                  }}
                 </ul>
-            </li>
-        }
-    };
-    let user = crate::user_list(list, user);
-    Ok(html! {
-      <Content
-        heading={list.name.clone()}
-        nav={html! {
-          <>
-            <ul class="navbar-nav me-auto">
-              <li class="nav-item">
-                <Link<ListsRoute> classes={tabs[0]} to={ListsRoute::View{id: list.id.clone()}}>{"View"}</Link<ListsRoute>>
-              </li>
-              <li class="nav-item">
-                <Link<ListsRoute> classes={tabs[1]} to={ListsRoute::List{id: list.id.clone()}}>{"Items"}</Link<ListsRoute>>
-              </li>
-              if user {
-                {dropdown_html}
-                <li class="nav-item">
-                  <Link<ListsRoute> classes={tabs[2]} to={ListsRoute::Edit{id: list.id.clone()}}>{"Settings"}</Link<ListsRoute>>
-                </li>
-              }
-            </ul>
-            if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
-              <div class="d-flex gap-3 align-items-baseline">
-                <span class="navbar-text text-nowrap">{"Item Mode:"}</span>
-                <select ref={select_ref.clone()} class="form-select" onchange={select_view}>
-                  <option selected=true>{"Update"}</option>
-                  <option>{"Delete"}</option>
-                </select>
-              </div>
+                {move || {
+                  if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
+                    Some(
+                      view! {
+                        <div class="d-flex gap-3 align-items-baseline">
+                          <span class="navbar-text text-nowrap">"Item Mode:"</span>
+                          <select
+                            class="form-select"
+                            on:input:target=move |ev| {
+                              set_mode
+                                .set(
+                                  match ev.target().value().as_str() {
+                                    "Update" => ItemMode::Update,
+                                    "Delete" => ItemMode::Delete,
+                                    _ => unreachable!(),
+                                  },
+                                )
+                            }
+                          >
+                            <option selected=true>"Update"</option>
+                            <option>"Delete"</option>
+                          </select>
+                        </div>
+                      },
+                    )
+                  } else {
+                    None
+                  }
+                }}
+              </>
             }
-          </>
-        }}
-        content={html! {
-          <>
-            if !user {
-              <h3>{&format!("{}'s list", list.user_id)}</h3>
+            content=view! {
+              <>
+                {move || {
+                  if user {
+                    None
+                  } else {
+                    Some(view! { <h3>{format!("{}'s list", list_signal().user_id)}</h3> })
+                  }
+                }} {component}
+              </>
             }
-            {component}
-          </>
-        }}/>
-    })
-} */
+          />
+        })
+    }
+}

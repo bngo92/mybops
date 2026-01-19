@@ -2,7 +2,7 @@
 use crate::{app::App, dataframe::DataFrame};
 use arrow::array::AsArray;
 use js_sys::Uint8Array;
-use leptos::prelude::*;
+use leptos::{either::Either, prelude::*};
 use mybops::{Id, Items, List, Lists, Spotify, User};
 use regex::Regex;
 use std::{collections::HashSet, io::Cursor};
@@ -13,7 +13,7 @@ use yew::{Callback, Html, Properties, function_component, html, use_state};
 use yew_router::Routable;
 
 mod app;
-// mod base;
+mod base;
 mod bootstrap;
 mod dataframe;
 // mod docs;
@@ -22,7 +22,7 @@ mod dataframe;
 // mod integrations;
 mod list;
 mod nfl;
-// mod plot;
+mod plot;
 // mod random;
 // mod search;
 // mod settings;
@@ -114,59 +114,73 @@ fn nav_content(nav: AnyView, content: AnyView) -> impl IntoView {
     }
 }
 
-#[derive(PartialEq, Properties)]
-struct ContentProps {
-    heading: String,
-    nav: Html,
-    content: Html,
-}
+#[component]
+fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl IntoView {
+    let (collapse, set_collapse) = signal(true);
 
-#[function_component]
-fn Content(
-    ContentProps {
-        heading,
-        nav,
-        content,
-    }: &ContentProps,
-) -> Html {
-    let collapse = use_state(|| true);
-
-    let toggle = {
-        let collapse = collapse.clone();
-        Callback::from(move |_| {
-            collapse.set(!*collapse);
-        })
+    let class = move || {
+        if collapse.get() {
+            "collapse navbar-collapse"
+        } else {
+            "navbar-collapse"
+        }
     };
-
-    let class = if *collapse {
-        "collapse navbar-collapse"
-    } else {
-        "navbar-collapse"
-    };
-    html! {
+    view! {
       <>
         <nav class="navbar navbar-expand-sm navbar-bg py-2" style="background-color: #2fb380;">
           <div class="container-fluid">
-            <a class="navbar-brand" href="#">{heading}</a>
-            <button class="navbar-toggler" type="button" onclick={toggle}>
-              if *collapse {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-                </svg>
-              } else {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-lg" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"/>
-                </svg>
-              }
+            <a class="navbar-brand" href="#">
+              {heading}
+            </a>
+            <button
+              class="navbar-toggler"
+              type="button"
+              on:click=move |_| set_collapse.set(collapse.get())
+            >
+              {move || {
+                if collapse.get() {
+                  Either::Left(
+                    view! {
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-plus-lg"
+                        viewBox="0 0 16 16"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"
+                        />
+                      </svg>
+                    },
+                  )
+                } else {
+                  Either::Right(
+                    view! {
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-dash-lg"
+                        viewBox="0 0 16 16"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"
+                        />
+                      </svg>
+                    },
+                  )
+                }
+              }}
             </button>
-            <div {class}>
-              {nav.clone()}
-            </div>
+            <div class=class>{nav}</div>
           </div>
         </nav>
-        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
-          {content.clone()}
-        </div>
+        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
       </>
     }
 }

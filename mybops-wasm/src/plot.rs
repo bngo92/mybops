@@ -5,16 +5,17 @@ use arrow::{
     datatypes::{DataType, Float64Type, UInt32Type},
     util::display,
 };
+use leptos::{either::Either, prelude::*};
 use plotters::prelude::{
     BLACK, ChartBuilder, Circle, Color, Histogram, IntoDrawingArea, IntoSegmentedCoord, LineSeries,
     RED, WHITE,
 };
 use plotters_canvas::CanvasBackend;
 use std::{collections::HashMap, sync::Arc};
-use yew::{Html, html};
 
 use crate::dataframe::DataFrame;
 
+#[derive(Clone, Debug)]
 pub enum DataView {
     Table,
     ColumnGraph,
@@ -24,66 +25,91 @@ pub enum DataView {
     Csv,
 }
 
-impl DataView {
-    pub fn render(&self, df: &DataFrame) -> Html {
-        html! {
-            <div>
-                <canvas id="canvas" width="640" height="426" class={if let DataView::Table | DataView::Csv = self { "d-none" } else { "" }}></canvas>
-                if let DataView::Table = self {
-                    {df_table_view(df, true)}
-                } else if let DataView::Csv = self {
-                    <p>{write_csv(df)
-                        .lines()
-                            .map(|items| html! {items})
-                            .intersperse(html! {<br/>})
-                            .collect::<Html>()}</p>
-                }
-            </div>
-        }
-    }
-
-    pub fn draw(&self, df: &DataFrame) -> Result<(), Box<dyn std::error::Error>> {
-        match self {
+#[component]
+pub fn DataViewRender(
+    view: ReadSignal<DataView>,
+    #[prop(into)] df: Signal<DataFrame>,
+    set_error: WriteSignal<Option<String>>,
+) -> impl IntoView {
+    Effect::new(move || {
+        let df = &*df.read();
+        if let Err(e) = match view.get() {
             DataView::Table | DataView::Csv => Ok(()),
             DataView::ColumnGraph => draw_column_graph(df),
             DataView::LineGraph => draw_line_graph(df),
             DataView::ScatterPlot => draw_scatter_plot(df),
             DataView::CumLineGraph => draw_cum_line_graph(df),
+        } {
+            set_error.set(Some(e.to_string()))
         }
+    });
+    view! {
+      <div>
+        <canvas
+          id="canvas"
+          width="640"
+          height="426"
+          class=move || if let DataView::Table | DataView::Csv = view.get() { "d-none" } else { "" }
+        ></canvas>
+        {move || {
+          if let DataView::Table = view.get() {
+            df_table_view(&*df.read(), true).into_any()
+          } else if let DataView::Csv = view.get() {
+            let csv = write_csv(&*df.read());
+            view! {
+              <p>
+                {csv
+                  .lines()
+                  .map(|items| Either::Left(view! { {items} }))
+                  .intersperse(Either::Right(view! { <br /> }))
+                  .collect_view()}
+              </p>
+            }
+              .into_any()
+          } else {
+            view! {}.into_any()
+          }
+        }}
+      </div>
     }
 }
 
-pub fn df_table_view(df: &DataFrame, min_width: bool) -> Html {
+pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
     let style = if min_width {
         "min-width: calc(min(568px, 100%))"
     } else {
         "min-width: 100%"
     };
-    html! {
-        <div class="table-responsive">
-            <table class="table table-striped mb-0 w-auto" {style}>
-                <thead>
-                    <tr>
-                        <th>{"#"}</th>
-                        {for df.schema.fields.iter().map(|f| html! {
-                            <th>{&f.name()}</th>
-                        })}
-                    </tr>
-                </thead>
-                <tbody>{for (0..df.arrays[0].len()).map(|i| df_item_view(df, i))}</tbody>
-            </table>
-        </div>
+    view! {
+      <div class="table-responsive">
+        <table class="table table-striped mb-0 w-auto" style=style>
+          <thead>
+            <tr>
+              <th>"#"</th>
+              {df
+                .schema
+                .fields
+                .iter()
+                .map(|f| view! { <th>{f.name().clone()}</th> })
+                .collect_view()}
+            </tr>
+          </thead>
+          <tbody>{(0..df.arrays[0].len()).map(|i| df_item_view(df, i)).collect_view()}</tbody>
+        </table>
+      </div>
     }
 }
 
-fn df_item_view(df: &DataFrame, i: usize) -> Html {
-    html! {
-        <tr>
-            <th>{i + 1}</th>
-            {for df.arrays.iter().map(|item| html! {
-                <td>{display::array_value_to_string(item, i).unwrap()}</td>
-            })}
-        </tr>
+fn df_item_view(df: &DataFrame, i: usize) -> impl IntoView {
+    view! {
+      <tr>
+        <th>{i + 1}</th>
+        {df
+          .arrays
+          .iter()
+          .map(|item| view! { <td>{display::array_value_to_string(item, i).unwrap()}</td> })
+          .collect_view()}
+      </tr>
     }
 }
 
