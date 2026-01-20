@@ -1,51 +1,49 @@
 use crate::base::IframeCompare;
+use leptos::{either::Either, prelude::*};
 use mybops::{ItemMetadata, List};
 use rand::prelude::SliceRandom;
 use std::{borrow::Cow, collections::HashMap};
-use web_sys::HtmlSelectElement;
-use yew::{
-    Callback, Event, Html, NodeRef, Properties, function_component, html, use_node_ref, use_state,
-};
 
-#[derive(Eq, PartialEq, Properties)]
-pub struct TournamentLoaderProps {
-    pub list: List,
-}
-
-#[function_component]
-pub fn TournamentLoader(TournamentLoaderProps { list }: &TournamentLoaderProps) -> Html {
-    let mut items: Vec<_> = (0..list.items.len()).collect();
-    items.sort_by_key(|&i| -list.items[i].score);
-    let previous_ranks = list.items.iter().map(|i| (i.id.clone(), i.rank)).collect();
+#[component]
+pub fn TournamentLoader(#[prop(into)] list: Signal<List>) -> impl IntoView {
+    let mut items: Vec<_> = (0..list.read().items.len()).collect();
+    items.sort_by_key(|&i| -list.read().items[i].score);
+    let previous_ranks = list
+        .read()
+        .items
+        .iter()
+        .map(|i| (i.id.clone(), i.rank))
+        .collect();
     let bracket = TournamentBracket::new(items, usize::MAX);
     let state = TournamentFields {
         state: TournamentState::Tournament,
         view_state: ViewState::Tournament,
-        list: list.clone(),
+        list: list.get(),
         previous_ranks,
         bracket,
     };
-    html! {
-        <Tournament {state}/>
-    }
+    view! { <Tournament state=state /> }
 }
 
-#[function_component]
-pub fn RandomTournamentLoader(TournamentLoaderProps { list }: &TournamentLoaderProps) -> Html {
-    let mut items: Vec<_> = (0..list.items.len()).collect();
+#[component]
+pub fn RandomTournamentLoader(#[prop(into)] list: Signal<List>) -> impl IntoView {
+    let mut items: Vec<_> = (0..list.read().items.len()).collect();
     items.shuffle(&mut rand::thread_rng());
-    let previous_ranks = list.items.iter().map(|i| (i.id.clone(), i.rank)).collect();
+    let previous_ranks = list
+        .read()
+        .items
+        .iter()
+        .map(|i| (i.id.clone(), i.rank))
+        .collect();
     let bracket = TournamentBracket::new(items, usize::MAX);
     let state = TournamentFields {
         state: TournamentState::Tournament,
         view_state: ViewState::Tournament,
-        list: list.clone(),
+        list: list.get(),
         previous_ranks,
         bracket,
     };
-    html! {
-        <Tournament {state}/>
-    }
+    view! { <Tournament state=state /> }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -306,37 +304,24 @@ enum ViewState {
     List,
 }
 
-pub enum Msg {
-    Update(usize),
-    Toggle,
-    SelectView,
-    Reset,
-}
-
-#[derive(PartialEq, Properties)]
-pub struct TournamentProps {
-    pub state: TournamentFields,
-}
-
-#[function_component]
-pub fn Tournament(TournamentProps { state }: &TournamentProps) -> Html {
-    let state = use_state(|| state.clone());
-    let select_ref = use_node_ref();
+#[component]
+pub fn Tournament(state: TournamentFields) -> impl IntoView {
+    let (state, set_state) = signal(state);
 
     let update = {
-        let state = state.clone();
-        Callback::from(move |i| {
-            let mut fields = (*state).clone();
-            if let Some((win, lose)) = fields.bracket.update(i, &mut fields.list.items) {
-                let id = fields.list.id.clone();
-                let win = win.id.clone();
-                let lose = lose.id.clone();
-                let updated_ranks = if fields.bracket.winner().is_some() {
-                    fields.list.items.iter().map(|i| i.rank).collect()
-                } else {
-                    Vec::new()
-                };
-                wasm_bindgen_futures::spawn_local(async move {
+        let update = Action::new_unsync(move |i| {
+            let i = *i;
+            async move {
+                let mut fields = state.get();
+                if let Some((win, lose)) = fields.bracket.update(i, &mut fields.list.items) {
+                    let id = fields.list.id.clone();
+                    let win = win.id.clone();
+                    let lose = lose.id.clone();
+                    let updated_ranks = if fields.bracket.winner().is_some() {
+                        fields.list.items.iter().map(|i| i.rank).collect()
+                    } else {
+                        Vec::new()
+                    };
                     crate::update_stats(&id, &win, &lose).await.unwrap();
                     if !updated_ranks.is_empty() {
                         // TODO: handle state syncing better
@@ -346,123 +331,142 @@ pub fn Tournament(TournamentProps { state }: &TournamentProps) -> Html {
                         }
                         crate::update_list(&list).await.unwrap();
                     }
-                });
+                }
+                set_state.set(fields);
             }
-            state.set(fields);
-        })
+        });
+        move |i| {
+            update.dispatch(i);
+        }
     };
-    let toggle_state = {
-        let state = state.clone();
-        Callback::from(move |_| {
-            let mut fields = (*state).clone();
+    let toggle_state = move |_| {
+        set_state.update(|fields| {
             fields.state = match fields.state {
                 TournamentState::Tournament => TournamentState::Match,
                 TournamentState::Match => TournamentState::Tournament,
             };
-            state.set(fields);
         })
     };
-    let select_view = {
-        let state = state.clone();
-        let select_ref = select_ref.clone();
-        Callback::from(move |_| {
-            let mut fields = (*state).clone();
-            fields.view_state = match select_ref
-                .cast::<HtmlSelectElement>()
-                .map(|s| s.value())
-                .as_deref()
-                .unwrap_or("Tournament View")
-            {
-                "Tournament View" => ViewState::Tournament,
-                "List View" => ViewState::List,
-                _ => unreachable!(),
-            };
-            state.set(fields);
-        })
-    };
-    let reset = {
-        let state = state.clone();
-        Callback::from(move |_| {
-            let mut fields = (*state).clone();
+    let reset = move |_| {
+        set_state.update(|fields| {
             fields.bracket.data = fields.bracket.initial_data.clone();
             for item in &mut fields.bracket.finished {
                 *item = None;
             }
             fields.bracket.finished_index = fields.bracket.finished.len() - 1;
-            state.set(fields);
         })
     };
 
-    let fields = &*state;
-    let (toggle, html) = match &fields.state {
-        TournamentState::Tournament => ("Match Mode", {
-            let winner = if let Some(winner) = fields.bracket.winner() {
-                fields.list.items.get(*winner)
-            } else {
-                None
-            };
-            html! {
-                <div>
-                    if let Some(winner) = winner {
-                        <h2>{format!("Winner: {}", winner.name)}</h2>
-                        // TODO: only show if iframe exists
-                        <div class="row">
-                            <div class="col-6">
-                                <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
-                            </div>
-                        </div>
-                    }
-                    <div class="overflow-scroll">
-                    {tournament_bracket_view(&fields.bracket, &fields.list.items, update, false)}
-                    </div>
-                    if let Some(src) = fields.list.iframe.clone() {
-                        <div class="row">
-                            <div class="col-12 col-lg-10 col-xl-8">
-                                <iframe width="100%" height="380" frameborder="0" {src}></iframe>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-        }),
-        TournamentState::Match => (
-            "Tournament Mode",
-            match_view(fields, update, &select_ref, select_view),
-        ),
+    let toggle = move || match state.read().state {
+        TournamentState::Tournament => "Match Mode",
+        TournamentState::Match => "Tournament Mode",
     };
-    html! {
-        <div>
-            <div class="d-flex gap-3">
-                <button type="button" class="btn btn-primary mb-1" onclick={toggle_state} style="width: 156.58px">{toggle}</button>
-                <button type="button" class="btn btn-danger mb-1" onclick={reset}>{"Reset"}</button>
-            </div>
-            {html}
+    let html = move || {
+        let fields = state.get();
+        match state.read().state {
+            TournamentState::Tournament => {
+                let winner = if let Some(winner) = fields.bracket.winner() {
+                    fields.list.items.get(*winner).cloned()
+                } else {
+                    None
+                };
+                Either::Left(view! {
+                  <div>
+                    {move || {
+                      let winner = winner.clone();
+                      winner
+                        .map(|winner| {
+                          view! {
+                            <h2>{format!("Winner: {}", winner.name)}</h2>
+                            // TODO: only show if iframe exists
+                            <div class="row">
+                              <div class="col-6">
+                                <iframe
+                                  width="100%"
+                                  height="380"
+                                  prop:frameborder="0"
+                                  src=winner.iframe
+                                ></iframe>
+                              </div>
+                            </div>
+                          }
+                        })
+                    }}
+                    <div class="overflow-scroll">
+                      {tournament_bracket_view(
+                        fields.bracket,
+                        fields.list.items,
+                        update,
+                        false,
+                      )}
+                    </div>
+                    {move || {
+                      fields
+                        .list
+                        .iframe
+                        .clone()
+                        .map(|src| {
+                          view! {
+                            <div class="row">
+                              <div class="col-12 col-lg-10 col-xl-8">
+                                <iframe width="100%" height="380" prop:frameborder="0" src=src></iframe>
+                              </div>
+                            </div>
+                          }
+                        })
+                    }}
+                  </div>
+                })
+            }
+            TournamentState::Match => Either::Right(match_view(fields, update, set_state)),
+        }
+    };
+    view! {
+      <div>
+        <div class="d-flex gap-3">
+          <button
+            type="button"
+            class="btn btn-primary mb-1"
+            on:click=toggle_state
+            style="width: 156.58px"
+          >
+            {toggle}
+          </button>
+          <button type="button" class="btn btn-danger mb-1" on:click=reset>
+            "Reset"
+          </button>
         </div>
+        {html}
+      </div>
     }
 }
 
 fn match_view(
-    fields: &TournamentFields,
-    update: Callback<usize>,
-    select_ref: &NodeRef,
-    select_view: Callback<Event>,
-) -> Html {
+    fields: TournamentFields,
+    update: impl FnMut(usize) + 'static + Send + Clone,
+    set_state: WriteSignal<TournamentFields>,
+) -> impl IntoView {
     let winner = if let Some(winner) = fields.bracket.winner() {
         fields.list.items.get(*winner)
     } else {
         None
     };
     let select = if let Some(winner) = winner {
-        html! {
-            <div>
-                <h2>{format!("Winner: {}", winner.name)}</h2>
-                <div class="row">
-                    <div class="col-6">
-                        <iframe width="100%" height="380" frameborder="0" src={winner.iframe.clone()}></iframe>
-                    </div>
-                </div>
+        Either::Left(view! {
+          <div>
+            <h2>{format!("Winner: {}", winner.name)}</h2>
+            <div class="row">
+              <div class="col-6">
+                <iframe
+                  width="100%"
+                  height="380"
+                  prop:frameborder="0"
+                  src=winner.iframe.clone()
+                ></iframe>
+              </div>
             </div>
-        }
+          </div>
+        })
     } else {
         // TODO: save last position instead of always starting from the beginning
         let mut start_i = 0;
@@ -476,11 +480,15 @@ fn match_view(
                 {
                     let pair = fields.bracket.data[item.pair].as_ref().unwrap();
                     if !pair.disabled {
-                        let left_callback = update.clone();
-                        let on_left_select = Callback::from(move |_| left_callback.emit(i));
-                        let right_callback = update.clone();
+                        let on_left_select = {
+                            let mut update = update.clone();
+                            move |_| update(i)
+                        };
                         let pair_i = item.pair;
-                        let on_right_select = Callback::from(move |_| right_callback.emit(pair_i));
+                        let on_right_select = {
+                            let mut update = update.clone();
+                            move |_| update(pair_i)
+                        };
                         found = Some((
                             fields.list.items[item.item].clone(),
                             on_left_select,
@@ -496,14 +504,21 @@ fn match_view(
             step *= 2;
         }
         let (left, on_left_select, right, on_right_select) = found.unwrap();
-        html! {<IframeCompare {left} {on_left_select} {right} {on_right_select}/>}
+        Either::Right(view! {
+          <IframeCompare
+            left=left
+            on_left_select=on_left_select
+            right=right
+            on_right_select=on_right_select
+          />
+        })
     };
     let view = if let ViewState::Tournament = fields.view_state {
-        html! {
-            <div class="overflow-scroll">
-            {tournament_bracket_view(&fields.bracket, &fields.list.items, update, true)}
-            </div>
-        }
+        Either::Left(view! {
+          <div class="overflow-scroll">
+            {tournament_bracket_view(fields.bracket, fields.list.items, update, true)}
+          </div>
+        })
     } else {
         let items = fields
             .bracket
@@ -525,30 +540,46 @@ fn match_view(
                 })
             })
             .collect();
-        crate::base::responsive_table_view(&["Track", "Prev. Rank", "Score"], items)
+        Either::Right(crate::base::responsive_table_view(
+            &["Track", "Prev. Rank", "Score"],
+            items,
+        ))
     };
-    html! {
-        <div>
-            {select}
-            <div class="row mt-4">
-                <div class="col-auto">
-                    <select ref={select_ref.clone()} class="form-select" onchange={select_view}>
-                        <option selected={matches!(fields.view_state, ViewState::Tournament)}>{"Tournament View"}</option>
-                        <option selected={matches!(fields.view_state, ViewState::List)}>{"List View"}</option>
-                    </select>
-                </div>
-            </div>
-            {view}
-        </div>
+    view! {
+      <div>
+        {select} <div class="row mt-4">
+          <div class="col-auto">
+            <select
+              class="form-select"
+              on:change:target=move |ev| {
+                set_state
+                  .update(|fields| {
+                    fields.view_state = match ev.target().value().as_str() {
+                      "Tournament View" => ViewState::Tournament,
+                      "List View" => ViewState::List,
+                      _ => unreachable!(),
+                    };
+                  })
+              }
+            >
+              <option selected=matches!(
+                fields.view_state,
+                ViewState::Tournament
+              )>{"Tournament View"}</option>
+              <option selected=matches!(fields.view_state, ViewState::List)>{"List View"}</option>
+            </select>
+          </div>
+        </div> {view}
+      </div>
     }
 }
 
 fn tournament_bracket_view(
-    bracket: &TournamentBracket<usize>,
-    lut: &[ItemMetadata],
-    on_click_select: Callback<usize>,
+    bracket: TournamentBracket<usize>,
+    lut: Vec<ItemMetadata>,
+    on_click_select: impl FnMut(usize) + 'static + Send + Clone,
     disabled: bool,
-) -> Html {
+) -> impl IntoView {
     // We want to limit the width of tournament buttons to between 168px and 1/6 of a bootstrap
     // container
     // 168px is the minimum width that avoids truncating Bop To The Top
@@ -556,7 +587,7 @@ fn tournament_bracket_view(
     let row_width = format!("min-width: {}px", 168 * depth);
     let offsets: Vec<_> = std::iter::once(None)
         .chain((1..depth).map(|i| {
-            Some(html! {<div style={format!("width: {}%", 100. * i as f64 / depth as f64)}></div>})
+            Some(view! { <div style=format!("width: {}%", 100. * i as f64 / depth as f64)></div> })
         }))
         .collect();
     let col_width = format!("width: {}%", 100. / depth as f64);
@@ -565,26 +596,42 @@ fn tournament_bracket_view(
         .iter()
         .enumerate()
         .map(|(i, item)| {
-            if let Some(item) = item {
-                let onclick = on_click_select.clone();
-                let onclick = Callback::from(move |_| onclick.emit(i));
-                let title = if item.item == usize::MAX {
-                    String::new()
-                } else {
-                    lut[item.item].name.clone()
-                };
-                let disabled = disabled || item.disabled;
-                html! {
-                    <div class="row" style={row_width.clone()}>
-                    {for offsets[item.depth].clone()}
-                        <div style={col_width.clone()}>
-                            <button type="button" class="btn btn-success text-truncate w-100" style="height: 38px" {disabled} {onclick}>{title}</button>
+            let item = item.clone();
+            let lut = lut.clone();
+            let on_click_select = on_click_select.clone();
+            let row_width = row_width.clone();
+            let offsets = offsets.clone();
+            let col_width = col_width.clone();
+            move || {
+                let item = item.clone();
+                if let Some(item) = item {
+                    let title = if item.item == usize::MAX {
+                        String::new()
+                    } else {
+                        lut[item.item].name.clone()
+                    };
+                    let disabled = disabled || item.disabled;
+                    let mut on_click_select = on_click_select.clone();
+                    Either::Left(view! {
+                      <div class="row" style=row_width.clone()>
+                        {offsets[item.depth].clone()}
+                        <div style=col_width.clone()>
+                          <button
+                            type="button"
+                            class="btn btn-success text-truncate w-100"
+                            style="height: 38px"
+                            disabled=disabled
+                            on:click=move |_| on_click_select(i)
+                          >
+                            {title}
+                          </button>
                         </div>
-                    </div>
+                      </div>
+                    })
+                } else {
+                    Either::Right(view! { <div style="height: 38px"></div> })
                 }
-            } else {
-                html! { <div style="height: 38px"></div> }
             }
         })
-        .collect()
+        .collect_view()
 }

@@ -7,6 +7,7 @@ use crate::{
     nfl::Nfl,
     plot::{DataView, DataViewRender},
     random::{RandomMatches, RandomRounds},
+    tournament::{RandomTournamentLoader, TournamentLoader},
 };
 use leptos::{either::Either, html, prelude::*};
 use leptos_router::{
@@ -311,6 +312,19 @@ fn AppImpl() -> impl IntoView {
                     }
                   }
                 />
+                <Route
+                  path=path!(":id/tournament")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Tournament
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
               </ParentRoute>
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
@@ -534,11 +548,10 @@ pub fn ListComponent(
                     view! { <RandomMatches id=list.id.clone() /> }.into_any()
                 }
                 ListPage::RandomRounds => view! { <RandomRounds id=list.id.clone() /> }.into_any(),
-                // ListPage::RandomTournament => {
-                //     view! { <RandomTournamentLoader list={*list.clone()}/> }
-                // }
-                // ListPage::Tournament => view! { <TournamentLoader list={*list.clone()}/> },
-                _ => todo!(),
+                ListPage::RandomTournament => {
+                    view! { <RandomTournamentLoader list=list_signal/> }.into_any()
+                }
+                ListPage::Tournament => view! { <TournamentLoader list=list_signal/> }.into_any(),
             }
         } else {
             match view {

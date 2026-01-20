@@ -26,7 +26,7 @@ mod plot;
 mod random;
 // mod search;
 // mod settings;
-// pub mod tournament;
+mod tournament;
 
 #[derive(Clone, Routable, PartialEq)]
 enum Route {
