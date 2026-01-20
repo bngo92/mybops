@@ -3,7 +3,10 @@ use crate::{
     base::Input,
     bootstrap::Modal,
     edit::Edit,
-    list::item::{ItemMode, ListItems},
+    list::{
+        self,
+        item::{ItemMode, ListItems},
+    },
     nfl::Nfl,
     plot::{DataView, DataViewRender},
     random::{RandomMatches, RandomRounds},
@@ -260,6 +263,12 @@ fn AppImpl() -> impl IntoView {
           <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
             <Routes fallback=crate::not_found>
               <ParentRoute path=path!("/lists") view=Outlet>
+                <Route
+                  path=path!("")
+                  view=move || {
+                    view! { <list::Lists logged_in=move || user.read().is_some() /> }
+                  }
+                />
                 <Route
                   path=path!(":id")
                   view=move || {

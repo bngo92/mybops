@@ -4,7 +4,7 @@ use leptos_router::hooks::use_navigate;
 pub mod item;
 
 #[component]
-pub fn Lists(logged_in: ReadSignal<bool>) -> impl IntoView {
+pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
     let lists = LocalResource::new(|| async { crate::fetch_lists(false).await.unwrap() });
 
     let create = Action::new_unsync(|_| async {
@@ -13,7 +13,7 @@ pub fn Lists(logged_in: ReadSignal<bool>) -> impl IntoView {
         navigator(&format!("/lists/{}/edit", list.id), Default::default());
     });
 
-    let list_html = || {
+    let list_html = move || {
         lists
             .read()
             .as_deref()
@@ -39,21 +39,23 @@ pub fn Lists(logged_in: ReadSignal<bool>) -> impl IntoView {
           </ul>
         }
         .into_any(),
-        view! {
-          <div>
-            <div class="row mt-3">{list_html()}</div>
-            <button
-              type="button"
-              class="btn btn-primary"
-              on:click=move |_| {
-                create.dispatch(());
-              }
-              disabled=move || !logged_in.get()
-            >
-              "Create List"
-            </button>
-          </div>
-        }
+        (move || {
+            view! {
+              <div>
+                <div class="row mt-3">{list_html()}</div>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  on:click=move |_| {
+                    create.dispatch(());
+                  }
+                  disabled=move || !logged_in.get()
+                >
+                  "Create List"
+                </button>
+              </div>
+            }
+        })
         .into_any(),
     )
 }
