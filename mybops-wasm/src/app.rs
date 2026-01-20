@@ -433,11 +433,7 @@ fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
         </div>
         <Input
           input_ref=query_ref
-          value=if matches!(list.read().mode, ListMode::View(_)) {
-            Some(list.get().query)
-          } else {
-            None
-          }
+          value=Some(list.get().query)
           onclick=move |_| set_query.set(query_ref.get().map(|query| query.value()))
           error=error
           disabled=matches!(list.read().mode, ListMode::View(_))
@@ -549,9 +545,9 @@ pub fn ListComponent(
                 }
                 ListPage::RandomRounds => view! { <RandomRounds id=list.id.clone() /> }.into_any(),
                 ListPage::RandomTournament => {
-                    view! { <RandomTournamentLoader list=list_signal/> }.into_any()
+                    view! { <RandomTournamentLoader list=list_signal /> }.into_any()
                 }
-                ListPage::Tournament => view! { <TournamentLoader list=list_signal/> }.into_any(),
+                ListPage::Tournament => view! { <TournamentLoader list=list_signal /> }.into_any(),
             }
         } else {
             match view {

@@ -393,12 +393,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                         })
                     }}
                     <div class="overflow-scroll">
-                      {tournament_bracket_view(
-                        fields.bracket,
-                        fields.list.items,
-                        update,
-                        false,
-                      )}
+                      {tournament_bracket_view(fields.bracket, fields.list.items, update, false)}
                     </div>
                     {move || {
                       fields
@@ -409,7 +404,12 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                           view! {
                             <div class="row">
                               <div class="col-12 col-lg-10 col-xl-8">
-                                <iframe width="100%" height="380" prop:frameborder="0" src=src></iframe>
+                                <iframe
+                                  width="100%"
+                                  height="380"
+                                  prop:frameborder="0"
+                                  src=src
+                                ></iframe>
                               </div>
                             </div>
                           }
