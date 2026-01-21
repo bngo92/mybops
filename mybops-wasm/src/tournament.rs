@@ -596,41 +596,32 @@ fn tournament_bracket_view(
         .iter()
         .enumerate()
         .map(|(i, item)| {
-            let item = item.clone();
-            let lut = lut.clone();
-            let on_click_select = on_click_select.clone();
-            let row_width = row_width.clone();
-            let offsets = offsets.clone();
-            let col_width = col_width.clone();
-            move || {
-                let item = item.clone();
-                if let Some(item) = item {
-                    let title = if item.item == usize::MAX {
-                        String::new()
-                    } else {
-                        lut[item.item].name.clone()
-                    };
-                    let disabled = disabled || item.disabled;
-                    let mut on_click_select = on_click_select.clone();
-                    Either::Left(view! {
-                      <div class="row" style=row_width.clone()>
-                        {offsets[item.depth].clone()}
-                        <div style=col_width.clone()>
-                          <button
-                            type="button"
-                            class="btn btn-success text-truncate w-100"
-                            style="height: 38px"
-                            disabled=disabled
-                            on:click=move |_| on_click_select(i)
-                          >
-                            {title}
-                          </button>
-                        </div>
-                      </div>
-                    })
+            if let Some(item) = item {
+                let title = if item.item == usize::MAX {
+                    String::new()
                 } else {
-                    Either::Right(view! { <div style="height: 38px"></div> })
-                }
+                    lut[item.item].name.clone()
+                };
+                let disabled = disabled || item.disabled;
+                let mut on_click_select = on_click_select.clone();
+                Either::Left(view! {
+                  <div class="row" style=row_width.clone()>
+                    {offsets[item.depth].clone()}
+                    <div style=col_width.clone()>
+                      <button
+                        type="button"
+                        class="btn btn-success text-truncate w-100"
+                        style="height: 38px"
+                        disabled=disabled
+                        on:click=move |_| on_click_select(i)
+                      >
+                        {title}
+                      </button>
+                    </div>
+                  </div>
+                })
+            } else {
+                Either::Right(view! { <div style="height: 38px"></div> })
             }
         })
         .collect_view()
