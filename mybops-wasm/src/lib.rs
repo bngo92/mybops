@@ -18,7 +18,7 @@ mod bootstrap;
 mod dataframe;
 // mod docs;
 mod edit;
-// mod home;
+mod home;
 // mod integrations;
 mod list;
 mod nfl;

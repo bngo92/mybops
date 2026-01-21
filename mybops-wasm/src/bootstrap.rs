@@ -1,28 +1,50 @@
 use leptos::{prelude::*, tachys::html::event::MouseEvent};
 
 #[component]
-pub fn Accordion(
+pub fn Accordion<F>(
     children: Children,
     header: String,
-    on_toggle: Option<Box<dyn FnMut(MouseEvent) + 'static>>,
-    collapsed: ReadSignal<Option<bool>>,
-) -> impl IntoView {
-    let collapsed = collapsed.read().unwrap_or(true);
-    let (collapsed_state, set_collapsed_state) = signal(collapsed);
+    on_toggle: Option<Box<F>>,
+    #[prop(into)] collapsed: Signal<Option<bool>>,
+) -> impl IntoView
+where
+    F: FnMut(MouseEvent) + 'static + Send + Clone,
+{
+    let initial = collapsed.read().unwrap_or(true);
+    let (collapsed_state, set_collapsed_state) = signal(initial);
 
-    let (collapsed, onclick) = if let Some(on_toggle) = on_toggle {
-        (collapsed, on_toggle)
-    } else {
-        (
-            collapsed_state.get(),
-            Box::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
-                as Box<dyn FnMut(MouseEvent) + 'static>,
-        )
+    let collapsed = {
+        let on_toggle = on_toggle.clone();
+        move || {
+            if on_toggle.is_some() {
+                collapsed.read().unwrap_or(true)
+            } else {
+                collapsed_state.get()
+            }
+        }
     };
-    let (button_class, body_class) = if collapsed {
-        ("accordion-button collapsed", "accordion-collapse collapse")
+    let button_class = {
+        let collapsed = collapsed.clone();
+        move || {
+            if collapsed() {
+                "accordion-button collapsed"
+            } else {
+                "accordion-button"
+            }
+        }
+    };
+    let body_class = move || {
+        if collapsed() {
+            "accordion-collapse collapse"
+        } else {
+            "accordion-collapse collapse show"
+        }
+    };
+    let onclick = if let Some(on_toggle) = on_toggle {
+        on_toggle
     } else {
-        ("accordion-button", "accordion-collapse collapse show")
+        Box::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
+            as Box<dyn FnMut(MouseEvent) + 'static>
     };
     view! {
       <div class="accordion mb-3">
@@ -55,11 +77,13 @@ pub fn Alert(
 }
 
 #[component]
-pub fn Collapse(children: Children, collapsed: ReadSignal<bool>) -> impl IntoView {
-    let body_class = if collapsed.get() {
-        "collapse"
-    } else {
-        "collapse show"
+pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> impl IntoView {
+    let body_class = move || {
+        if collapsed.get() {
+            "collapse"
+        } else {
+            "collapse show"
+        }
     };
     view! {
       <div class=body_class>

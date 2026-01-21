@@ -3,6 +3,7 @@ use crate::{
     base::Input,
     bootstrap::Modal,
     edit::Edit,
+    home::Home,
     list::{
         self,
         item::{ItemMode, ListItems},
@@ -80,7 +81,12 @@ pub fn App() -> impl IntoView {
 
 #[component]
 fn AppImpl() -> impl IntoView {
-    let user = LocalResource::new(|| async { crate::get_user().await.ok() });
+    let logged_in = RwSignal::new(false);
+    let user = LocalResource::new(move || async move {
+        let user = crate::get_user().await.ok();
+        logged_in.set(user.is_some());
+        user
+    });
     let (sidebar, set_sidebar) = signal(false);
     let (login, set_login) = signal(false);
     let (dropdown, set_dropdown) = signal(false);
@@ -262,11 +268,12 @@ fn AppImpl() -> impl IntoView {
           </div>
           <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
             <Routes fallback=crate::not_found>
+              <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
               <ParentRoute path=path!("/lists") view=Outlet>
                 <Route
                   path=path!("")
                   view=move || {
-                    view! { <list::Lists logged_in=move || user.read().is_some() /> }
+                    view! { <list::Lists logged_in=logged_in /> }
                   }
                 />
                 <Route
