@@ -32,92 +32,77 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
             }
         }
         Some(crate::nav_content(
-        view! {
-          <>
-            <ul class="navbar-nav me-auto">
-              <li class="navbar-brand">{move || if disabled { "Demo" } else { "Home" }}</li>
-            </ul>
-            <div class="d-flex gap-3 align-items-baseline">
-              <span class="navbar-text text-nowrap">"Sort Mode:"</span>
-              <select node_ref=select_ref class="form-select">
-                <option>"Tournament"</option>
-                <option selected=true>"Random Tournament"</option>
-                <option>"Random Matches"</option>
-                <option>"Random Rounds"</option>
-              </select>
-              <button class="btn btn-info" on:click=move |_| logged_in.set(!logged_in.get())>
-                "Help"
-              </button>
-            </div>
-          </>
-        }.into_any(),
-        view! {
-          <div>
-            <Collapse collapsed=logged_in>
-              <p>
-                "mybops is an app that helps you filter your data and remove flops from your life.
+            view! {
+              <>
+                <ul class="navbar-nav me-auto">
+                  <li class="navbar-brand">{move || if disabled { "Demo" } else { "Home" }}</li>
+                </ul>
+                <div class="d-flex gap-3 align-items-baseline">
+                  <span class="navbar-text text-nowrap">"Sort Mode:"</span>
+                  <select node_ref=select_ref class="form-select">
+                    <option>"Tournament"</option>
+                    <option selected=true>"Random Tournament"</option>
+                    <option>"Random Matches"</option>
+                    <option>"Random Rounds"</option>
+                  </select>
+                  <button class="btn btn-info" on:click=move |_| logged_in.set(!logged_in.get())>
+                    "Help"
+                  </button>
+                </div>
+              </>
+            },
+            view! {
+              <div>
+                <Collapse collapsed=logged_in>
+                  <p>
+                    "mybops is an app that helps you filter your data and remove flops from your life.
                       Use it to gain insights about your favorite songs, TV shows, and even restaurants.
                       mybops makes it easy to rate and/or rank what's important to you."
-              </p>
-              <p>
-                "The data is organized into lists of items and your lists are displayed here on the home page using user-defined widgets.
+                  </p>
+                  <p>
+                    "The data is organized into lists of items and your lists are displayed here on the home page using user-defined widgets.
                       The fastest way to rank your items is with a randomly generated tournament.
                       You can start a tournament for a list by clicking the "
-                <button type="button" class="btn btn-success btn-sm">
-                  "Rank"
-                </button> " button below the list widget. Here is the full list of sort modes:"
-              </p>
-              <ul>
-                <li>
-                  <strong>"Tournament"</strong>
-                  " - Sort by choosing between items that are organized using a seeded tournament."
-                </li>
-                <li>
-                  <strong>"Random Tournament"</strong>
-                  " - Sort by choosing between items that are organized using a randomly generated tournament."
-                </li>
-                <li>
-                  <strong>"Random Matches"</strong>
-                  " - Sort by choosing between randomly selected items."
-                </li>
-                <li>
-                  <strong>"Random Rounds"</strong>
-                  " - This mode is similar to Random Matches except every item will be selected before an item is repeated."
-                </li>
-              </ul>
-              <p>
-                "To rate items, go to the item rating page for the list by clicking on the "
-                <button type="button" class="btn btn-success btn-sm">
-                  "Rate"
-                </button>" button."
-              </p>
-              <p>"You can also:"</p>
-              <ul class="mb-0">
-                <li>"View items in the list by clicking on the widget to expand it."</li>
-                <li>
-                  "Search for data about your ratings and rankings by going to the "
-                  <a href="/search">"Search"</a>" page."
-                </li>
-              </ul>
-            </Collapse>
-            <div class="mt-3">
-              <div class="d-md-none">
-                {column}
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  on:click=move |_| {
-                    create.dispatch(());
-                  }
-                  disabled=disabled
-                >
-                  "Create List"
-                </button>
-              </div>
-              <div class="d-none d-md-block">
-                <div class="d-grid gap-3" style="grid-template-columns: 1fr 1fr">
-                  <div>
-                    {left}
+                    <button type="button" class="btn btn-success btn-sm">
+                      "Rank"
+                    </button> " button below the list widget. Here is the full list of sort modes:"
+                  </p>
+                  <ul>
+                    <li>
+                      <strong>"Tournament"</strong>
+                      " - Sort by choosing between items that are organized using a seeded tournament."
+                    </li>
+                    <li>
+                      <strong>"Random Tournament"</strong>
+                      " - Sort by choosing between items that are organized using a randomly generated tournament."
+                    </li>
+                    <li>
+                      <strong>"Random Matches"</strong>
+                      " - Sort by choosing between randomly selected items."
+                    </li>
+                    <li>
+                      <strong>"Random Rounds"</strong>
+                      " - This mode is similar to Random Matches except every item will be selected before an item is repeated."
+                    </li>
+                  </ul>
+                  <p>
+                    "To rate items, go to the item rating page for the list by clicking on the "
+                    <button type="button" class="btn btn-success btn-sm">
+                      "Rate"
+                    </button>" button."
+                  </p>
+                  <p>"You can also:"</p>
+                  <ul class="mb-0">
+                    <li>"View items in the list by clicking on the widget to expand it."</li>
+                    <li>
+                      "Search for data about your ratings and rankings by going to the "
+                      <a href="/search">"Search"</a>" page."
+                    </li>
+                  </ul>
+                </Collapse>
+                <div class="mt-3">
+                  <div class="d-md-none">
+                    {column}
                     <button
                       type="button"
                       class="btn btn-primary"
@@ -129,13 +114,28 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                       "Create List"
                     </button>
                   </div>
-                  <div>{right}</div>
+                  <div class="d-none d-md-block">
+                    <div class="d-grid gap-3" style="grid-template-columns: 1fr 1fr">
+                      <div>
+                        {left}
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          on:click=move |_| {
+                            create.dispatch(());
+                          }
+                          disabled=disabled
+                        >
+                          "Create List"
+                        </button>
+                      </div>
+                      <div>{right}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        }.into_any(),
-    ))
+            },
+        ))
     }
 }
 

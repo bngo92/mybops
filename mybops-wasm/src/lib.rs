@@ -16,7 +16,7 @@ mod app;
 mod base;
 mod bootstrap;
 mod dataframe;
-// mod docs;
+mod docs;
 mod edit;
 mod home;
 // mod integrations;
@@ -103,7 +103,7 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
     };
 }
 
-fn nav_content(nav: AnyView, content: AnyView) -> impl IntoView {
+fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
       <>
         <nav class="navbar navbar-expand navbar-bg py-2">

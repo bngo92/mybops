@@ -269,6 +269,7 @@ fn AppImpl() -> impl IntoView {
           <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
             <Routes fallback=crate::not_found>
               <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
+              <Route path=path!("/docs") view=docs::docs />
               <ParentRoute path=path!("/lists") view=Outlet>
                 <Route
                   path=path!("")
