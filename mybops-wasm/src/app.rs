@@ -13,6 +13,7 @@ use crate::{
     plot::{DataView, DataViewRender},
     random::{RandomMatches, RandomRounds},
     search::Search,
+    settings::Settings,
     tournament::{RandomTournamentLoader, TournamentLoader},
 };
 use leptos::{either::Either, html, prelude::*};
@@ -346,6 +347,16 @@ fn AppImpl() -> impl IntoView {
                 />
               </ParentRoute>
               <Route path=path!("/search") view=move || view! { <Search logged_in=logged_in /> } />
+              <Route
+                path=path!("/settings")
+                view=move || {
+                  if user.read().as_ref().flatten().is_some() {
+                    view! { <Settings user=move || user.get().flatten().unwrap() /> }.into_any()
+                  } else {
+                    crate::not_found().into_any()
+                  }
+                }
+              />
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
           </div>

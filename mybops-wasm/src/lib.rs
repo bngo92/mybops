@@ -25,7 +25,7 @@ mod nfl;
 mod plot;
 mod random;
 mod search;
-// mod settings;
+mod settings;
 mod tournament;
 
 #[derive(Clone, Routable, PartialEq)]
