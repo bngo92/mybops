@@ -565,8 +565,8 @@ fn match_view(
               <option selected=matches!(
                 fields.view_state,
                 ViewState::Tournament
-              )>{"Tournament View"}</option>
-              <option selected=matches!(fields.view_state, ViewState::List)>{"List View"}</option>
+              )>"Tournament View"</option>
+              <option selected=matches!(fields.view_state, ViewState::List)>"List View"</option>
             </select>
           </div>
         </div> {view}

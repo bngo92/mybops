@@ -327,9 +327,7 @@ pub fn Nfl() -> impl IntoView {
         (games, records)
     });
     move || {
-        let Some((games, records)) = games.get() else {
-            return None;
-        };
+        let (games, records) = games.get()?;
         let selected = !selected_teams.read().is_empty();
         let teams = if selected {
             &selected_teams.read()
@@ -375,11 +373,9 @@ pub fn Nfl() -> impl IntoView {
                         "Head-to-Head",
                         head_to_head.get(*team).unwrap_or(&(0, 0, 0)),
                     );
-                    let division_record = if let Some(record) = division_record.get(team) {
-                        Some(render_record("Divison Record", record))
-                    } else {
-                        None
-                    };
+                    let division_record = division_record
+                        .get(team)
+                        .map(|record| render_record("Divison Record", record));
                     let common_games = render_record(
                         "Common Games",
                         common_games.get(*team).unwrap_or(&(0, 0, 0)),

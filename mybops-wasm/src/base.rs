@@ -135,7 +135,7 @@ pub fn table_view<'a>(
         <table class="table table-striped mb-0">
           <thead>
             <tr>
-              <th>{"#"}</th>
+              <th>"#"</th>
               {header.iter().map(|item| view! { <th>{item.to_owned()}</th> }).collect_view()}
             </tr>
           </thead>

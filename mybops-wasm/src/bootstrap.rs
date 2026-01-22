@@ -10,24 +10,18 @@ pub fn Accordion(
     let initial = collapsed.read().unwrap_or(true);
     let (collapsed_state, set_collapsed_state) = signal(initial);
 
-    let collapsed = {
-        let on_toggle = on_toggle.clone();
-        move || {
-            if on_toggle.is_some() {
-                collapsed.read().unwrap_or(true)
-            } else {
-                collapsed_state.get()
-            }
+    let collapsed = move || {
+        if on_toggle.is_some() {
+            collapsed.read().unwrap_or(true)
+        } else {
+            collapsed_state.get()
         }
     };
-    let button_class = {
-        let collapsed = collapsed.clone();
-        move || {
-            if collapsed() {
-                "accordion-button collapsed"
-            } else {
-                "accordion-button"
-            }
+    let button_class = move || {
+        if collapsed() {
+            "accordion-button collapsed"
+        } else {
+            "accordion-button"
         }
     };
     let body_class = move || {

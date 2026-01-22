@@ -244,7 +244,7 @@ pub fn ListItems(
         }
     });
 
-    let disabled = move || user.read().is_none() || !crate::user_list(&*list.read(), &*user.read());
+    let disabled = move || user.read().is_none() || !crate::user_list(&list.read(), &user.read());
     let modal_html = if let Some(i) = modal.get() {
         let item = items.read()[i].clone();
         let onchange = move |rating| update_rating((i, rating));
@@ -253,20 +253,15 @@ pub fn ListItems(
             <div class="carousel slide">
               <div class="carousel-item active">
                 {move || {
-                  if let Some(iframe) = &item.item.iframe {
-                    Some(
+                  item
+                    .item
+                    .iframe
+                    .clone()
+                    .map(|iframe| {
                       view! {
-                        <iframe
-                          width="100%"
-                          height="380"
-                          prop:frameborder="0"
-                          src=iframe.clone()
-                        ></iframe>
-                      },
-                    )
-                  } else {
-                    None
-                  }
+                        <iframe width="100%" height="380" prop:frameborder="0" src=iframe></iframe>
+                      }
+                    })
                 }}
               </div>
               <button
@@ -287,17 +282,16 @@ pub fn ListItems(
               </button>
             </div>
             {move || {
-              if let Some(state) = state.read().as_ref() {
-                Some(
+              state
+                .read()
+                .as_ref()
+                .map(|state| {
                   view! {
                     <div class="col-2">
                       <Rating rating=state[i].rating onchange=onchange />
                     </div>
-                  },
-                )
-              } else {
-                None
-              }
+                  }
+                })
             }}
           </Modal>
         })
@@ -466,8 +460,11 @@ pub fn ListItems(
         <div class="d-flex flex-row-reverse flex-wrap justify-content-end row-gap-3 column-gap-5">
           {modal_html}
           {move || {
-            if let Some(src) = list.read().iframe.clone() {
-              Some(
+            list
+              .read()
+              .iframe
+              .clone()
+              .map(|src| {
                 view! {
                   <iframe
                     width="100%"
@@ -476,11 +473,8 @@ pub fn ListItems(
                     src=src
                     style="flex-basis: 600px"
                   ></iframe>
-                },
-              )
-            } else {
-              None
-            }
+                }
+              })
           }} <form style="flex-basis: 750px">
             <div class="d-grid row-gap-1 column-gap-3 mb-3" style=style>
               {move || {
@@ -584,17 +578,17 @@ fn Rating(
         class="form-select"
       >
         <option selected=move || rating.is_none()></option>
-        <option selected=move || rating == Some(0)>{"0"}</option>
-        <option selected=move || rating == Some(1)>{"1"}</option>
-        <option selected=move || rating == Some(2)>{"2"}</option>
-        <option selected=move || rating == Some(3)>{"3"}</option>
-        <option selected=move || rating == Some(4)>{"4"}</option>
-        <option selected=move || rating == Some(5)>{"5"}</option>
-        <option selected=move || rating == Some(6)>{"6"}</option>
-        <option selected=move || rating == Some(7)>{"7"}</option>
-        <option selected=move || rating == Some(8)>{"8"}</option>
-        <option selected=move || rating == Some(9)>{"9"}</option>
-        <option selected=move || rating == Some(10)>{"10"}</option>
+        <option selected=move || rating == Some(0)>"0"</option>
+        <option selected=move || rating == Some(1)>"1"</option>
+        <option selected=move || rating == Some(2)>"2"</option>
+        <option selected=move || rating == Some(3)>"3"</option>
+        <option selected=move || rating == Some(4)>"4"</option>
+        <option selected=move || rating == Some(5)>"5"</option>
+        <option selected=move || rating == Some(6)>"6"</option>
+        <option selected=move || rating == Some(7)>"7"</option>
+        <option selected=move || rating == Some(8)>"8"</option>
+        <option selected=move || rating == Some(9)>"9"</option>
+        <option selected=move || rating == Some(10)>"10"</option>
       </select>
     }
 }

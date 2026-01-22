@@ -155,7 +155,6 @@ pub fn Edit(
                     Some(SourceType::Setlist(_)) => selected[2] = true,
                     Some(SourceType::ListItems(_)) => selected[3] = true,
                 };
-                let delete_source = delete_source.clone();
                 let onclick = move |_| delete_source(i);
                 let value = match source {
                     None => String::new(),
@@ -171,7 +170,7 @@ pub fn Edit(
                 view! {
                   <div class="row mb-1">
                     <div class="col-4 col-sm-3 col-md-2">
-                      <select node_ref=source_ref.clone() class="form-select">
+                      <select node_ref=*source_ref class="form-select">
                         <option selected=selected[0]>"Custom"</option>
                         <option selected=selected[1]>"Spotify"</option>
                         <option selected=selected[2]>"Setlist"</option>

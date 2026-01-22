@@ -9,8 +9,6 @@ use std::{collections::HashSet, io::Cursor};
 use wasm_bindgen::{JsCast, prelude::*};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
-use yew::{Callback, Html, Properties, function_component, html, use_state};
-use yew_router::Routable;
 
 mod app;
 mod base;
@@ -28,43 +26,12 @@ mod search;
 mod settings;
 mod tournament;
 
-#[derive(Clone, Routable, PartialEq)]
-enum Route {
-    #[at("/")]
-    Home,
-    #[at("/docs")]
-    Docs,
-    #[at("/lists")]
-    ListsRoot,
-    #[at("/lists/*")]
-    Lists,
-    #[at("/search")]
-    Search,
-    #[at("/settings")]
-    Settings,
-    #[at("/integrations/spotify")]
-    Spotify,
-    #[at("/nfl")]
-    Nfl,
-}
-
-#[derive(Clone, Routable, PartialEq)]
 pub enum ListsRoute {
-    #[at("/lists/:id")]
     View,
-    #[at("/lists/:id/items")]
     List,
-    #[at("/lists/:id/edit")]
     Edit,
-    #[at("/lists/:id/match")]
     Match,
-    #[at("/lists/:id/tournament")]
     Tournament,
-}
-
-#[derive(Eq, PartialEq, Properties)]
-pub struct UserProps {
-    logged_in: bool,
 }
 
 pub fn parse_spotify_source(input: String) -> Option<Spotify> {

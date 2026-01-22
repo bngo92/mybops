@@ -150,8 +150,6 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
 
     let on_toggle = {
         let list = list.clone();
-        let query = query.clone();
-        let collapsed = collapsed.clone();
         Action::new_unsync(move |_| {
             let list = list.clone();
             async move {

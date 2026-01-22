@@ -53,9 +53,9 @@ pub fn DataViewRender(
         ></canvas>
         {move || {
           if let DataView::Table = view.get() {
-            df_table_view(&*df.read(), true).into_any()
+            df_table_view(&df.read(), true).into_any()
           } else if let DataView::Csv = view.get() {
-            let csv = write_csv(&*df.read());
+            let csv = write_csv(&df.read());
             view! {
               <p>
                 {csv
@@ -67,7 +67,7 @@ pub fn DataViewRender(
             }
               .into_any()
           } else {
-            view! {}.into_any()
+            ().into_any()
           }
         }}
       </div>

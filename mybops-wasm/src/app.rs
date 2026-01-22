@@ -25,10 +25,7 @@ use leptos_router::{
     path,
 };
 use mybops::{List, ListMode, User};
-use std::{borrow::Borrow, collections::HashMap, rc::Rc};
-use web_sys::{HtmlSelectElement, MouseEvent};
-
-type RouteQuery = &'static [(&'static str, &'static str)];
+use web_sys::MouseEvent;
 
 pub enum ListPage {
     View,
@@ -39,38 +36,6 @@ pub enum ListPage {
     Tournament,
     RandomTournament,
 }
-
-/* fn switch(
-    routes: Route,
-    user: Rc<Option<User>>,
-    list_dropdown: bool,
-    show_list_dropdown: Rc<Callback<MouseEvent>>,
-) -> Html {
-    let logged_in = user.is_some();
-    match routes {
-        Route::Home => html! { <Home {logged_in}/> },
-        Route::Docs => docs::docs(),
-        Route::ListsRoot => html! { <list::Lists {logged_in}/> },
-        Route::Lists => {
-            let render = move |view| {
-                html! {
-                  <ListComponent {view} user={Rc::clone(&user)} dropdown={list_dropdown} show_dropdown={Rc::clone(&show_list_dropdown)}/>
-                }
-            };
-            html! { <Switch<ListsRoute> {render}/> }
-        }
-        Route::Search => html! { <Search {logged_in}/> },
-        Route::Settings => html! {
-            if let Some(user) = (*user).clone() {
-                <Settings {user}/>
-            } else {
-                <Redirect<Route> to={Route::Home}/>
-            }
-        },
-        Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
-        Route::Nfl => html! { <Nfl/> },
-    }
-} */
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -423,20 +388,17 @@ fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
     let (error, set_error) = signal(None);
     let query_ref = NodeRef::<html::Input>::new();
 
-    let data = LocalResource::new(move || {
-        let list = list.clone();
-        async move {
-            match crate::query_list(&list.read(), query.get()).await {
-                Ok(None) => None,
-                Ok(Some(mut data)) => {
-                    set_error.set(None);
-                    data.drop_in_place("id");
-                    Some(data)
-                }
-                Err(e) => {
-                    set_error.set(e.as_string());
-                    None
-                }
+    let data = LocalResource::new(move || async move {
+        match crate::query_list(&list.read(), query.get()).await {
+            Ok(None) => None,
+            Ok(Some(mut data)) => {
+                set_error.set(None);
+                data.drop_in_place("id");
+                Some(data)
+            }
+            Err(e) => {
+                set_error.set(e.as_string());
+                None
             }
         }
     });
@@ -540,17 +502,17 @@ pub fn ListComponent(
         };
         let query = use_query_map();
         let view = match view {
-            ListsRoute::View { .. } => ListPage::View,
-            ListsRoute::List { .. } => ListPage::List,
-            ListsRoute::Edit { .. } => ListPage::Edit,
-            ListsRoute::Tournament { .. } => {
+            ListsRoute::View => ListPage::View,
+            ListsRoute::List => ListPage::List,
+            ListsRoute::Edit => ListPage::Edit,
+            ListsRoute::Tournament => {
                 if query.read().get("mode").as_deref() == Some("random") {
                     ListPage::RandomTournament
                 } else {
                     ListPage::Tournament
                 }
             }
-            ListsRoute::Match { .. } => {
+            ListsRoute::Match => {
                 if query.read().get("mode").as_deref() == Some("rounds") {
                     ListPage::RandomRounds
                 } else {
@@ -566,7 +528,7 @@ pub fn ListComponent(
             ListPage::Edit => tabs[2] = active,
             _ => {}
         }
-        let component = if crate::user_list(&list, &*user.read()) {
+        let component = if crate::user_list(&list, &user.read()) {
             match view {
                 ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
                 ListPage::List => {
@@ -659,7 +621,7 @@ pub fn ListComponent(
                 }
             }
         };
-        let user = crate::user_list(&list, &*user.read());
+        let user = crate::user_list(&list, &user.read());
         Some(view! {
           <Content
             heading=list.name.clone()

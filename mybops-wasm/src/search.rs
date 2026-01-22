@@ -214,7 +214,7 @@ pub fn SearchPane() -> impl IntoView {
                 style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%"
                 placeholder=default_search
               />
-              {move || error().map(|error| { error })}
+              {error}
             </div>
             <button
               type="button"

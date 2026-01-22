@@ -70,8 +70,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                         <div class="col">
                           <a href=i.url.clone()>{i.name.clone()}</a>
                           {move || {
-                            i
-                              .user_score
+                            i.user_score
                               .is_none()
                               .then(|| {
                                 view! {
