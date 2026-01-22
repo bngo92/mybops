@@ -1,15 +1,12 @@
 use leptos::{prelude::*, tachys::html::event::MouseEvent};
 
 #[component]
-pub fn Accordion<F>(
+pub fn Accordion(
     children: Children,
     header: String,
-    on_toggle: Option<Box<F>>,
+    #[prop(optional)] on_toggle: Option<Callback<MouseEvent>>,
     #[prop(into)] collapsed: Signal<Option<bool>>,
-) -> impl IntoView
-where
-    F: FnMut(MouseEvent) + 'static + Send + Clone,
-{
+) -> impl IntoView {
     let initial = collapsed.read().unwrap_or(true);
     let (collapsed_state, set_collapsed_state) = signal(initial);
 
@@ -43,14 +40,13 @@ where
     let onclick = if let Some(on_toggle) = on_toggle {
         on_toggle
     } else {
-        Box::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
-            as Box<dyn FnMut(MouseEvent) + 'static>
+        Callback::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
     };
     view! {
       <div class="accordion mb-3">
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class=button_class on:click=onclick>
+            <button class=button_class on:click=move |ev| onclick.run(ev)>
               {header}
             </button>
           </h2>

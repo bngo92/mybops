@@ -19,7 +19,7 @@ mod dataframe;
 mod docs;
 mod edit;
 mod home;
-// mod integrations;
+mod integrations;
 mod list;
 mod nfl;
 mod plot;

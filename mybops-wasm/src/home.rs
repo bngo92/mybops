@@ -201,11 +201,9 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
         <Accordion
           header=list.name.clone()
           collapsed=move || Some(collapsed.get())
-          on_toggle=Some(
-            Box::new(move |_| {
-              on_toggle.dispatch(());
-            }),
-          )
+          on_toggle=Callback::new(move |_| {
+            on_toggle.dispatch(());
+          })
         >
           {move || {
             if let Some(query) = query.get() {

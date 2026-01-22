@@ -5,6 +5,7 @@ use crate::{
     docs,
     edit::Edit,
     home::Home,
+    integrations::spotify::SpotifyIntegration,
     list::{
         self,
         item::{ItemMode, ListItems},
@@ -356,6 +357,10 @@ fn AppImpl() -> impl IntoView {
                     crate::not_found().into_any()
                   }
                 }
+              />
+              <Route
+                path=path!("/integrations/spotify")
+                view=move || view! { <SpotifyIntegration logged_in=logged_in /> }
               />
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
