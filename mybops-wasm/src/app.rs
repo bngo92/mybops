@@ -2,6 +2,7 @@ use crate::{
     Content, ListsRoute,
     base::Input,
     bootstrap::Modal,
+    docs,
     edit::Edit,
     home::Home,
     list::{
@@ -11,6 +12,7 @@ use crate::{
     nfl::Nfl,
     plot::{DataView, DataViewRender},
     random::{RandomMatches, RandomRounds},
+    search::Search,
     tournament::{RandomTournamentLoader, TournamentLoader},
 };
 use leptos::{either::Either, html, prelude::*};
@@ -343,6 +345,7 @@ fn AppImpl() -> impl IntoView {
                   }
                 />
               </ParentRoute>
+              <Route path=path!("/search") view=move || view! { <Search logged_in=logged_in /> } />
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
           </div>

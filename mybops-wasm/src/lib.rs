@@ -24,7 +24,7 @@ mod list;
 mod nfl;
 mod plot;
 mod random;
-// mod search;
+mod search;
 // mod settings;
 mod tournament;
 
