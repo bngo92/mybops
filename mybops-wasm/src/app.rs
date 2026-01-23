@@ -1,35 +1,31 @@
 use crate::{
-    Content, ListsRoute, Route,
+    Content, ListsRoute,
     base::Input,
     bootstrap::Modal,
-    dataframe::DataFrame,
     docs,
     edit::Edit,
     home::Home,
     integrations::spotify::SpotifyIntegration,
-    list,
-    list::item::{ItemMode, ListItems},
+    list::{
+        self,
+        item::{ItemMode, ListItems},
+    },
     nfl::Nfl,
-    plot::DataView,
+    plot::{DataView, DataViewRender},
     random::{RandomMatches, RandomRounds},
     search::Search,
     settings::Settings,
     tournament::{RandomTournamentLoader, TournamentLoader},
 };
+use leptos::{either::Either, html, prelude::*};
+use leptos_router::{
+    components::*,
+    hooks::{use_params, use_query_map},
+    params::Params,
+    path,
+};
 use mybops::{List, ListMode, User};
-use std::{borrow::Borrow, collections::HashMap, rc::Rc};
-use web_sys::{HtmlSelectElement, MouseEvent};
-use yew::{
-    Callback, Component, Context, Html, HtmlResult, NodeRef, Properties, Suspense,
-    function_component, html, suspense::use_future, use_node_ref, use_state,
-};
-use yew_router::{
-    BrowserRouter, Switch,
-    hooks::use_location,
-    prelude::{Link, Redirect},
-};
-
-type RouteQuery = &'static [(&'static str, &'static str)];
+use web_sys::MouseEvent;
 
 pub enum ListPage {
     View,
@@ -41,83 +37,41 @@ pub enum ListPage {
     RandomTournament,
 }
 
-fn switch(
-    routes: Route,
-    user: Rc<Option<User>>,
-    list_dropdown: bool,
-    show_list_dropdown: Rc<Callback<MouseEvent>>,
-) -> Html {
-    let logged_in = user.is_some();
-    match routes {
-        Route::Home => html! { <Home {logged_in}/> },
-        Route::Docs => docs::docs(),
-        Route::ListsRoot => html! { <list::Lists {logged_in}/> },
-        Route::Lists => {
-            let render = move |view| {
-                html! {
-                  <ListComponent {view} user={Rc::clone(&user)} dropdown={list_dropdown} show_dropdown={Rc::clone(&show_list_dropdown)}/>
-                }
-            };
-            html! { <Switch<ListsRoute> {render}/> }
-        }
-        Route::Search => html! { <Search {logged_in}/> },
-        Route::Settings => html! {
-            if let Some(user) = (*user).clone() {
-                <Settings {user}/>
-            } else {
-                <Redirect<Route> to={Route::Home}/>
-            }
-        },
-        Route::Spotify => html! { <SpotifyIntegration {logged_in}/> },
-        Route::Nfl => html! { <Nfl/> },
+#[component]
+pub fn App() -> impl IntoView {
+    view! {
+      <Transition>
+        <Router>
+          <AppImpl />
+        </Router>
+      </Transition>
     }
 }
 
-#[function_component]
-pub fn App() -> Html {
-    html! {
-        <Suspense>
-            <AppImpl/>
-        </Suspense>
-    }
-}
+#[component]
+fn AppImpl() -> impl IntoView {
+    let logged_in = RwSignal::new(false);
+    let user = LocalResource::new(move || async move {
+        let user = crate::get_user().await.ok();
+        logged_in.set(user.is_some());
+        user
+    });
+    let (sidebar, set_sidebar) = signal(false);
+    let (login, set_login) = signal(false);
+    let (dropdown, set_dropdown) = signal(false);
+    let (list_dropdown, set_list_dropdown) = signal(false);
+    let (integrations_dropdown, set_integrations_dropdown) = signal(false);
 
-#[function_component]
-fn AppImpl() -> HtmlResult {
-    let user = Rc::new((*use_future(|| async move { crate::get_user().await.ok() })?).clone());
-    let sidebar = use_state(|| false);
-    let login = use_state(|| false);
-    let dropdown = use_state(|| false);
-    let list_dropdown = use_state(|| false);
-    let integrations_dropdown = use_state(|| false);
-
-    let show_sidebar = {
-        let sidebar = sidebar.clone();
-        Callback::from(move |_| sidebar.set(true))
-    };
-    let hide_sidebar = {
-        let sidebar = sidebar.clone();
-        Callback::from(move |_| sidebar.set(false))
-    };
-    let show_login = {
-        let login = login.clone();
-        Callback::from(move |_| login.set(true))
-    };
-    let hide_login = {
-        let login = login.clone();
-        Callback::from(move |_| login.set(false))
-    };
     // We need to check which dropdown is clicked instead of relying on stop_propagation
     // TODO: fix multiple open dropdowns
-    let reset_dropdown = {
-        let dropdown = dropdown.clone();
-        let list_dropdown = list_dropdown.clone();
-        let integrations_dropdown = integrations_dropdown.clone();
-        Callback::from(move |_| {
-            dropdown.set(false);
-            list_dropdown.set(false);
-            integrations_dropdown.set(false);
-        })
+    // let reset_dropdown = move |_| {
+    //     set_dropdown.set(false);
+    //     set_list_dropdown.set(false);
+    //     set_integrations_dropdown.set(false);
+    // };
+    let show_list_dropdown = move |e: MouseEvent| {
+        e.stop_propagation();
+        set_list_dropdown.set(!list_dropdown.get());
     };
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
@@ -132,124 +86,286 @@ fn AppImpl() -> HtmlResult {
     }
     Msg::Reload => true,*/
 
-    let window = crate::window();
-    let location = window.location();
     //let onclick = ctx.link().callback(|_| Msg::Logout);
     // TODO: make anchors active if active
     let search = /*if location.pathname().unwrap() == "/search" {
-            "nav-link active"
-        } else */{
-            "nav-link text-white"
-        };
-    let (toggle_class, menu_class) = dropdown_class(*dropdown);
-    let (int_toggle_class, int_menu_class) = dropdown_class(*integrations_dropdown);
-    let toggle_dropdown = Callback::from(move |e: MouseEvent| {
+        "nav-link active"
+    } else */{
+        "nav-link text-white"
+    };
+    let toggle_dropdown = move |e: MouseEvent| {
         // Prevent reset_dropdown from triggering
         e.stop_propagation();
-        dropdown.set(!*dropdown);
-    });
-    let int_dropdown = Callback::from(move |e: MouseEvent| {
-        e.stop_propagation();
-        integrations_dropdown.set(!*integrations_dropdown);
-    });
-    let sidebar_class = if *sidebar {
-        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
-    } else {
-        "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
+        set_dropdown.set(!dropdown.get());
     };
-    let render = {
-        let user = Rc::clone(&user);
-        let show_list_dropdown = {
-            let list_dropdown = list_dropdown.clone();
-            Rc::new(Callback::from(move |e: MouseEvent| {
-                e.stop_propagation();
-                list_dropdown.set(!*list_dropdown);
-            }))
-        };
-        move |routes| {
-            switch(
-                routes,
-                Rc::clone(&user),
-                *list_dropdown,
-                Rc::clone(&show_list_dropdown),
-            )
+    let int_dropdown = move |e: MouseEvent| {
+        e.stop_propagation();
+        set_integrations_dropdown.set(!integrations_dropdown.get());
+    };
+    let sidebar_class = move || {
+        if sidebar.get() {
+            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
+        } else {
+            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
         }
     };
-    Ok(html! {
-      <div onclick={reset_dropdown}>
-        <BrowserRouter>
-          <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
-            <div class="container-lg d-flex justify-content-start gap-3">
-              <button type="button" class="border-0" style="background-color: transparent; color: rgba(255,255,255,0.85)" onclick={show_sidebar}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-                </svg>
-              </button>
-              <Link<Route> classes="navbar-brand" to={Route::Home}>{"mybops"}</Link<Route>>
-            </div>
-          </nav>
-          <div class="d-flex vh-100 min-vh-100 align-items-stretch">
-            <div class={sidebar_class} style="width: 200px;">
-              <div class="h-100 offcanvas-body d-flex flex-column">
-                <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
-                  <Link<Route> classes="text-white text-decoration-none fs-5" to={Route::Home}>{"mybops"}</Link<Route>>
-                  <button type="button" class="btn-close d-sm-none" onclick={hide_sidebar}></button>
-                </div>
-                <hr/>
-                <ul class="nav nav-pills flex-column mb-auto">
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::ListsRoot}>{"Lists"}</Link<Route>>
-                  </li>
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::Search}>{"Query"}</Link<Route>>
-                  </li>
-                  <li class="nav-item dropdown">
-                    <a class={int_toggle_class} href="#" onclick={int_dropdown}>{"Integrations"}</a>
-                    <ul class={int_menu_class}>
-                      <li><Link<Route> classes="dropdown-item" to={Route::Spotify}>{"Spotify"}</Link<Route>></li>
-                    </ul>
-                  </li>
-                  <li class="nav-item">
-                    <Link<Route> classes={search} to={Route::Docs}>{"Docs"}</Link<Route>>
-                  </li>
-                </ul>
-                <hr/>
-                <div>
-                  <ul class="nav nav-pills flex-column">
-                    if let Some(user) = &*user {
-                      <li class="nav-item dropdown">
-                        <a class={toggle_class} href="#" onclick={toggle_dropdown}>{&user.user_id}</a>
-                        <ul class={menu_class} style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)">
-                          <li><Link<Route> classes="dropdown-item" to={Route::Settings}>{"Settings"}</Link<Route>></li>
-                          <li><a class="dropdown-item" href="/api/logout">{"Log out"}</a></li>
-                        </ul>
-                      </li>
-                    } else {
-                      <li class="nav-item">
-                        <a class={search} href="#" onclick={show_login}>{"Log in"}</a>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <Suspense>
-              <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
-                <Switch<Route> {render} />
-              </div>
-            </Suspense>
+    view! {
+      // <div on:click=reset_dropdown>
+      <div>
+        <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
+          <div class="container-lg d-flex justify-content-start gap-3">
+            <button
+              type="button"
+              class="border-0"
+              style="background-color: transparent; color: rgba(255,255,255,0.85)"
+              on:click=move |_| set_sidebar.set(true)
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-list"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"
+                />
+              </svg>
+            </button>
+            <a class="navbar-brand" href="/">
+              "mybops"
+            </a>
           </div>
-          if *login {
-            <Modal header={"Log in"} hide={hide_login}>
-              <div class="modal-body d-grid gap-2">
-                <a class="btn btn-success" href={format!("https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private", location.origin().unwrap().as_str())}>{"Log in with Spotify"}</a>
-                <a class="btn btn-success" href={format!("https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email", location.origin().unwrap().as_str())}>{"Log in with Google"}</a>
+        </nav>
+        <div class="d-flex vh-100 min-vh-100 align-items-stretch">
+          <div class=sidebar_class style="width: 200px;">
+            <div class="h-100 offcanvas-body d-flex flex-column">
+              <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
+                <a class="text-white text-decoration-none fs-5" href="/">
+                  "mybops"
+                </a>
+                <button
+                  type="button"
+                  class="btn-close d-sm-none"
+                  on:click=move |_| set_sidebar.set(false)
+                ></button>
               </div>
-            </Modal>
-          }
-        </BrowserRouter>
+              <hr />
+              <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                  <a class=search href="/lists">
+                    "Lists"
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class=search href="/search">
+                    "Query"
+                  </a>
+                </li>
+                <li class="nav-item dropdown">
+                  <a
+                    class=dropdown_class(integrations_dropdown.get()).0
+                    href="#"
+                    on:click=int_dropdown
+                  >
+                    "Integrations"
+                  </a>
+                  <ul class=move || dropdown_class(integrations_dropdown.get()).1>
+                    <li>
+                      <a class="dropdown-item" href="/integrations/spotify">
+                        "Spotify"
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a class=search href="/docs">
+                    "Docs"
+                  </a>
+                </li>
+              </ul>
+              <hr />
+              <div>
+                <ul class="nav nav-pills flex-column">
+                  {move || {
+                    if let Some(user) = user.get().flatten() {
+                      Either::Left(
+                        view! {
+                          <li class="nav-item dropdown">
+                            <a
+                              class=move || dropdown_class(dropdown.get()).0
+                              href="#"
+                              on:click=toggle_dropdown
+                            >
+                              {user.user_id}
+                            </a>
+                            <ul
+                              class=move || dropdown_class(dropdown.get()).1
+                              style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)"
+                            >
+                              <li>
+                                <a class="dropdown-item" href="/settings">
+                                  "Settings"
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item" href="/api/logout" rel="external">
+                                  "Log out"
+                                </a>
+                              </li>
+                            </ul>
+                          </li>
+                        },
+                      )
+                    } else {
+                      Either::Right(
+                        view! {
+                          <li class="nav-item">
+                            <a class=search href="#" on:click=move |_| set_login.set(true)>
+                              "Log in"
+                            </a>
+                          </li>
+                        },
+                      )
+                    }
+                  }}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+            <Routes fallback=crate::not_found>
+              <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
+              <Route path=path!("/docs") view=docs::docs />
+              <ParentRoute path=path!("/lists") view=Outlet>
+                <Route
+                  path=path!("")
+                  view=move || {
+                    view! { <list::Lists logged_in=logged_in /> }
+                  }
+                />
+                <Route
+                  path=path!(":id")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::View
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+                <Route
+                  path=path!(":id/items")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::List
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+                <Route
+                  path=path!(":id/edit")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Edit
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+                <Route
+                  path=path!(":id/match")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Match
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+                <Route
+                  path=path!(":id/tournament")
+                  view=move || {
+                    view! {
+                      <ListComponent
+                        view=ListsRoute::Tournament
+                        user=move || user.get().flatten()
+                        dropdown=list_dropdown
+                        show_dropdown=show_list_dropdown
+                      />
+                    }
+                  }
+                />
+              </ParentRoute>
+              <Route path=path!("/search") view=move || view! { <Search logged_in=logged_in /> } />
+              <Route
+                path=path!("/settings")
+                view=move || {
+                  if user.read().as_ref().flatten().is_some() {
+                    view! { <Settings user=move || user.get().flatten().unwrap() /> }.into_any()
+                  } else {
+                    crate::not_found().into_any()
+                  }
+                }
+              />
+              <Route
+                path=path!("/integrations/spotify")
+                view=move || view! { <SpotifyIntegration logged_in=logged_in /> }
+              />
+              <Route path=path!("/nfl") view=Nfl />
+            </Routes>
+          </div>
+          {move || {
+            if login.get() {
+              let origin = location().origin().unwrap();
+              Some(
+                view! {
+                  <Modal header="Log in".to_owned() hide=move |_| set_login.set(false)>
+                    <div class="modal-body d-grid gap-2">
+                      <a
+                        class="btn btn-success"
+                        href=format!(
+                          "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
+                          origin.as_str(),
+                        )
+                      >
+                        "Log in with Spotify"
+                      </a>
+                      <a
+                        class="btn btn-success"
+                        href=format!(
+                          "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                          origin.as_str(),
+                        )
+                      >
+                        "Log in with Google"
+                      </a>
+                    </div>
+                  </Modal>
+                },
+              )
+            } else {
+              None
+            }
+          }}
+        </div>
       </div>
-    })
+    }
 }
 
 fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
@@ -265,123 +381,76 @@ fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
     }
 }
 
-enum ListViewMsg {
-    Success(Option<DataFrame>),
-    Failed(String),
-    Select,
-    Query,
+#[component]
+fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
+    let (view, set_view) = signal(DataView::Table);
+    let (query, set_query) = signal(None);
+    let (error, set_error) = signal(None);
+    let query_ref = NodeRef::<html::Input>::new();
+
+    let data = LocalResource::new(move || async move {
+        match crate::query_list(&list.read(), query.get()).await {
+            Ok(None) => None,
+            Ok(Some(mut data)) => {
+                set_error.set(None);
+                data.drop_in_place("id");
+                Some(data)
+            }
+            Err(e) => {
+                set_error.set(e.as_string());
+                None
+            }
+        }
+    });
+
+    view! {
+      <div class="row">
+        <div class="col-auto">
+          <select
+            class="form-select mb-3"
+            on:change:target=move |ev| {
+              let view = match ev.target().value().as_str() {
+                "Table" => DataView::Table,
+                "Column Graph" => DataView::ColumnGraph,
+                "Line Graph" => DataView::LineGraph,
+                "Scatter Plot" => DataView::ScatterPlot,
+                "Cumulative Line Graph" => DataView::CumLineGraph,
+                "CSV" => DataView::Csv,
+                _ => unreachable!(),
+              };
+              set_view.set(view)
+            }
+          >
+            <option selected=true>"Table"</option>
+            <option>"Column Graph"</option>
+            <option>"Line Graph"</option>
+            <option>"Scatter Plot"</option>
+            <option>"Cumulative Line Graph"</option>
+            <option>"CSV"</option>
+          </select>
+        </div>
+        <Input
+          input_ref=query_ref
+          value=Some(list.get().query)
+          onclick=move |_| set_query.set(query_ref.get().map(|query| query.value()))
+          error=error
+          disabled=matches!(list.read().mode, ListMode::View(_))
+        />
+        {move || {
+          data
+            .get()
+            .flatten()
+            .map(|data| {
+              view! { <DataViewRender view=view df=move || data.clone() set_error=set_error /> }
+            })
+        }}
+      </div>
+    }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct ListViewProps {
-    list: List,
-}
-
-struct ListView {
-    data: Option<DataFrame>,
-    select_ref: NodeRef,
-    view: DataView,
-    query_ref: NodeRef,
-    error: Option<String>,
-}
-
-impl Component for ListView {
-    type Message = ListViewMsg;
-    type Properties = ListViewProps;
-
-    fn create(ctx: &Context<Self>) -> Self {
-        let list = ctx.props().list.clone();
-        ctx.link().send_future(async move {
-            match crate::query_list(&list, None).await {
-                Ok(data) => ListViewMsg::Success(data),
-                Err(e) => ListViewMsg::Failed(e.as_string().unwrap()),
-            }
-        });
-        Self {
-            data: None,
-            select_ref: NodeRef::default(),
-            view: DataView::Table,
-            query_ref: NodeRef::default(),
-            error: None,
-        }
-    }
-
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            ListViewMsg::Success(data) => {
-                let Some(data) = data else {
-                    return false;
-                };
-                self.data = {
-                    let mut data = data.clone();
-                    data.drop_in_place("id");
-                    Some(data)
-                };
-                self.error = None;
-            }
-            ListViewMsg::Failed(e) => {
-                self.error = Some(e);
-            }
-            ListViewMsg::Select => {
-                let view = self.select_ref.cast::<HtmlSelectElement>().unwrap().value();
-                self.view = match &*view {
-                    "Table" => DataView::Table,
-                    "Column Graph" => DataView::ColumnGraph,
-                    "Line Graph" => DataView::LineGraph,
-                    "Scatter Plot" => DataView::ScatterPlot,
-                    "Cumulative Line Graph" => DataView::CumLineGraph,
-                    "CSV" => DataView::Csv,
-                    _ => unreachable!(),
-                };
-            }
-            ListViewMsg::Query => {
-                let query = self.query_ref.cast::<HtmlSelectElement>().unwrap().value();
-                let list = ctx.props().list.clone();
-                ctx.link().send_future(async move {
-                    match crate::query_list(&list, Some(query)).await {
-                        Ok(data) => ListViewMsg::Success(data),
-                        Err(e) => ListViewMsg::Failed(e.as_string().unwrap()),
-                    }
-                });
-            }
-        }
-        if let Some(data) = &self.data
-            && let Err(e) = self.view.draw(data)
-        {
-            self.error = Some(e.to_string());
-        }
-        true
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let onchange = ctx.link().callback(|_| ListViewMsg::Select);
-        let query = ctx.link().callback(|_| ListViewMsg::Query);
-        html! {
-            <div class="row">
-                <div class="col-auto">
-                    <select ref={self.select_ref.clone()} class="form-select mb-3" {onchange}>
-                        <option selected=true>{"Table"}</option>
-                        <option>{"Column Graph"}</option>
-                        <option>{"Line Graph"}</option>
-                        <option>{"Scatter Plot"}</option>
-                        <option>{"Cumulative Line Graph"}</option>
-                        <option>{"CSV"}</option>
-                    </select>
-                </div>
-                <Input input_ref={self.query_ref.clone()} onclick={query.clone()} error={self.error.clone()} disabled={matches!(ctx.props().list.mode, ListMode::View(_))}/>
-                if let Some(data) = &self.data {
-                    {self.view.render(data)}
-                }
-            </div>
-        }
-    }
-
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        if first_render || matches!(ctx.props().list.mode, ListMode::View(_)) {
-            let query = self.query_ref.cast::<HtmlSelectElement>().unwrap();
-            query.set_value(&ctx.props().list.query);
-        }
-    }
+#[derive(Params, PartialEq)]
+struct ListParams {
+    id: Option<String>,
 }
 
 enum ListState {
@@ -389,197 +458,251 @@ enum ListState {
     NotFound,
 }
 
-#[derive(PartialEq, Properties)]
-pub struct ListProps {
-    pub view: ListsRoute,
-    pub user: Rc<Option<User>>,
-    pub dropdown: bool,
-    pub show_dropdown: Rc<Callback<MouseEvent>>,
-}
-
-#[function_component]
+#[component]
 pub fn ListComponent(
-    ListProps {
-        view,
-        user,
-        dropdown,
-        show_dropdown,
-    }: &ListProps,
-) -> HtmlResult {
-    let id = match view {
-        ListsRoute::List { id }
-        | ListsRoute::View { id }
-        | ListsRoute::Edit { id }
-        | ListsRoute::Match { id }
-        | ListsRoute::Tournament { id } => id.clone(),
+    view: ListsRoute,
+    #[prop(into)] user: Signal<Option<User>>,
+    dropdown: ReadSignal<bool>,
+    show_dropdown: impl FnMut(MouseEvent) + 'static + Send + Clone,
+) -> impl IntoView {
+    let params = use_params::<ListParams>();
+    let id = move || {
+        params
+            .read()
+            .as_ref()
+            .ok()
+            .and_then(|params| params.id.clone())
+            .unwrap_or_default()
     };
-    let select_ref = use_node_ref();
-    let (ref state, ref mode) = *use_future(|| async move {
-        if let Some(list) = crate::fetch_list(&id).await.unwrap() {
-            let mode = if let ListMode::View(_) = list.mode {
+    let (mode, set_mode) = signal(ItemMode::View);
+    let state = LocalResource::new(move || async move {
+        if let Some(list) = crate::fetch_list(&id()).await.unwrap() {
+            set_mode.set(if let ListMode::View(_) = &list.mode {
                 ItemMode::View
             } else {
                 ItemMode::Update
-            };
-            (ListState::Success(Box::new(list)), mode)
+            });
+            ListState::Success(Box::new(list))
         } else {
-            (ListState::NotFound, ItemMode::View)
+            ListState::NotFound
         }
-    })?;
-    let mode = use_state(|| mode.clone());
-    let location = use_location();
-    let select_view = {
-        let select_ref = select_ref.clone();
-        let mode = mode.clone();
-        Callback::from(move |_| {
-            mode.set(
-                match select_ref
-                    .cast::<HtmlSelectElement>()
-                    .map(|s| s.value())
-                    .as_deref()
-                    .unwrap_or("Update")
-                {
-                    "Update" => ItemMode::Update,
-                    "Delete" => ItemMode::Delete,
-                    _ => unreachable!(),
-                },
-            )
-        })
-    };
+    });
 
-    let list = match state {
-        ListState::NotFound => return Ok(crate::not_found()),
-        ListState::Success(list) => list,
-    };
-    let query = location
-        .unwrap()
-        .query::<HashMap<String, String>>()
-        .unwrap_or_default();
-    let view = match view.clone() {
-        ListsRoute::View { .. } => ListPage::View,
-        ListsRoute::List { .. } => ListPage::List,
-        ListsRoute::Edit { .. } => ListPage::Edit,
-        ListsRoute::Tournament { .. } => {
-            if query.get("mode").map(String::as_str) == Some("random") {
+    let query = use_query_map();
+    let view = move || match view {
+        ListsRoute::View => ListPage::View,
+        ListsRoute::List => ListPage::List,
+        ListsRoute::Edit => ListPage::Edit,
+        ListsRoute::Tournament => {
+            if query.read().get("mode").as_deref() == Some("random") {
                 ListPage::RandomTournament
             } else {
                 ListPage::Tournament
             }
         }
-        ListsRoute::Match { .. } => {
-            if query.get("mode").map(String::as_str) == Some("rounds") {
+        ListsRoute::Match => {
+            if query.read().get("mode").as_deref() == Some("rounds") {
                 ListPage::RandomRounds
             } else {
                 ListPage::RandomMatches
             }
         }
     };
-    let mut tabs = ["nav-link"; 3];
-    let active = "nav-link active";
-    match view {
-        ListPage::View => tabs[0] = active,
-        ListPage::List => tabs[1] = active,
-        ListPage::Edit => tabs[2] = active,
-        _ => {}
-    }
-    let component = if crate::user_list(list, user) {
-        match view {
-            ListPage::View => html! { <ListView list={*list.clone()}/> },
-            ListPage::List => {
-                html! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
+    let dropdown_html = {
+        let view = view.clone();
+        move || {
+            let list = match &*state.read() {
+                None => return None,
+                Some(ListState::NotFound) => return None,
+                Some(ListState::Success(list)) => list.clone(),
+            };
+            let toggle = match view() {
+                ListPage::RandomMatches => "Random Matches",
+                ListPage::RandomRounds => "Random Rounds",
+                ListPage::Tournament => "Tournament",
+                ListPage::RandomTournament => "Random Tournament",
+                _ => "Rank",
+            };
+            let toggle_class = match (toggle, dropdown.get()) {
+                ("Rank", false) => "nav-link dropdown-toggle",
+                ("Rank", true) => "nav-link dropdown-toggle show",
+                (_, false) => "nav-link active dropdown-toggle",
+                (_, true) => "nav-link active dropdown-toggle show",
+            };
+            let menu_class = if dropdown.get() {
+                "dropdown-menu show"
+            } else {
+                "dropdown-menu"
+            };
+            // TODO: handle GROUP BY queries
+            if let ListMode::View(_) = list.mode {
+                None
+            } else {
+                Some(view! {
+                  <li class="nav-item dropdown">
+                    <a class=toggle_class href="#" on:click=show_dropdown.clone()>
+                      {toggle}
+                    </a>
+                    <ul class=menu_class>
+                      <li>
+                        <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                          "Tournament"
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          class="dropdown-item"
+                          href=format!("/lists/{}/tournament?mode=random", list.id)
+                        >
+                          "Random Tournament"
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                          "Random Matches"
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          class="dropdown-item"
+                          href=format!("/lists/{}/match?mode=rounds", list.id)
+                        >
+                          "Random Rounds"
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                })
             }
-            ListPage::Edit => {
-                html! { <Edit logged_in={user.is_some()} list={*list.clone()}/> }
-            }
-            ListPage::RandomMatches => html! { <RandomMatches id={list.id.clone()}/> },
-            ListPage::RandomRounds => html! { <RandomRounds id={list.id.clone()}/> },
-            ListPage::RandomTournament => {
-                html! { <RandomTournamentLoader list={*list.clone()}/> }
-            }
-            ListPage::Tournament => html! { <TournamentLoader list={*list.clone()}/> },
         }
-    } else {
+    };
+    move || {
+        let dropdown_html = dropdown_html.clone();
+        let list = match &*state.read() {
+            None => return None,
+            Some(ListState::NotFound) => return None,
+            Some(ListState::Success(list)) => list.clone(),
+        };
+        let list_signal = move || match &*state.read() {
+            None => unreachable!(),
+            Some(ListState::NotFound) => unreachable!(),
+            Some(ListState::Success(list)) => *list.clone(),
+        };
+        let mut tabs = ["nav-link"; 3];
+        let active = "nav-link active";
+        let view = view();
         match view {
-            ListPage::View => html! { <ListView list={*list.clone()}/> },
-            ListPage::List => {
-                html! { <ListItems user={Rc::clone(user)} list={*list.clone()} mode={(*mode).clone()}/> }
-            }
-            // TODO: move this up?
-            _ => crate::not_found(),
+            ListPage::View => tabs[0] = active,
+            ListPage::List => tabs[1] = active,
+            ListPage::Edit => tabs[2] = active,
+            _ => {}
         }
-    };
-    let toggle = match view {
-        ListPage::RandomMatches => "Random Matches",
-        ListPage::RandomRounds => "Random Rounds",
-        ListPage::Tournament => "Tournament",
-        ListPage::RandomTournament => "Random Tournament",
-        _ => "Rank",
-    };
-    let toggle_class = match (toggle, dropdown) {
-        ("Rank", false) => "nav-link dropdown-toggle",
-        ("Rank", true) => "nav-link dropdown-toggle show",
-        (_, false) => "nav-link active dropdown-toggle",
-        (_, true) => "nav-link active dropdown-toggle show",
-    };
-    let menu_class = if *dropdown {
-        "dropdown-menu show"
-    } else {
-        "dropdown-menu"
-    };
-    // TODO: handle GROUP BY queries
-    let dropdown_html = if let ListMode::View(_) = list.mode {
-        html! {}
-    } else {
-        html! {
-            <li class="nav-item dropdown">
-                <a class={toggle_class} href="#" onclick={Borrow::<Callback<_>>::borrow(show_dropdown).clone()}>{toggle}</a>
-                <ul class={menu_class}>
-                    <li><Link<ListsRoute> classes="dropdown-item" to={ListsRoute::Tournament{ id: list.id.clone() }}>{"Tournament"}</Link<ListsRoute>></li>
-                    <li><Link<ListsRoute, RouteQuery> classes="dropdown-item" to={ListsRoute::Tournament{ id: list.id.clone() }} query={Some(&[("mode", "random")][..])}>{"Random Tournament"}</Link<ListsRoute, RouteQuery>></li>
-                    <li><Link<ListsRoute> classes="dropdown-item" to={ListsRoute::Match{ id: list.id.clone() }}>{"Random Matches"}</Link<ListsRoute>></li>
-                    <li><Link<ListsRoute, RouteQuery> classes="dropdown-item" to={ListsRoute::Match{ id: list.id.clone() }} query={Some(&[("mode", "rounds")][..])}>{"Random Rounds"}</Link<ListsRoute, RouteQuery>></li>
+        let component = if crate::user_list(&list, &user.read()) {
+            match view {
+                ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
+                ListPage::List => {
+                    view! { <ListItems user=user list=list_signal mode=mode /> }.into_any()
+                }
+                ListPage::Edit => {
+                    view! { <Edit logged_in=move || user.read().is_some() list=list_signal /> }
+                        .into_any()
+                }
+                ListPage::RandomMatches => {
+                    view! { <RandomMatches id=list.id.clone() /> }.into_any()
+                }
+                ListPage::RandomRounds => view! { <RandomRounds id=list.id.clone() /> }.into_any(),
+                ListPage::RandomTournament => {
+                    view! { <RandomTournamentLoader list=list_signal /> }.into_any()
+                }
+                ListPage::Tournament => view! { <TournamentLoader list=list_signal /> }.into_any(),
+            }
+        } else {
+            match view {
+                ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
+                ListPage::List => {
+                    view! { <ListItems user=user list=list_signal mode=mode /> }.into_any()
+                }
+                // TODO: move this up?
+                _ => crate::not_found().into_any(),
+            }
+        };
+        let user = crate::user_list(&list, &user.read());
+        Some(view! {
+          <Content
+            heading=list.name.clone()
+            nav=view! {
+              <>
+                <ul class="navbar-nav me-auto">
+                  <li class="nav-item">
+                    <a class=tabs[0] href=format!("/lists/{}", list.id)>
+                      "View"
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class=tabs[1] href=format!("/lists/{}/items", list.id)>
+                      "Items"
+                    </a>
+                  </li>
+                  {move || {
+                    if user {
+                      Some(
+                        view! {
+                          {dropdown_html.clone()}
+                          <li class="nav-item">
+                            <a class=tabs[2] href=format!("/lists/{}/edit", list_signal().id)>
+                              "Settings"
+                            </a>
+                          </li>
+                        },
+                      )
+                    } else {
+                      None
+                    }
+                  }}
                 </ul>
-            </li>
-        }
-    };
-    let user = crate::user_list(list, user);
-    Ok(html! {
-      <Content
-        heading={list.name.clone()}
-        nav={html! {
-          <>
-            <ul class="navbar-nav me-auto">
-              <li class="nav-item">
-                <Link<ListsRoute> classes={tabs[0]} to={ListsRoute::View{id: list.id.clone()}}>{"View"}</Link<ListsRoute>>
-              </li>
-              <li class="nav-item">
-                <Link<ListsRoute> classes={tabs[1]} to={ListsRoute::List{id: list.id.clone()}}>{"Items"}</Link<ListsRoute>>
-              </li>
-              if user {
-                {dropdown_html}
-                <li class="nav-item">
-                  <Link<ListsRoute> classes={tabs[2]} to={ListsRoute::Edit{id: list.id.clone()}}>{"Settings"}</Link<ListsRoute>>
-                </li>
-              }
-            </ul>
-            if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
-              <div class="d-flex gap-3 align-items-baseline">
-                <span class="navbar-text text-nowrap">{"Item Mode:"}</span>
-                <select ref={select_ref.clone()} class="form-select" onchange={select_view}>
-                  <option selected=true>{"Update"}</option>
-                  <option>{"Delete"}</option>
-                </select>
-              </div>
+                {move || {
+                  if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
+                    Some(
+                      view! {
+                        <div class="d-flex gap-3 align-items-baseline">
+                          <span class="navbar-text text-nowrap">"Item Mode:"</span>
+                          <select
+                            class="form-select"
+                            on:input:target=move |ev| {
+                              set_mode
+                                .set(
+                                  match ev.target().value().as_str() {
+                                    "Update" => ItemMode::Update,
+                                    "Delete" => ItemMode::Delete,
+                                    _ => unreachable!(),
+                                  },
+                                )
+                            }
+                          >
+                            <option selected=true>"Update"</option>
+                            <option>"Delete"</option>
+                          </select>
+                        </div>
+                      },
+                    )
+                  } else {
+                    None
+                  }
+                }}
+              </>
             }
-          </>
-        }}
-        content={html! {
-          <>
-            if !user {
-              <h3>{&format!("{}'s list", list.user_id)}</h3>
+            content=view! {
+              <>
+                {move || {
+                  if user {
+                    None
+                  } else {
+                    Some(view! { <h3>{format!("{}'s list", list_signal().user_id)}</h3> })
+                  }
+                }} {component}
+              </>
             }
-            {component}
-          </>
-        }}/>
-    })
+          />
+        })
+    }
 }

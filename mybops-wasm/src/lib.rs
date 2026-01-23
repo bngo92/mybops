@@ -2,14 +2,13 @@
 use crate::{app::App, dataframe::DataFrame};
 use arrow::array::AsArray;
 use js_sys::Uint8Array;
-use mybops::{Id, Items, List, ListMode, Lists, Spotify, User};
+use leptos::{either::Either, prelude::*};
+use mybops::{Id, Items, List, Lists, Spotify, User};
 use regex::Regex;
 use std::{collections::HashSet, io::Cursor};
 use wasm_bindgen::{JsCast, prelude::*};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
-use yew::{Callback, Html, Properties, function_component, html, use_state};
-use yew_router::Routable;
 
 mod app;
 mod base;
@@ -25,45 +24,15 @@ mod plot;
 mod random;
 mod search;
 mod settings;
-pub mod tournament;
+mod tournament;
 
-#[derive(Clone, Routable, PartialEq)]
-enum Route {
-    #[at("/")]
-    Home,
-    #[at("/docs")]
-    Docs,
-    #[at("/lists")]
-    ListsRoot,
-    #[at("/lists/*")]
-    Lists,
-    #[at("/search")]
-    Search,
-    #[at("/settings")]
-    Settings,
-    #[at("/integrations/spotify")]
-    Spotify,
-    #[at("/nfl")]
-    Nfl,
-}
-
-#[derive(Clone, Routable, PartialEq)]
+#[derive(Clone)]
 pub enum ListsRoute {
-    #[at("/lists/:id")]
-    View { id: String },
-    #[at("/lists/:id/items")]
-    List { id: String },
-    #[at("/lists/:id/edit")]
-    Edit { id: String },
-    #[at("/lists/:id/match")]
-    Match { id: String },
-    #[at("/lists/:id/tournament")]
-    Tournament { id: String },
-}
-
-#[derive(Eq, PartialEq, Properties)]
-pub struct UserProps {
-    logged_in: bool,
+    View,
+    List,
+    Edit,
+    Match,
+    Tournament,
 }
 
 pub fn parse_spotify_source(input: String) -> Option<Spotify> {
@@ -102,74 +71,84 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
     };
 }
 
-fn nav_content(nav: Html, content: Html) -> Html {
-    html! {
-        <>
-            <nav class="navbar navbar-expand navbar-bg py-2">
-                <div class="container-fluid">
-                    {nav}
-                </div>
-            </nav>
-            <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
-                {content}
-            </div>
-        </>
+fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
+    view! {
+      <>
+        <nav class="navbar navbar-expand navbar-bg py-2">
+          <div class="container-fluid">{nav}</div>
+        </nav>
+        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
+      </>
     }
 }
 
-#[derive(PartialEq, Properties)]
-struct ContentProps {
-    heading: String,
-    nav: Html,
-    content: Html,
-}
+#[component]
+fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl IntoView {
+    let (collapse, set_collapse) = signal(true);
 
-#[function_component]
-fn Content(
-    ContentProps {
-        heading,
-        nav,
-        content,
-    }: &ContentProps,
-) -> Html {
-    let collapse = use_state(|| true);
-
-    let toggle = {
-        let collapse = collapse.clone();
-        Callback::from(move |_| {
-            collapse.set(!*collapse);
-        })
+    let class = move || {
+        if collapse.get() {
+            "collapse navbar-collapse"
+        } else {
+            "navbar-collapse"
+        }
     };
-
-    let class = if *collapse {
-        "collapse navbar-collapse"
-    } else {
-        "navbar-collapse"
-    };
-    html! {
+    view! {
       <>
         <nav class="navbar navbar-expand-sm navbar-bg py-2" style="background-color: #2fb380;">
           <div class="container-fluid">
-            <a class="navbar-brand" href="#">{heading}</a>
-            <button class="navbar-toggler" type="button" onclick={toggle}>
-              if *collapse {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-                </svg>
-              } else {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-lg" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"/>
-                </svg>
-              }
+            <a class="navbar-brand" href="#">
+              {heading}
+            </a>
+            <button
+              class="navbar-toggler"
+              type="button"
+              on:click=move |_| set_collapse.set(collapse.get())
+            >
+              {move || {
+                if collapse.get() {
+                  Either::Left(
+                    view! {
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-plus-lg"
+                        viewBox="0 0 16 16"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"
+                        />
+                      </svg>
+                    },
+                  )
+                } else {
+                  Either::Right(
+                    view! {
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        class="bi bi-dash-lg"
+                        viewBox="0 0 16 16"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"
+                        />
+                      </svg>
+                    },
+                  )
+                }
+              }}
             </button>
-            <div {class}>
-              {nav.clone()}
-            </div>
+            <div class=class>{nav}</div>
           </div>
         </nav>
-        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">
-          {content.clone()}
-        </div>
+        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
       </>
     }
 }
@@ -177,7 +156,8 @@ fn Content(
 // Called by our JS entry point to run the example
 #[wasm_bindgen(start)]
 pub async fn run() -> Result<(), JsValue> {
-    yew::Renderer::<App>::new().render();
+    console_error_panic_hook::set_once();
+    leptos::mount::mount_to_body(|| view! { <App /> });
     Ok(())
 }
 
@@ -360,10 +340,8 @@ fn user_list(list: &List, user: &Option<User>) -> bool {
         || (user.is_none() && list.user_id == "demo")
 }
 
-fn not_found() -> Html {
-    html! {
-        <h1>{"Not found"}</h1>
-    }
+fn not_found() -> impl IntoView {
+    view! { <h1>"Not found"</h1> }
 }
 
 fn window() -> Window {

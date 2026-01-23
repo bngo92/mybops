@@ -1,47 +1,61 @@
-use crate::{ListsRoute, UserProps};
-use yew::{Callback, HtmlResult, function_component, html, suspense::use_future};
-use yew_router::{hooks::use_navigator, prelude::Link};
+use leptos::prelude::*;
+use leptos_router::hooks::use_navigate;
 
 pub mod item;
 
-#[function_component]
-pub fn Lists(UserProps { logged_in }: &UserProps) -> HtmlResult {
-    let lists = &*use_future(|| async move { crate::fetch_lists(false).await.unwrap() })?;
-    let navigator = use_navigator().unwrap();
+#[component]
+pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
+    let lists = LocalResource::new(|| async { crate::fetch_lists(false).await.unwrap() });
 
-    let create = Callback::from(move |_| {
-        let navigator = navigator.clone();
-        wasm_bindgen_futures::spawn_local(async move {
-            let list = crate::create_list(None).await.unwrap();
-            navigator.push(&ListsRoute::Edit { id: list.id });
-        });
+    let create = Action::new_unsync(|_| async {
+        let list = crate::create_list(None).await.unwrap();
+        let navigator = use_navigate();
+        navigator(&format!("/lists/{}/edit", list.id), Default::default());
     });
 
-    let list_html = lists.iter().map(|l| {
-        html! {
-            <div class="col-12 col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <Link<ListsRoute> to={ListsRoute::View{id: l.id.clone()}}>{&l.name}</Link<ListsRoute>>
+    let list_html = move || {
+        lists
+            .read()
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .map(|l| {
+                view! {
+                  <div class="col-12 col-md-6 mb-4">
+                    <div class="card">
+                      <div class="card-body">
+                        <a href=format!("/lists/{}", l.id)>{l.name.clone()}</a>
+                      </div>
                     </div>
-                </div>
-            </div>
-        }
-    });
-    let disabled = !logged_in;
-    Ok(crate::nav_content(
-        html! {
+                  </div>
+                }
+            })
+            .collect_view()
+    };
+    crate::nav_content(
+        view! {
           <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">{"All Lists"}</li>
+            <li class="navbar-brand">"All Lists"</li>
           </ul>
-        },
-        html! {
-          <div>
-            <div class="row mt-3">
-              {for list_html}
-            </div>
-            <button type="button" class="btn btn-primary" onclick={create} {disabled}>{"Create List"}</button>
-          </div>
-        },
-    ))
+        }
+        .into_any(),
+        (move || {
+            view! {
+              <div>
+                <div class="row mt-3">{list_html()}</div>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  on:click=move |_| {
+                    create.dispatch(());
+                  }
+                  disabled=move || !logged_in.get()
+                >
+                  "Create List"
+                </button>
+              </div>
+            }
+        })
+        .into_any(),
+    )
 }

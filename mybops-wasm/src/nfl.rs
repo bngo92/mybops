@@ -4,13 +4,11 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
 };
 
+use leptos::{html, prelude::*};
 use serde::Deserialize;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{HtmlInputElement, Request, RequestInit, RequestMode, Response};
-use yew::{
-    Callback, HtmlResult, NodeRef, function_component, html, suspense::use_future, use_state,
-};
+use web_sys::{Request, RequestInit, RequestMode, Response};
 
 #[derive(Debug, Deserialize)]
 pub struct Scoreboard {
@@ -264,11 +262,11 @@ fn calculate_tiebreakers<'s>(
     }
 }
 
-#[function_component]
-pub fn Nfl() -> HtmlResult {
-    let selected_teams = use_state(Vec::new);
-    let refs = use_state(|| array::from_fn::<_, { TEAMS.len() }, _>(|_| NodeRef::default()));
-    let (ref games, ref records) = *use_future(|| async move {
+#[component]
+pub fn Nfl() -> impl IntoView {
+    let (selected_teams, set_selected_teams) = signal(Vec::new());
+    let refs = array::from_fn::<_, { TEAMS.len() }, _>(|_| NodeRef::<html::Input>::new());
+    let games = LocalResource::new(|| async move {
         let window = crate::window();
         let opts = RequestInit::new();
         opts.set_mode(RequestMode::Cors);
@@ -327,187 +325,216 @@ pub fn Nfl() -> HtmlResult {
             }
         }
         (games, records)
-    })?;
-    let selected = !selected_teams.is_empty();
-    let teams = if selected {
-        &selected_teams
-    } else {
-        TEAMS.as_slice()
-    };
-    let mut play_count = HashMap::new();
-    let mut head_to_head = HashMap::new();
-    let mut division_record = HashMap::new();
-    let mut common_games = HashMap::new();
-    let mut conference_record = HashMap::new();
-    if selected {
-        calculate_tiebreakers(
-            games,
-            selected_teams.len(),
-            teams,
-            &mut play_count,
-            &mut head_to_head,
-            &mut division_record,
-            &mut common_games,
-            &mut conference_record,
-        );
-    }
-    let team_records: HashMap<_, _> = TEAMS
-        .iter()
-        .copied()
-        .map(|team| {
-            let (wins, losses, ties) = records.get(team).unwrap_or(&(0, 0, 0));
-            if *ties != 0 {
-                (team, format!("{team} ({wins}-{losses}-{ties})"))
-            } else {
-                (team, format!("{team} ({wins}-{losses})"))
-            }
-        })
-        .collect();
-    let header = teams.iter().zip(refs.iter()).map(|(team, team_ref)| {
-        let team_record = &team_records[team];
+    });
+    move || {
+        let (games, records) = games.get()?;
+        let selected = !selected_teams.read().is_empty();
+        let teams = if selected {
+            &selected_teams.read()
+        } else {
+            TEAMS.as_slice()
+        };
+        let mut play_count = HashMap::new();
+        let mut head_to_head = HashMap::new();
+        let mut division_record = HashMap::new();
+        let mut common_games = HashMap::new();
+        let mut conference_record = HashMap::new();
         if selected {
-            let head_to_head = render_record(
-                "Head-to-Head",
-                head_to_head.get(*team).unwrap_or(&(0, 0, 0)),
+            calculate_tiebreakers(
+                &games,
+                selected_teams.read().len(),
+                teams,
+                &mut play_count,
+                &mut head_to_head,
+                &mut division_record,
+                &mut common_games,
+                &mut conference_record,
             );
-            let division_record = if let Some(record) = division_record.get(team) {
-                Some(render_record("Divison Record", record))
-            } else {
-                None
-            };
-            let common_games = render_record(
-                "Common Games",
-                common_games.get(*team).unwrap_or(&(0, 0, 0)),
-            );
-            let conference_record = render_record(
-                "Conference Record",
-                conference_record.get(*team).unwrap_or(&(0, 0, 0)),
-            );
-            html! {
-              <div>
-                <div>{team_record}</div>
-                <div>{head_to_head}</div>
-                {division_record}
-                <div>{common_games}</div>
-                <div>{conference_record}</div>
-              </div>
-            }
-        } else {
-            html! {
-              <div class="form-check">
-                <label class="form-check-label">{team_record}</label>
-                <input ref={team_ref} class="form-check-input" type="checkbox"/>
-              </div>
-            }
         }
-    });
-    let mut games_html = Vec::new();
-    for team2 in TEAMS {
-        if selected && !play_count.contains_key(team2) {
-            continue;
-        }
-        let team_record = &team_records[team2];
-        let common_game = play_count.get(team2) == Some(&selected_teams.len());
-        games_html.push(if common_game {
-            html! { <div><strong>{team_record}</strong></div> }
-        } else {
-            html! { <div>{team_record}</div> }
-        });
-        for team1 in teams {
-            let mut scores = Vec::new();
-            for (week, (score1, status)) in games
-                .get(*team1)
-                .cloned()
-                .unwrap_or_default()
-                .get(team2)
-                .cloned()
-                .unwrap_or_default()
-                .iter()
-            {
-                let (score2, _) = games[team2][*team1][week];
-                if status == "STATUS_SCHEDULED" {
-                    let score = format!("Week {}", week);
-                    let score = if common_game {
-                        html! { <div><strong>{score}</strong></div> }
-                    } else {
-                        html! { <div>{score}</div> }
-                    };
-                    scores.push(score);
-                    continue;
-                }
-                let score = format!("Week {}: {}-{}", week, score1, score2);
-                if status == "STATUS_IN_PROGRESS" {
-                    let score = if common_game {
-                        html! { <div><strong>{score}</strong></div> }
-                    } else {
-                        html! { <div>{score}</div> }
-                    };
-                    scores.push(score);
-                    continue;
-                }
-                let class = match score1.cmp(&score2) {
-                    Ordering::Less => "text-danger",
-                    Ordering::Equal => "text-warning",
-                    Ordering::Greater => "text-success",
-                };
-                let score = if common_game {
-                    html! { <div {class}><strong>{score}</strong></div> }
+        let team_records: HashMap<_, _> = TEAMS
+            .iter()
+            .copied()
+            .map(|team| {
+                let (wins, losses, ties) = records.get(team).unwrap_or(&(0, 0, 0));
+                if *ties != 0 {
+                    (team, format!("{team} ({wins}-{losses}-{ties})"))
                 } else {
-                    html! { <div {class}>{score}</div> }
-                };
-                scores.push(score);
-            }
-            games_html.push(html! { <div>{for scores}</div> });
-        }
-    }
-    let style = format!(
-        "grid-template-columns: repeat({}, max-content)",
-        teams.len() + 1
-    );
-    let html = html! {
-      <div class="d-grid gap-3" {style}>
-        <div></div>
-        {for header}
-        {for games_html}
-      </div>
-    };
-    let onclick = Callback::from(move |_| {
-        selected_teams.set(if selected {
-            Vec::new()
-        } else {
-            refs.iter()
-                .enumerate()
-                .filter_map(|(i, team_ref)| {
-                    if team_ref.cast::<HtmlInputElement>().unwrap().checked() {
-                        Some(TEAMS[i])
-                    } else {
-                        None
+                    (team, format!("{team} ({wins}-{losses})"))
+                }
+            })
+            .collect();
+        let header = teams
+            .iter()
+            .zip(refs.iter())
+            .map(|(team, team_ref)| {
+                let team_record = &team_records[team];
+                if selected {
+                    let head_to_head = render_record(
+                        "Head-to-Head",
+                        head_to_head.get(*team).unwrap_or(&(0, 0, 0)),
+                    );
+                    let division_record = division_record
+                        .get(team)
+                        .map(|record| render_record("Divison Record", record));
+                    let common_games = render_record(
+                        "Common Games",
+                        common_games.get(*team).unwrap_or(&(0, 0, 0)),
+                    );
+                    let conference_record = render_record(
+                        "Conference Record",
+                        conference_record.get(*team).unwrap_or(&(0, 0, 0)),
+                    );
+                    view! {
+                      <div>
+                        <div>{team_record.clone()}</div>
+                        <div>{head_to_head}</div>
+                        {division_record}
+                        <div>{common_games}</div>
+                        <div>{conference_record}</div>
+                      </div>
                     }
-                })
-                .collect()
-        })
-    });
-    Ok(crate::nav_content(
-        html! {
-          <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">{"NFL"}</li>
-          </ul>
-        },
-        html! {
-          <div>
-            <form class="d-flex">
-              <label class="col-form-label pe-2">{"Sort by:"}</label>
-              <select class="form-select" style="width: auto">
-                <option>{"Previous Division Standings"}</option>
-              </select>
-            </form>
-            <button type="button" class="btn btn-info" {onclick}>
-              {if selected {"Clear"} else {"Select"}}
-            </button>
-            {html}
+                    .into_any()
+                } else {
+                    view! {
+                      <div class="form-check">
+                        <label class="form-check-label">{team_record.clone()}</label>
+                        <input node_ref=*team_ref class="form-check-input" type="checkbox" />
+                      </div>
+                    }
+                    .into_any()
+                }
+            })
+            .collect_view();
+        let mut games_html = Vec::new();
+        for team2 in TEAMS {
+            if selected && !play_count.contains_key(team2) {
+                continue;
+            }
+            let team_record = &team_records[team2];
+            let common_game = play_count.get(team2) == Some(&selected_teams.read().len());
+            games_html.push(if common_game {
+                view! {
+                  <div>
+                    <strong>{team_record.clone()}</strong>
+                  </div>
+                }
+                .into_any()
+            } else {
+                view! { <div>{team_record.clone()}</div> }.into_any()
+            });
+            for team1 in teams {
+                let mut scores = Vec::new();
+                for (week, (score1, status)) in games
+                    .get(*team1)
+                    .cloned()
+                    .unwrap_or_default()
+                    .get(team2)
+                    .cloned()
+                    .unwrap_or_default()
+                    .iter()
+                {
+                    let (score2, _) = games[team2][*team1][week];
+                    if status == "STATUS_SCHEDULED" {
+                        let score = format!("Week {}", week);
+                        let score = if common_game {
+                            view! {
+                              <div>
+                                <strong>{score}</strong>
+                              </div>
+                            }
+                            .into_any()
+                        } else {
+                            view! { <div>{score}</div> }.into_any()
+                        };
+                        scores.push(score);
+                        continue;
+                    }
+                    let score = format!("Week {}: {}-{}", week, score1, score2);
+                    if status == "STATUS_IN_PROGRESS" {
+                        let score = if common_game {
+                            view! {
+                              <div>
+                                <strong>{score}</strong>
+                              </div>
+                            }
+                            .into_any()
+                        } else {
+                            view! { <div>{score}</div> }.into_any()
+                        };
+                        scores.push(score);
+                        continue;
+                    }
+                    let class = match score1.cmp(&score2) {
+                        Ordering::Less => "text-danger",
+                        Ordering::Equal => "text-warning",
+                        Ordering::Greater => "text-success",
+                    };
+                    let score = if common_game {
+                        view! {
+                          <div class=class>
+                            <strong>{score}</strong>
+                          </div>
+                        }
+                        .into_any()
+                    } else {
+                        view! { <div class=class>{score}</div> }.into_any()
+                    };
+                    scores.push(score);
+                }
+                games_html.push(view! { <div>{scores}</div> }.into_any());
+            }
+        }
+        let style = format!(
+            "grid-template-columns: repeat({}, max-content)",
+            teams.len() + 1
+        );
+        let html = view! {
+          <div class="d-grid gap-3" style=style>
+            <div></div>
+            {header}
+            {games_html}
           </div>
-        },
-    ))
+        };
+        let onclick = move |_| {
+            set_selected_teams.set(if selected {
+                Vec::new()
+            } else {
+                refs.iter()
+                    .enumerate()
+                    .filter_map(|(i, team_ref)| {
+                        if team_ref.get().unwrap().checked() {
+                            Some(TEAMS[i])
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            })
+        };
+        Some(crate::nav_content(
+            view! {
+              <ul class="navbar-nav me-auto">
+                <li class="navbar-brand">"NFL"</li>
+              </ul>
+            }
+            .into_any(),
+            view! {
+              <div>
+                <form class="d-flex">
+                  <label class="col-form-label pe-2">"Sort by:"</label>
+                  <select class="form-select" style="width: auto">
+                    <option>"Previous Division Standings"</option>
+                  </select>
+                </form>
+                <button type="button" class="btn btn-info" on:click=onclick>
+                  {move || if selected { "Clear" } else { "Select" }}
+                </button>
+                {html}
+              </div>
+            }
+            .into_any(),
+        ))
+    }
 }
 
 fn render_record(label: &str, (wins, losses, ties): &(u32, u32, u32)) -> String {

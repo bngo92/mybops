@@ -1,32 +1,34 @@
-use crate::{UserProps, bootstrap::Accordion};
+use crate::bootstrap::Accordion;
+use leptos::{html::Input, prelude::*};
 use mybops::{
     Spotify,
     spotify::{Playlists, RecentTracks},
 };
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{HtmlSelectElement, Response};
-use yew::{Callback, HtmlResult, function_component, html, suspense::use_future, use_node_ref};
+use web_sys::Response;
 
-#[function_component]
-pub fn SpotifyIntegration(UserProps { logged_in }: &UserProps) -> HtmlResult {
-    let logged_in = *logged_in;
-    let import_ref = use_node_ref();
-    let (ref recent_tracks, ref playlists) = *use_future(|| async move {
-        if logged_in {
-            (
-                Some(get_recent_tracks().await.unwrap()),
-                Some(get_playlists().await.unwrap()),
-            )
+#[component]
+pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
+    let import_ref = NodeRef::<Input>::new();
+    let recent_tracks = LocalResource::new(move || async move {
+        if logged_in.get() {
+            Some(get_recent_tracks().await.unwrap())
         } else {
-            (None, None)
+            None
         }
-    })?;
+    });
+    let playlists = LocalResource::new(move || async move {
+        if logged_in.get() {
+            Some(get_playlists().await.unwrap())
+        } else {
+            None
+        }
+    });
 
     let import = {
-        let import_ref = import_ref.clone();
-        Callback::from(move |_| {
-            let input = import_ref.cast::<HtmlSelectElement>().unwrap().value();
+        Action::new_unsync(move |_: &()| {
+            let input = import_ref.get().unwrap().value();
             // TODO: handle bad input
             let source = match crate::parse_spotify_source(input) {
                 Some(Spotify::Playlist(id)) => Some(("spotify:playlist", id)),
@@ -34,100 +36,149 @@ pub fn SpotifyIntegration(UserProps { logged_in }: &UserProps) -> HtmlResult {
                 Some(Spotify::Track(id)) => Some(("spotify:track", id)),
                 None => None,
             };
-            if let Some((source, id)) = source {
-                wasm_bindgen_futures::spawn_local(async move {
-                    crate::import_list(source, &id.id).await.unwrap();
-                });
+            async move {
+                if let Some((source, id)) = source {
+                    crate::import_list(source, &id.id).await.unwrap()
+                }
             }
         })
     };
-    let import_track = Callback::from(|input| {
+    let import_track = Action::new_unsync(|input: &String| {
         // TODO: handle bad input
-        let source = match crate::parse_spotify_source(input) {
+        let source = match crate::parse_spotify_source(input.clone()) {
             Some(Spotify::Track(id)) => Some(("spotify:track", id)),
             _ => None,
         };
-        if let Some((source, id)) = source {
-            wasm_bindgen_futures::spawn_local(async move {
+        async move {
+            if let Some((source, id)) = source {
                 crate::import_list(source, &id.id).await.unwrap();
                 // TODO: refresh row
-            });
+            }
         }
     });
 
     let default_import =
         "https://open.spotify.com/playlist/5MztFbRbMpyxbVYuOSfQV9?si=9db089ab25274efa";
-    let track_html = if let Some(tracks) = recent_tracks {
-        tracks
-            .tracks
-            .iter()
-            .map(|i| {
-                let import_track = {
-                    let url = i.url.clone();
-                    let import_track = import_track.clone();
-                    Callback::from(move |_| {
-                        let url = url.clone();
-                        import_track.emit(url)
-                    })
-                };
-                html! {
-                    <div class="row">
+    let track_html = move || {
+        if let Some(Some(tracks)) = recent_tracks.get() {
+            tracks
+                .tracks
+                .into_iter()
+                .map(|i| {
+                    view! {
+                      <div class="row">
                         <div class="col">
-                             <a href={i.url.clone()}>{&i.name}</a>
-                             if i.user_score.is_none() {
-                                 <button type="button" class="btn btn-success" onclick={import_track}>{"Import"}</button>
-                             }
+                          <a href=i.url.clone()>{i.name.clone()}</a>
+                          {move || {
+                            i.user_score
+                              .is_none()
+                              .then(|| {
+                                view! {
+                                  <button
+                                    type="button"
+                                    class="btn btn-success"
+                                    on:click={
+                                      let url = i.url.clone();
+                                      move |_| {
+                                        import_track.dispatch(url.clone());
+                                      }
+                                    }
+                                  >
+                                    "Import"
+                                  </button>
+                                }
+                              })
+                          }}
                         </div>
                         <div class="col-1">{i.rating}</div>
                         <div class="col-1">{i.user_score}</div>
-                    </div>
-                }
-            })
-            .collect()
-    } else {
-        Vec::new()
+                      </div>
+                    }
+                })
+                .collect()
+        } else {
+            Vec::new()
+        }
     };
-    Ok(crate::nav_content(
-        html! {
+    crate::nav_content(
+        view! {
           <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">{"Spotify"}</li>
+            <li class="navbar-brand">"Spotify"</li>
           </ul>
         },
-        html! {
+        view! {
           <div>
-            <Accordion header={"Recent Tracks"} collapsed={false}>
-              if logged_in {
-                <div class="row">
-                  <div class="col"></div>
-                  <div class="col-1"><strong>{"Rating"}</strong></div>
-                  <div class="col-1"><strong>{"User Score"}</strong></div>
-                </div>
-                {for track_html}
-              } else {
-                <p>{"Create an account to view and import tracks that were recently played in Spotify"}</p>
-              }
+            <Accordion header="Recent Tracks".to_owned() collapsed=false>
+              {move || {
+                if logged_in.get() {
+                  view! {
+                    <div class="row">
+                      <div class="col"></div>
+                      <div class="col-1">
+                        <strong>"Rating"</strong>
+                      </div>
+                      <div class="col-1">
+                        <strong>"User Score"</strong>
+                      </div>
+                    </div>
+                    {track_html}
+                  }
+                    .into_any()
+                } else {
+                  view! {
+                    <p>
+                      "Create an account to view and import tracks that were recently played in Spotify"
+                    </p>
+                  }
+                    .into_any()
+                }
+              }}
             </Accordion>
-            <Accordion header={"Saved Playlists"} collapsed={false}>
-              if let Some(playlists) = playlists {
-                {for playlists.items.iter().map(|i| html! {<div><a href={i.external_urls["spotify"].clone()}>{&i.name}</a></div>})}
-              } else {
-                <p>{"Create an account to import playlists from Spotify"}</p>
-              }
+            <Accordion header="Saved Playlists".to_owned() collapsed=false>
+              {move || {
+                if let Some(Some(ref playlists)) = *playlists.read() {
+                  {
+                    playlists
+                      .items
+                      .iter()
+                      .map(|i| {
+                        view! {
+                          <div>
+                            <a href=i.external_urls["spotify"].clone()>{i.name.clone()}</a>
+                          </div>
+                        }
+                      })
+                      .collect_view()
+                      .into_any()
+                  }
+                } else {
+                  view! { <p>"Create an account to import playlists from Spotify"</p> }.into_any()
+                }
+              }}
             </Accordion>
-            <h2>{"Import from Spotify link"}</h2>
+            <h2>"Import from Spotify link"</h2>
             <form>
               <div class="row">
                 <div class="col-12 col-md-8 col-lg-9">
-                  <input ref={import_ref.clone()} type="text" class="w-100 h-100" value={default_import}/>
+                  <input node_ref=import_ref type="text" class="w-100 h-100" value=default_import />
                 </div>
                 <div class="col-2 col-lg-1 pe-2">
-                  <button type="button" class="btn btn-success" onclick={import} disabled={logged_in}>{"Import"}</button>
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    on:click=move |_| {
+                      import.dispatch(());
+                    }
+                    disabled=logged_in
+                  >
+                    "Import"
+                  </button>
                 </div>
               </div>
             </form>
           </div>
         },
-    ))
+    )
 }
 
 async fn get_recent_tracks() -> Result<RecentTracks, JsValue> {
