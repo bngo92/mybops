@@ -26,6 +26,7 @@ mod search;
 mod settings;
 mod tournament;
 
+#[derive(Clone)]
 pub enum ListsRoute {
     View,
     List,

@@ -488,8 +488,96 @@ pub fn ListComponent(
         }
     });
 
-    let show_dropdown = show_dropdown.clone();
+    let query = use_query_map();
+    let view = move || match view {
+        ListsRoute::View => ListPage::View,
+        ListsRoute::List => ListPage::List,
+        ListsRoute::Edit => ListPage::Edit,
+        ListsRoute::Tournament => {
+            if query.read().get("mode").as_deref() == Some("random") {
+                ListPage::RandomTournament
+            } else {
+                ListPage::Tournament
+            }
+        }
+        ListsRoute::Match => {
+            if query.read().get("mode").as_deref() == Some("rounds") {
+                ListPage::RandomRounds
+            } else {
+                ListPage::RandomMatches
+            }
+        }
+    };
+    let dropdown_html = {
+        let view = view.clone();
+        move || {
+            let list = match &*state.read() {
+                None => return None,
+                Some(ListState::NotFound) => return None,
+                Some(ListState::Success(list)) => list.clone(),
+            };
+            let toggle = match view() {
+                ListPage::RandomMatches => "Random Matches",
+                ListPage::RandomRounds => "Random Rounds",
+                ListPage::Tournament => "Tournament",
+                ListPage::RandomTournament => "Random Tournament",
+                _ => "Rank",
+            };
+            let toggle_class = match (toggle, dropdown.get()) {
+                ("Rank", false) => "nav-link dropdown-toggle",
+                ("Rank", true) => "nav-link dropdown-toggle show",
+                (_, false) => "nav-link active dropdown-toggle",
+                (_, true) => "nav-link active dropdown-toggle show",
+            };
+            let menu_class = if dropdown.get() {
+                "dropdown-menu show"
+            } else {
+                "dropdown-menu"
+            };
+            // TODO: handle GROUP BY queries
+            if let ListMode::View(_) = list.mode {
+                None
+            } else {
+                Some(view! {
+                  <li class="nav-item dropdown">
+                    <a class=toggle_class href="#" on:click=show_dropdown.clone()>
+                      {toggle}
+                    </a>
+                    <ul class=menu_class>
+                      <li>
+                        <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                          "Tournament"
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          class="dropdown-item"
+                          href=format!("/lists/{}/tournament?mode=random", list.id)
+                        >
+                          "Random Tournament"
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                          "Random Matches"
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          class="dropdown-item"
+                          href=format!("/lists/{}/match?mode=rounds", list.id)
+                        >
+                          "Random Rounds"
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                })
+            }
+        }
+    };
     move || {
+        let dropdown_html = dropdown_html.clone();
         let list = match &*state.read() {
             None => return None,
             Some(ListState::NotFound) => return None,
@@ -500,28 +588,9 @@ pub fn ListComponent(
             Some(ListState::NotFound) => unreachable!(),
             Some(ListState::Success(list)) => *list.clone(),
         };
-        let query = use_query_map();
-        let view = match view {
-            ListsRoute::View => ListPage::View,
-            ListsRoute::List => ListPage::List,
-            ListsRoute::Edit => ListPage::Edit,
-            ListsRoute::Tournament => {
-                if query.read().get("mode").as_deref() == Some("random") {
-                    ListPage::RandomTournament
-                } else {
-                    ListPage::Tournament
-                }
-            }
-            ListsRoute::Match => {
-                if query.read().get("mode").as_deref() == Some("rounds") {
-                    ListPage::RandomRounds
-                } else {
-                    ListPage::RandomMatches
-                }
-            }
-        };
         let mut tabs = ["nav-link"; 3];
         let active = "nav-link active";
+        let view = view();
         match view {
             ListPage::View => tabs[0] = active,
             ListPage::List => tabs[1] = active,
@@ -555,70 +624,6 @@ pub fn ListComponent(
                 }
                 // TODO: move this up?
                 _ => crate::not_found().into_any(),
-            }
-        };
-        let toggle = match view {
-            ListPage::RandomMatches => "Random Matches",
-            ListPage::RandomRounds => "Random Rounds",
-            ListPage::Tournament => "Tournament",
-            ListPage::RandomTournament => "Random Tournament",
-            _ => "Rank",
-        };
-        let toggle_class = match (toggle, dropdown.get()) {
-            ("Rank", false) => "nav-link dropdown-toggle",
-            ("Rank", true) => "nav-link dropdown-toggle show",
-            (_, false) => "nav-link active dropdown-toggle",
-            (_, true) => "nav-link active dropdown-toggle show",
-        };
-        let menu_class = if dropdown.get() {
-            "dropdown-menu show"
-        } else {
-            "dropdown-menu"
-        };
-        // TODO: handle GROUP BY queries
-        let show_dropdown = show_dropdown.clone();
-        let dropdown_html = {
-            let list = list.clone();
-            move || {
-                if let ListMode::View(_) = list_signal().mode {
-                    None
-                } else {
-                    Some(view! {
-                      <li class="nav-item dropdown">
-                        <a class=toggle_class href="#" on:click=show_dropdown.clone()>
-                          {toggle}
-                        </a>
-                        <ul class=menu_class>
-                          <li>
-                            <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
-                              "Tournament"
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              class="dropdown-item"
-                              href=format!("/lists/{}/tournament?mode=random", list.id)
-                            >
-                              "Random Tournament"
-                            </a>
-                          </li>
-                          <li>
-                            <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
-                              "Random Matches"
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              class="dropdown-item"
-                              href=format!("/lists/{}/match?mode=rounds", list.id)
-                            >
-                              "Random Rounds"
-                            </a>
-                          </li>
-                        </ul>
-                      </li>
-                    })
-                }
             }
         };
         let user = crate::user_list(&list, &user.read());
