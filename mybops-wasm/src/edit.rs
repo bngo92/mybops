@@ -118,7 +118,6 @@ pub fn Edit(
                 .unwrap()
             {
                 let navigator = use_navigate();
-                let navigator = navigator.clone();
                 crate::delete_list(&id).await.unwrap();
                 navigator("/", Default::default());
             }
