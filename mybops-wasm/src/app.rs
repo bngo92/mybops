@@ -17,7 +17,11 @@ use crate::{
     settings::Settings,
     tournament::{RandomTournamentLoader, TournamentLoader},
 };
-use leptos::{either::Either, html, prelude::*};
+use leptos::{
+    either::Either,
+    html::{self, Dialog},
+    prelude::*,
+};
 use leptos_router::{
     components::*,
     hooks::{use_params, use_query_map},
@@ -57,7 +61,6 @@ fn AppImpl() -> impl IntoView {
         user
     });
     let (sidebar, set_sidebar) = signal(false);
-    let (login, set_login) = signal(false);
     let (dropdown, set_dropdown) = signal(false);
     let (list_dropdown, set_list_dropdown) = signal(false);
     let (integrations_dropdown, set_integrations_dropdown) = signal(false);
@@ -109,6 +112,8 @@ fn AppImpl() -> impl IntoView {
             "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
         }
     };
+    let origin = location().origin().unwrap();
+    let modal_ref = NodeRef::<Dialog>::new();
     view! {
       // <div on:click=reset_dropdown>
       <div>
@@ -223,7 +228,11 @@ fn AppImpl() -> impl IntoView {
                       Either::Right(
                         view! {
                           <li class="nav-item">
-                            <a class=search href="#" on:click=move |_| set_login.set(true)>
+                            <a
+                              class=search
+                              href="#"
+                              on:click=move |_| modal_ref.get().unwrap().show_modal().unwrap()
+                            >
                               "Log in"
                             </a>
                           </li>
@@ -330,39 +339,28 @@ fn AppImpl() -> impl IntoView {
               <Route path=path!("/nfl") view=Nfl />
             </Routes>
           </div>
-          {move || {
-            if login.get() {
-              let origin = location().origin().unwrap();
-              Some(
-                view! {
-                  <Modal header="Log in".to_owned() hide=move |_| set_login.set(false)>
-                    <div class="modal-body d-grid gap-2">
-                      <a
-                        class="btn btn-success"
-                        href=format!(
-                          "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
-                          origin.as_str(),
-                        )
-                      >
-                        "Log in with Spotify"
-                      </a>
-                      <a
-                        class="btn btn-success"
-                        href=format!(
-                          "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
-                          origin.as_str(),
-                        )
-                      >
-                        "Log in with Google"
-                      </a>
-                    </div>
-                  </Modal>
-                },
-              )
-            } else {
-              None
-            }
-          }}
+          <Modal header="Log in".to_owned() modal_ref=modal_ref>
+            <div class="modal-body d-grid gap-2">
+              <a
+                class="btn btn-success"
+                href=format!(
+                  "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
+                  origin.as_str(),
+                )
+              >
+                "Log in with Spotify"
+              </a>
+              <a
+                class="btn btn-success"
+                href=format!(
+                  "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                  origin.as_str(),
+                )
+              >
+                "Log in with Google"
+              </a>
+            </div>
+          </Modal>
         </div>
       </div>
     }

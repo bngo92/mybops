@@ -3,7 +3,7 @@ use arrow::{array::AsArray, datatypes::UInt64Type};
 use js_sys::Error;
 use leptos::{
     either::{Either, EitherOf3},
-    html::Input,
+    html::{Dialog, Input},
     prelude::*,
 };
 use mybops::{Id, ItemMetadata, List, ListMode, SourceType, Spotify, User};
@@ -65,7 +65,7 @@ pub fn ListItems(
     let (prev_state, set_prev_state) = signal(None);
     let (state, set_state) = signal(None);
     let (alert, set_alert) = signal(None);
-    let (modal, set_modal) = signal(None);
+    let (modal, set_modal) = signal(0);
 
     LocalResource::new(move || async move {
         if !matches!(list.read().mode, ListMode::View(_)) {
@@ -215,20 +215,26 @@ pub fn ListItems(
     let push = Action::new_unsync(move |_| async move {
         crate::push_list(&list.read().id).await.unwrap();
     });
-    let open = move |i| set_modal.set(Some(i));
-    let modal_back = move |i| {
-        set_modal.set(Some(if i == 0 {
+    let modal_ref = NodeRef::<Dialog>::new();
+    let open = move |i| {
+        set_modal.set(i);
+        modal_ref.get().unwrap().show_modal().unwrap()
+    };
+    let modal_back = move |_| {
+        let i = modal.get();
+        set_modal.set(if i == 0 {
             items.read().len() - 1
         } else {
             i - 1
-        }))
+        })
     };
-    let modal_forward = move |i| {
-        set_modal.set(Some(if i == items.read().len() - 1 {
+    let modal_forward = move |_| {
+        let i = modal.get();
+        set_modal.set(if i == items.read().len() - 1 {
             0
         } else {
             i + 1
-        }))
+        })
     };
     let delete = Action::new_unsync(move |(i, id): &(usize, String)| {
         let i = *i;
@@ -245,58 +251,62 @@ pub fn ListItems(
     });
 
     let disabled = move || user.read().is_none() || !crate::user_list(&list.read(), &user.read());
-    let modal_html = if let Some(i) = modal.get() {
-        let item = items.read()[i].clone();
-        let onchange = move |rating| update_rating((i, rating));
-        Some(view! {
-          <Modal header=item.item.name hide=move |_| set_modal.set(None)>
-            <div class="carousel slide">
-              <div class="carousel-item active">
-                {move || {
-                  item
-                    .item
-                    .iframe
-                    .clone()
-                    .map(|iframe| {
-                      view! {
-                        <iframe width="100%" height="380" prop:frameborder="0" src=iframe></iframe>
-                      }
-                    })
-                }}
-              </div>
-              <button
-                class="carousel-control-prev"
-                type="button"
-                on:click=move |_| modal_back(i)
-                style="top: 56px; bottom: auto; height: 137px"
-              >
-                <span class="carousel-control-prev-icon"></span>
-              </button>
-              <button
-                class="carousel-control-next"
-                type="button"
-                on:click=move |_| modal_forward(i)
-                style="top: 56px; bottom: auto; height: 137px"
-              >
-                <span class="carousel-control-next-icon"></span>
-              </button>
-            </div>
+    let modal_html = view! {
+      <Modal
+        header=move || {
+          let i = modal.get();
+          items.read()[i].item.name.clone()
+        }
+        modal_ref=modal_ref
+      >
+        <div class="carousel slide">
+          <div class="carousel-item active">
             {move || {
-              state
-                .read()
-                .as_ref()
-                .map(|state| {
+              let i = modal.get();
+              items
+                .read()[i]
+                .item
+                .iframe
+                .clone()
+                .map(|iframe| {
                   view! {
-                    <div class="col-2">
-                      <Rating rating=state[i].rating onchange=onchange />
-                    </div>
+                    <iframe width="100%" height="380" prop:frameborder="0" src=iframe></iframe>
                   }
                 })
             }}
-          </Modal>
-        })
-    } else {
-        None
+          </div>
+          <button
+            class="carousel-control-prev"
+            type="button"
+            on:click=modal_back
+            style="top: 56px; bottom: auto; height: 137px"
+          >
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button
+            class="carousel-control-next"
+            type="button"
+            on:click=modal_forward
+            style="top: 56px; bottom: auto; height: 137px"
+          >
+            <span class="carousel-control-next-icon"></span>
+          </button>
+        </div>
+        {move || {
+          let i = modal.get();
+          let onchange = move |rating| update_rating((i, rating));
+          state
+            .read()
+            .as_ref()
+            .map(|state| {
+              view! {
+                <div class="col-2">
+                  <Rating rating=state[i].rating onchange=onchange />
+                </div>
+              }
+            })
+        }}
+      </Modal>
     };
     let source_html = list
         .read()

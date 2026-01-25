@@ -1,4 +1,4 @@
-use leptos::{prelude::*, tachys::html::event::MouseEvent};
+use leptos::{html::Dialog, prelude::*, tachys::html::event::MouseEvent};
 
 #[component]
 pub fn Accordion(
@@ -84,25 +84,34 @@ pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> im
 
 #[component]
 pub fn Modal(
-    header: String,
+    #[prop(into)] header: Signal<String>,
     children: Children,
-    hide: impl FnMut(MouseEvent) + 'static + Clone,
+    modal_ref: NodeRef<Dialog>,
 ) -> impl IntoView {
-    let hide_copy = hide.clone();
     view! {
-      <div>
-        <div class="modal d-block" on:click=hide_copy>
-          <div class="modal-dialog" on:click=|e: MouseEvent| e.stop_propagation()>
-            <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title">{header}</h1>
-                <button type="button" class="btn-close" on:click=hide></button>
-              </div>
-              {children()}
-            </div>
-          </div>
+      <dialog
+        class="tw:fixed tw:top-1/3 tw:left-1/2 tw:-translate-1/2 tw:w-full tw:max-w-md"
+        closedby="any"
+        node_ref=modal_ref
+      >
+        <div class="tw:flex tw:justify-between tw:p-4">
+          <h1 class="">{header}</h1>
+          <form method="dialog">
+            <button class="">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="tw:size-8"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </form>
         </div>
-        <div class="modal-backdrop show"></div>
-      </div>
+        <div class="tw:flex tw:flex-col tw:p-4">{children()}</div>
+      </dialog>
     }
 }
