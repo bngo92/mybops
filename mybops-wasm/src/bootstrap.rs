@@ -1,4 +1,9 @@
-use leptos::{html::Dialog, prelude::*, tachys::html::event::MouseEvent};
+use leptos::{
+    html::{Dialog, Div},
+    prelude::*,
+    tachys::html::event::MouseEvent,
+};
+use leptos_use::on_click_outside;
 
 #[component]
 pub fn Accordion(
@@ -78,6 +83,19 @@ pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> im
     view! {
       <div class=body_class>
         <div class="card card-body bg-light">{children()}</div>
+      </div>
+    }
+}
+
+#[component]
+pub fn Dropdown(children: Children, id: String) -> impl IntoView {
+    let dropdown = NodeRef::<Div>::new();
+    on_click_outside(dropdown, move |_| {
+        dropdown.get().unwrap().hide_popover().unwrap();
+    });
+    view! {
+      <div id=id popover=true class="tw:top-[anchor(bottom)] tw:left-[anchor(left)]">
+        <div class="tw:flex tw:flex-col tw:gap-4 tw:p-4">{children()}</div>
       </div>
     }
 }

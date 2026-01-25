@@ -1,7 +1,7 @@
 use crate::{
     Content, ListsRoute,
     base::Input,
-    bootstrap::Modal,
+    bootstrap::{Dropdown, Modal},
     docs,
     edit::Edit,
     home::Home,
@@ -538,37 +538,43 @@ pub fn ListComponent(
             } else {
                 Some(view! {
                   <li class="nav-item dropdown">
-                    <a class=toggle_class href="#" on:click=show_dropdown.clone()>
+                    <button
+                      popovertarget="list-dropdown"
+                      class="tw:flex tw:gap-1 tw:items-baseline tw:text-black tw:py-2 tw:pr-1 tw:pl-3"
+                    >
                       {toggle}
-                    </a>
-                    <ul class=menu_class>
-                      <li>
-                        <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
-                          "Tournament"
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          class="dropdown-item"
-                          href=format!("/lists/{}/tournament?mode=random", list.id)
-                        >
-                          "Random Tournament"
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
-                          "Random Matches"
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          class="dropdown-item"
-                          href=format!("/lists/{}/match?mode=rounds", list.id)
-                        >
-                          "Random Rounds"
-                        </a>
-                      </li>
-                    </ul>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="tw:size-3"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                        />
+                      </svg>
+                    </button>
+                    <Dropdown id="list-dropdown".to_owned()>
+                      <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                        "Tournament"
+                      </a>
+                      <a
+                        class="dropdown-item"
+                        href=format!("/lists/{}/tournament?mode=random", list.id)
+                      >
+                        "Random Tournament"
+                      </a>
+                      <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                        "Random Matches"
+                      </a>
+                      <a class="dropdown-item" href=format!("/lists/{}/match?mode=rounds", list.id)>
+                        "Random Rounds"
+                      </a>
+                    </Dropdown>
                   </li>
                 })
             }

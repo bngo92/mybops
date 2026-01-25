@@ -16,6 +16,7 @@ getrandom = { version = "0.2.12", features = ["js"] }
 js-sys = "0.3.64"
 leptos = { git = "https://github.com/bngo92/leptos", features = ["csr"] }
 leptos_router = { git = "https://github.com/bngo92/leptos" }
+leptos-use = { path = "../../leptos-use" }
 mybops = { path = "../mybops" }
 plotters = { git = "https://github.com/plotters-rs/plotters", default-features = false, features = ["histogram", "line_series"] }
 plotters-canvas = { git = "https://github.com/AE1020/plotters-canvas", rev = "aacc00b" }
