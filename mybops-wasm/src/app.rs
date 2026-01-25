@@ -62,7 +62,6 @@ fn AppImpl() -> impl IntoView {
     });
     let (sidebar, set_sidebar) = signal(false);
     let (dropdown, set_dropdown) = signal(false);
-    let (list_dropdown, set_list_dropdown) = signal(false);
     let (integrations_dropdown, set_integrations_dropdown) = signal(false);
 
     // We need to check which dropdown is clicked instead of relying on stop_propagation
@@ -72,10 +71,6 @@ fn AppImpl() -> impl IntoView {
     //     set_list_dropdown.set(false);
     //     set_integrations_dropdown.set(false);
     // };
-    let show_list_dropdown = move |e: MouseEvent| {
-        e.stop_propagation();
-        set_list_dropdown.set(!list_dropdown.get());
-    };
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
             let window = web_sys::window().expect("no global `window` exists");
@@ -259,12 +254,7 @@ fn AppImpl() -> impl IntoView {
                   path=path!(":id")
                   view=move || {
                     view! {
-                      <ListComponent
-                        view=ListsRoute::View
-                        user=move || user.get().flatten()
-                        dropdown=list_dropdown
-                        show_dropdown=show_list_dropdown
-                      />
+                      <ListComponent view=ListsRoute::View user=move || user.get().flatten() />
                     }
                   }
                 />
@@ -272,12 +262,7 @@ fn AppImpl() -> impl IntoView {
                   path=path!(":id/items")
                   view=move || {
                     view! {
-                      <ListComponent
-                        view=ListsRoute::List
-                        user=move || user.get().flatten()
-                        dropdown=list_dropdown
-                        show_dropdown=show_list_dropdown
-                      />
+                      <ListComponent view=ListsRoute::List user=move || user.get().flatten() />
                     }
                   }
                 />
@@ -285,12 +270,7 @@ fn AppImpl() -> impl IntoView {
                   path=path!(":id/edit")
                   view=move || {
                     view! {
-                      <ListComponent
-                        view=ListsRoute::Edit
-                        user=move || user.get().flatten()
-                        dropdown=list_dropdown
-                        show_dropdown=show_list_dropdown
-                      />
+                      <ListComponent view=ListsRoute::Edit user=move || user.get().flatten() />
                     }
                   }
                 />
@@ -298,12 +278,7 @@ fn AppImpl() -> impl IntoView {
                   path=path!(":id/match")
                   view=move || {
                     view! {
-                      <ListComponent
-                        view=ListsRoute::Match
-                        user=move || user.get().flatten()
-                        dropdown=list_dropdown
-                        show_dropdown=show_list_dropdown
-                      />
+                      <ListComponent view=ListsRoute::Match user=move || user.get().flatten() />
                     }
                   }
                 />
@@ -314,8 +289,6 @@ fn AppImpl() -> impl IntoView {
                       <ListComponent
                         view=ListsRoute::Tournament
                         user=move || user.get().flatten()
-                        dropdown=list_dropdown
-                        show_dropdown=show_list_dropdown
                       />
                     }
                   }
@@ -457,12 +430,7 @@ enum ListState {
 }
 
 #[component]
-pub fn ListComponent(
-    view: ListsRoute,
-    #[prop(into)] user: Signal<Option<User>>,
-    dropdown: ReadSignal<bool>,
-    show_dropdown: impl FnMut(MouseEvent) + 'static + Send + Clone,
-) -> impl IntoView {
+pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>) -> impl IntoView {
     let params = use_params::<ListParams>();
     let id = move || {
         params
@@ -520,17 +488,6 @@ pub fn ListComponent(
                 ListPage::Tournament => "Tournament",
                 ListPage::RandomTournament => "Random Tournament",
                 _ => "Rank",
-            };
-            let toggle_class = match (toggle, dropdown.get()) {
-                ("Rank", false) => "nav-link dropdown-toggle",
-                ("Rank", true) => "nav-link dropdown-toggle show",
-                (_, false) => "nav-link active dropdown-toggle",
-                (_, true) => "nav-link active dropdown-toggle show",
-            };
-            let menu_class = if dropdown.get() {
-                "dropdown-menu show"
-            } else {
-                "dropdown-menu"
             };
             // TODO: handle GROUP BY queries
             if let ListMode::View(_) = list.mode {

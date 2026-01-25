@@ -90,6 +90,7 @@ pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> im
 #[component]
 pub fn Dropdown(children: Children, id: String) -> impl IntoView {
     let dropdown = NodeRef::<Div>::new();
+    #[allow(unused_must_use)]
     on_click_outside(dropdown, move |_| {
         dropdown.get().unwrap().hide_popover().unwrap();
     });
