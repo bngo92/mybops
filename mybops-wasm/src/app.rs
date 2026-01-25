@@ -1,7 +1,7 @@
 use crate::{
     Content, ListsRoute,
     base::Input,
-    bootstrap::{Dropdown, Modal},
+    bootstrap::{Direction, Dropdown, Modal},
     docs,
     edit::Edit,
     home::Home,
@@ -29,7 +29,6 @@ use leptos_router::{
     path,
 };
 use mybops::{List, ListMode, User};
-use web_sys::MouseEvent;
 
 pub enum ListPage {
     View,
@@ -61,16 +60,7 @@ fn AppImpl() -> impl IntoView {
         user
     });
     let (sidebar, set_sidebar) = signal(false);
-    let (dropdown, set_dropdown) = signal(false);
-    let (integrations_dropdown, set_integrations_dropdown) = signal(false);
 
-    // We need to check which dropdown is clicked instead of relying on stop_propagation
-    // TODO: fix multiple open dropdowns
-    // let reset_dropdown = move |_| {
-    //     set_dropdown.set(false);
-    //     set_list_dropdown.set(false);
-    //     set_integrations_dropdown.set(false);
-    // };
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
             let window = web_sys::window().expect("no global `window` exists");
@@ -91,15 +81,6 @@ fn AppImpl() -> impl IntoView {
     } else */{
         "nav-link text-white"
     };
-    let toggle_dropdown = move |e: MouseEvent| {
-        // Prevent reset_dropdown from triggering
-        e.stop_propagation();
-        set_dropdown.set(!dropdown.get());
-    };
-    let int_dropdown = move |e: MouseEvent| {
-        e.stop_propagation();
-        set_integrations_dropdown.set(!integrations_dropdown.get());
-    };
     let sidebar_class = move || {
         if sidebar.get() {
             "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
@@ -110,7 +91,6 @@ fn AppImpl() -> impl IntoView {
     let origin = location().origin().unwrap();
     let modal_ref = NodeRef::<Dialog>::new();
     view! {
-      // <div on:click=reset_dropdown>
       <div>
         <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
           <div class="container-lg d-flex justify-content-start gap-3">
@@ -165,20 +145,31 @@ fn AppImpl() -> impl IntoView {
                   </a>
                 </li>
                 <li class="nav-item dropdown">
-                  <a
-                    class=dropdown_class(integrations_dropdown.get()).0
-                    href="#"
-                    on:click=int_dropdown
+                  <button
+                    popovertarget="integrations-dropdown"
+                    class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
                   >
                     "Integrations"
-                  </a>
-                  <ul class=move || dropdown_class(integrations_dropdown.get()).1>
-                    <li>
-                      <a class="dropdown-item" href="/integrations/spotify">
-                        "Spotify"
-                      </a>
-                    </li>
-                  </ul>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="tw:size-3"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+                  <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
+                    <a class="dropdown-item" href="/integrations/spotify">
+                      "Spotify"
+                    </a>
+                  </Dropdown>
                 </li>
                 <li class="nav-item">
                   <a class=search href="/docs">
@@ -194,28 +185,34 @@ fn AppImpl() -> impl IntoView {
                       Either::Left(
                         view! {
                           <li class="nav-item dropdown">
-                            <a
-                              class=move || dropdown_class(dropdown.get()).0
-                              href="#"
-                              on:click=toggle_dropdown
+                            <button
+                              popovertarget="login-dropdown"
+                              class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
                             >
                               {user.user_id}
-                            </a>
-                            <ul
-                              class=move || dropdown_class(dropdown.get()).1
-                              style="inset: auto auto 0px 0px; transform: translate3d(0px, -34px, 0px)"
-                            >
-                              <li>
-                                <a class="dropdown-item" href="/settings">
-                                  "Settings"
-                                </a>
-                              </li>
-                              <li>
-                                <a class="dropdown-item" href="/api/logout" rel="external">
-                                  "Log out"
-                                </a>
-                              </li>
-                            </ul>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="tw:size-3"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                                />
+                              </svg>
+                            </button>
+                            <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
+                              <a class="dropdown-item" href="/settings">
+                                "Settings"
+                              </a>
+                              <a class="dropdown-item" href="/api/logout" rel="external">
+                                "Log out"
+                              </a>
+                            </Dropdown>
                           </li>
                         },
                       )
@@ -336,19 +333,6 @@ fn AppImpl() -> impl IntoView {
           </Modal>
         </div>
       </div>
-    }
-}
-
-fn dropdown_class(dropdown: bool) -> (&'static str, &'static str) {
-    match dropdown {
-        true => (
-            "nav-link dropdown-toggle show text-white",
-            "dropdown-menu dropdown-menu-dark show",
-        ),
-        false => (
-            "nav-link dropdown-toggle text-white",
-            "dropdown-menu dropdown-menu-dark",
-        ),
     }
 }
 
@@ -515,7 +499,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                         />
                       </svg>
                     </button>
-                    <Dropdown id="list-dropdown".to_owned()>
+                    <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
                       <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
                         "Tournament"
                       </a>

@@ -87,16 +87,27 @@ pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> im
     }
 }
 
+pub enum Direction {
+    Up,
+    Down,
+}
+
 #[component]
-pub fn Dropdown(children: Children, id: String) -> impl IntoView {
+pub fn Dropdown(children: Children, id: String, direction: Direction) -> impl IntoView {
     let dropdown = NodeRef::<Div>::new();
     #[allow(unused_must_use)]
     on_click_outside(dropdown, move |_| {
         dropdown.get().unwrap().hide_popover().unwrap();
     });
     view! {
-      <div id=id popover=true class="tw:top-[anchor(bottom)] tw:left-[anchor(left)]">
-        <div class="tw:flex tw:flex-col tw:gap-4 tw:p-4">{children()}</div>
+      <div
+        id=id
+        popover=true
+        class="tw:left-[anchor(left)]"
+        class=(["tw:inset-auto", "tw:bottom-[anchor(top)]"], matches!(direction, Direction::Up))
+        class=("tw:top-[anchor(bottom)]", matches!(direction, Direction::Down))
+      >
+        <div class="tw:flex tw:flex-col tw:gap-4 tw:p-4 tw:min-w-40">{children()}</div>
       </div>
     }
 }
