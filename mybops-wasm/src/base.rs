@@ -29,54 +29,62 @@ pub fn IframeCompare(
     on_right_select: impl FnMut(MouseEvent) + 'static,
 ) -> impl IntoView {
     let (flag, set_flag) = signal(IframeCompareMsg::Left);
-    let (left_class, right_class, src) = match *flag.read() {
-        IframeCompareMsg::Left => ("nav-link active", "nav-link", left.iframe.clone()),
-        IframeCompareMsg::Right => ("nav-link", "nav-link active", right.iframe.clone()),
-    };
     view! {
-      <div class="row">
-        <div class="col-12 d-lg-none">
-          <ul class="nav nav-tabs nav-justified">
-            <li class="nav-item">
-              <a
-                class=left_class
-                aria-label="Show left item"
-                href="#"
-                on:click=move |_| set_flag.set(IframeCompareMsg::Left)
-              >
-                {left.name.clone()}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class=right_class href="#" onclick=move || set_flag.set(IframeCompareMsg::Right)>
-                {right.name.clone()}
-              </a>
-            </li>
-          </ul>
-          <iframe width="100%" height="380" prop:frameborder="0" src=src></iframe>
+      <div class="tw:grid tw:lg:hidden tw:grid-cols-2 tw:mb-px tw:text-center">
+        <a
+          class="tw:h-full tw:text-gray-700! tw:no-underline! tw:border-b-2"
+          class=("tw:border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Left))
+          class=("tw:border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Right))
+          aria-label="Show left item"
+          href="#"
+          on:click=move |_| set_flag.set(IframeCompareMsg::Left)
+        >
+          {left.name.clone()}
+        </a>
+        <a
+          class="tw:h-full tw:text-gray-700! tw:no-underline! tw:border-b-2"
+          class=("tw:border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Left))
+          class=("tw:border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Right))
+          href="#"
+          on:click=move |_| set_flag.set(IframeCompareMsg::Right)
+        >
+          {right.name.clone()}
+        </a>
+      </div>
+      <div class="tw:grid tw:grid-cols-2 tw:gap-x-6">
+        <div class="tw:col-span-full tw:lg:hidden">
+          <iframe
+            width="100%"
+            height="380"
+            prop:frameborder="0"
+            src={
+              let left = left.iframe.clone();
+              let right = right.iframe.clone();
+              move || match *flag.read() {
+                IframeCompareMsg::Left => left.clone(),
+                IframeCompareMsg::Right => right.clone(),
+              }
+            }
+          ></iframe>
         </div>
-        <div class="col-md-6 d-none d-lg-block">
+        <div class="tw:hidden tw:lg:block">
           <iframe width="100%" height="380" prop:frameborder="0" src=left.iframe.clone()></iframe>
         </div>
-        <div class="col-md-6 d-none d-lg-block">
+        <div class="tw:hidden tw:lg:block">
           <iframe width="100%" height="380" prop:frameborder="0" src=right.iframe.clone()></iframe>
         </div>
-        <div class="col-6">
-          <Button
-            class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
-            on:click=on_left_select
-          >
-            {left.name}
-          </Button>
-        </div>
-        <div class="col-6">
-          <Button
-            class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
-            on:click=on_right_select
-          >
-            {right.name}
-          </Button>
-        </div>
+        <Button
+          class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
+          on:click=on_left_select
+        >
+          {left.name}
+        </Button>
+        <Button
+          class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
+          on:click=on_right_select
+        >
+          {right.name}
+        </Button>
       </div>
     }
 }
