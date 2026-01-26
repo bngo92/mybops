@@ -7,9 +7,13 @@
     'Noto Color Emoji';
     --tw-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
+    --tw-color-violet-400: oklch(70.2% 0.183 293.541);
+    --tw-color-purple-400: oklch(71.4% 0.203 305.504);
     --tw-color-black: #000;
+    --tw-color-white: #fff;
     --tw-spacing: 0.25rem;
     --tw-container-md: 28rem;
+    --tw-radius-sm: 0.25rem;
     --tw-default-font-family: var(--tw-font-sans);
     --tw-default-mono-font-family: var(--tw-font-mono);
   }
@@ -224,6 +228,20 @@
   .tw\:gap-4 {
     gap: calc(var(--tw-spacing) * 4);
   }
+  .tw\:truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tw\:rounded-sm\! {
+    border-radius: var(--tw-radius-sm) !important;
+  }
+  .tw\:bg-purple-400 {
+    background-color: var(--tw-color-purple-400);
+  }
+  .tw\:bg-violet-400 {
+    background-color: var(--tw-color-violet-400);
+  }
   .tw\:p-4 {
     padding: calc(var(--tw-spacing) * 4);
   }
@@ -241,6 +259,9 @@
   }
   .tw\:text-black {
     color: var(--tw-color-black);
+  }
+  .tw\:text-white {
+    color: var(--tw-color-white);
   }
 }
 @property --tw-translate-x {

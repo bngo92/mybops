@@ -3,6 +3,19 @@ use mybops::ItemMetadata;
 use std::borrow::Cow;
 use web_sys::MouseEvent;
 
+#[component]
+pub fn Button(
+    children: Children,
+    #[prop(default = "button")] r#type: &'static str,
+    class: &'static str,
+) -> impl IntoView {
+    view! {
+      <button type=r#type class=class class=(["tw:rounded-sm!"], true)>
+        {children()}
+      </button>
+    }
+}
+
 pub enum IframeCompareMsg {
     Left,
     Right,
@@ -49,18 +62,20 @@ pub fn IframeCompare(
           <iframe width="100%" height="380" prop:frameborder="0" src=right.iframe.clone()></iframe>
         </div>
         <div class="col-6">
-          <button type="button" class="btn btn-info text-truncate w-100" on:click=on_left_select>
+          <Button
+            class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
+            on:click=on_left_select
+          >
             {left.name}
-          </button>
+          </Button>
         </div>
         <div class="col-6">
-          <button
-            type="button"
-            class="btn btn-warning text-truncate w-100"
+          <Button
+            class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
             on:click=on_right_select
           >
             {right.name}
-          </button>
+          </Button>
         </div>
       </div>
     }
