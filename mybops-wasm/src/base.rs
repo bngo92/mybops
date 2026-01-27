@@ -1,4 +1,4 @@
-use leptos::{either::Either, html, prelude::*};
+use leptos::{html, prelude::*};
 use mybops::ItemMetadata;
 use std::borrow::Cow;
 use web_sys::MouseEvent;
@@ -116,7 +116,9 @@ pub fn Input(
             value=value.clone()
             disabled=disabled
           />
-          {move || error.get().map(|error| view! { <div class="tw:text-sm tw:text-red-500">{error}</div> })}
+          {move || {
+            error.get().map(|error| view! { <div class="tw:text-sm tw:text-red-500">{error}</div> })
+          }}
         </div>
         <div>
           <Button class="tw:text-white tw:bg-purple-400" {..} on:click=onclick disabled=disabled>
@@ -139,10 +141,10 @@ pub fn responsive_table_view(
     let left_items = left_items.into_iter().map(|(item, _)| item);
     let right_items = right_items.into_iter().map(|(item, _)| item);
     view! {
-      <div class="row">
-        <div class="col-md-6 d-none d-lg-block">{table_view(header, left_items)}</div>
-        <div class="col-md-6 d-none d-lg-block">{table_view(header, right_items)}</div>
-        <div class="col-12 d-lg-none">{table_view(header, items.into_iter())}</div>
+      <div class="tw:grid tw:grid-cols-2 tw:gap-x-6">
+        <div class="tw:hidden tw:lg:block">{table_view(header, left_items)}</div>
+        <div class="tw:hidden tw:lg:block">{table_view(header, right_items)}</div>
+        <div class="tw:lg:hidden tw:col-span-full">{table_view(header, items.into_iter())}</div>
       </div>
     }
 }
@@ -152,12 +154,15 @@ pub fn table_view<'a>(
     items: impl Iterator<Item = Option<(i32, Cow<'a, [String]>)>>,
 ) -> impl IntoView {
     view! {
-      <div class="table-responsive">
-        <table class="table table-striped mb-0">
+      <div class="tw:overflow-x-auto">
+        <table class="tw:w-full">
           <thead>
             <tr>
-              <th>"#"</th>
-              {header.iter().map(|item| view! { <th>{item.to_owned()}</th> }).collect_view()}
+              <th class="tw:p-4">"#"</th>
+              {header
+                .iter()
+                .map(|item| view! { <th class="tw:p-4">{item.to_owned()}</th> })
+                .collect_view()}
             </tr>
           </thead>
           <tbody>{items.map(|item| item_view(item, header.len())).collect_view()}</tbody>
@@ -167,25 +172,18 @@ pub fn table_view<'a>(
 }
 
 fn item_view(item: Option<(i32, Cow<[String]>)>, len: usize) -> impl IntoView {
-    if let Some((i, item)) = item {
-        Either::Left(view! {
+    item.map(|(i, item)| {
+        view! {
           <tr>
-            <th>{i}</th>
+            <th class="tw:p-4">{i}</th>
             {item
               .iter()
               .take(len)
-              .map(|item| view! { <td class="text-truncate max-width">{item.clone()}</td> })
+              .map(|item| {
+                view! { <td class="tw:p-4 tw:max-w-[424px] tw:truncate">{item.clone()}</td> }
+              })
               .collect_view()}
           </tr>
-        })
-    } else {
-        Either::Right(view! {
-          <tr style="height: 41.5px">
-            <th></th>
-            <td class="td"></td>
-            <td></td>
-            <td></td>
-          </tr>
-        })
-    }
+        }
+    })
 }

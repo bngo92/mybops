@@ -223,6 +223,9 @@
   .tw\:w-full {
     width: 100%;
   }
+  .tw\:max-w-\[424px\] {
+    max-width: 424px;
+  }
   .tw\:max-w-md {
     max-width: var(--tw-container-md);
   }
@@ -262,6 +265,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .tw\:overflow-x-auto {
+    overflow-x: auto;
   }
   .tw\:rounded-sm\! {
     border-radius: var(--tw-radius-sm) !important;
