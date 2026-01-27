@@ -10,7 +10,13 @@ pub fn Button(
     class: &'static str,
 ) -> impl IntoView {
     view! {
-      <button type=r#type class=class class=(["tw:rounded-sm!"], true)>
+      <button
+        type=r#type
+        class=class
+        class=(["tw:rounded-sm!"], true)
+        class=(["tw:px-4"], true)
+        class=(["tw:py-2"], true)
+      >
         {children()}
       </button>
     }
@@ -98,32 +104,24 @@ pub fn Input(
     error: ReadSignal<Option<String>>,
     disabled: bool,
 ) -> impl IntoView {
-    let class = move || {
-        if error.read().is_some() {
-            "is-invalid"
-        } else {
-            ""
-        }
-    };
     view! {
-      <div class="d-flex gap-2">
+      <div class="tw:flex tw:gap-2">
         <div style="flex-basis: 800px">
           // Copy only the styles from .form-control that are needed for sizing
           <input
             node_ref=input_ref
             type="text"
-            class=class
             style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%"
             placeholder=default
             value=value.clone()
             disabled=disabled
           />
-          {move || error.get().map(|error| view! { <div class="invalid-feedback">{error}</div> })}
+          {move || error.get().map(|error| view! { <div class="tw:text-sm tw:text-red-500">{error}</div> })}
         </div>
         <div>
-          <button type="button" class="btn btn-success" on:click=onclick disabled=disabled>
+          <Button class="tw:text-white tw:bg-purple-400" {..} on:click=onclick disabled=disabled>
             "Search"
-          </button>
+          </Button>
         </div>
       </div>
     }
