@@ -109,6 +109,7 @@ pub fn Input(
         <div style="flex-basis: 800px">
           // Copy only the styles from .form-control that are needed for sizing
           <input
+            class="tw:bg-white"
             node_ref=input_ref
             type="text"
             style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%"
