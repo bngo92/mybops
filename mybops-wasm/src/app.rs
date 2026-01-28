@@ -152,17 +152,11 @@ fn AppImpl() -> impl IntoView {
                     "Integrations"
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                      class="tw:size-3"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="tw:size-2"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                      />
+                      <polygon points="0,0 20,0 10,10" />
                     </svg>
                   </button>
                   <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
@@ -192,17 +186,11 @@ fn AppImpl() -> impl IntoView {
                               {user.user_id}
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="tw:size-3"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                class="tw:size-2"
                               >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                                />
+                                <polygon points="0,0 20,0 10,10" />
                               </svg>
                             </button>
                             <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
@@ -486,17 +474,11 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                       {toggle}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="tw:size-3"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        class="tw:size-2"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                        />
+                        <polygon points="0,0 20,0 10,10" />
                       </svg>
                     </button>
                     <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>

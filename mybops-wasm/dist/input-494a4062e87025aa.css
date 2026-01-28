@@ -209,9 +209,9 @@
   .tw\:hidden {
     display: none;
   }
-  .tw\:size-3 {
-    width: calc(var(--tw-spacing) * 3);
-    height: calc(var(--tw-spacing) * 3);
+  .tw\:size-2 {
+    width: calc(var(--tw-spacing) * 2);
+    height: calc(var(--tw-spacing) * 2);
   }
   .tw\:size-8 {
     width: calc(var(--tw-spacing) * 8);
