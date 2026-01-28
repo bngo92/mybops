@@ -11,6 +11,7 @@
     --tw-color-violet-400: oklch(70.2% 0.183 293.541);
     --tw-color-purple-400: oklch(71.4% 0.203 305.504);
     --tw-color-purple-500: oklch(62.7% 0.265 303.9);
+    --tw-color-gray-200: oklch(92.8% 0.006 264.531);
     --tw-color-gray-300: oklch(87.2% 0.01 258.338);
     --tw-color-gray-700: oklch(37.3% 0.034 259.733);
     --tw-color-black: #000;
@@ -19,6 +20,8 @@
     --tw-container-md: 28rem;
     --tw-text-sm: 0.875rem;
     --tw-text-sm--line-height: calc(1.25 / 0.875);
+    --tw-text-base: 1rem;
+    --tw-text-base--line-height: calc(1.5 / 1);
     --tw-radius-sm: 0.25rem;
     --tw-default-font-family: var(--tw-font-sans);
     --tw-default-mono-font-family: var(--tw-font-mono);
@@ -197,8 +200,17 @@
   .tw\:col-span-full {
     grid-column: 1 / -1;
   }
+  .tw\:m-0\! {
+    margin: calc(var(--tw-spacing) * 0) !important;
+  }
+  .tw\:mb-3 {
+    margin-bottom: calc(var(--tw-spacing) * 3);
+  }
   .tw\:mb-px {
     margin-bottom: 1px;
+  }
+  .tw\:block {
+    display: block;
   }
   .tw\:flex {
     display: flex;
@@ -212,6 +224,10 @@
   .tw\:size-2 {
     width: calc(var(--tw-spacing) * 2);
     height: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:size-6 {
+    width: calc(var(--tw-spacing) * 6);
+    height: calc(var(--tw-spacing) * 6);
   }
   .tw\:size-8 {
     width: calc(var(--tw-spacing) * 8);
@@ -269,12 +285,26 @@
   .tw\:overflow-x-auto {
     overflow-x: auto;
   }
+  .tw\:rounded-sm {
+    border-radius: var(--tw-radius-sm);
+  }
   .tw\:rounded-sm\! {
     border-radius: var(--tw-radius-sm) !important;
+  }
+  .tw\:border-1 {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .tw\:border-b {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 1px;
   }
   .tw\:border-b-2 {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 2px;
+  }
+  .tw\:border-gray-200 {
+    border-color: var(--tw-color-gray-200);
   }
   .tw\:border-gray-300 {
     border-color: var(--tw-color-gray-300);
@@ -288,14 +318,23 @@
   .tw\:bg-violet-400 {
     background-color: var(--tw-color-violet-400);
   }
+  .tw\:bg-white {
+    background-color: var(--tw-color-white);
+  }
   .tw\:p-4 {
     padding: calc(var(--tw-spacing) * 4);
   }
   .tw\:px-4 {
     padding-inline: calc(var(--tw-spacing) * 4);
   }
+  .tw\:px-5 {
+    padding-inline: calc(var(--tw-spacing) * 5);
+  }
   .tw\:py-2 {
     padding-block: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:py-4 {
+    padding-block: calc(var(--tw-spacing) * 4);
   }
   .tw\:pr-1 {
     padding-right: calc(var(--tw-spacing) * 1);
@@ -305,6 +344,10 @@
   }
   .tw\:text-center {
     text-align: center;
+  }
+  .tw\:text-base\! {
+    font-size: var(--tw-text-base) !important;
+    line-height: var(--tw-leading, var(--tw-text-base--line-height)) !important;
   }
   .tw\:text-sm {
     font-size: var(--tw-text-sm);

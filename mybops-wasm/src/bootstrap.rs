@@ -22,19 +22,8 @@ pub fn Accordion(
             collapsed_state.get()
         }
     };
-    let button_class = move || {
-        if collapsed() {
-            "accordion-button collapsed"
-        } else {
-            "accordion-button"
-        }
-    };
     let body_class = move || {
-        if collapsed() {
-            "accordion-collapse collapse"
-        } else {
-            "accordion-collapse collapse show"
-        }
+        if collapsed() { "tw:hidden" } else { "tw:block" }
     };
     let onclick = if let Some(on_toggle) = on_toggle {
         on_toggle
@@ -42,15 +31,36 @@ pub fn Accordion(
         Callback::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
     };
     view! {
-      <div class="accordion mb-3">
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class=button_class on:click=move |ev| onclick.run(ev)>
-              {header}
-            </button>
-          </h2>
-          <div class=body_class>{children()}</div>
-        </div>
+      <div class="tw:mb-3 tw:bg-white tw:rounded-sm tw:border-1 tw:border-gray-200">
+        <h2
+          class="tw:px-5 tw:py-4 tw:m-0! tw:text-base! tw:border-gray-200"
+          class=("tw:border-b", move || !collapsed())
+        >
+          <button class="tw:flex tw:justify-between tw:w-full" on:click=move |ev| onclick.run(ev)>
+            {header}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="tw:size-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d=move || {
+                  if collapsed() {
+                    "m19.5 8.25-7.5 7.5-7.5-7.5"
+                  } else {
+                    "m4.5 15.75 7.5-7.5 7.5 7.5"
+                  }
+                }
+              />
+            </svg>
+          </button>
+        </h2>
+        <div class=body_class>{children()}</div>
       </div>
     }
 }
