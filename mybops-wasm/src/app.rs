@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{
     Content, ListsRoute,
     base::Input,
-    bootstrap::{Direction, Dropdown, Modal},
+    bootstrap::{Direction, Dropdown, Modal, Toasts},
     docs,
     edit::Edit,
     home::Home,
@@ -60,6 +62,8 @@ fn AppImpl() -> impl IntoView {
         user
     });
     let (sidebar, set_sidebar) = signal(false);
+    let (toasts, set_toasts) = signal(HashMap::new());
+    provide_context(set_toasts);
 
     /*Msg::Logout => {
         ctx.link().clone().send_future(async move {
@@ -319,6 +323,7 @@ fn AppImpl() -> impl IntoView {
               </a>
             </div>
           </Modal>
+          <Toasts toasts=toasts />
         </div>
       </div>
     }

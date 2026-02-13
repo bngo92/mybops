@@ -7,12 +7,15 @@
     'Noto Color Emoji';
     --tw-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
+    --tw-color-red-100: oklch(93.6% 0.032 17.717);
     --tw-color-red-500: oklch(63.7% 0.237 25.331);
+    --tw-color-emerald-100: oklch(95% 0.052 163.051);
     --tw-color-violet-400: oklch(70.2% 0.183 293.541);
     --tw-color-purple-400: oklch(71.4% 0.203 305.504);
     --tw-color-purple-500: oklch(62.7% 0.265 303.9);
     --tw-color-gray-200: oklch(92.8% 0.006 264.531);
     --tw-color-gray-300: oklch(87.2% 0.01 258.338);
+    --tw-color-gray-500: oklch(55.1% 0.027 264.364);
     --tw-color-gray-700: oklch(37.3% 0.034 259.733);
     --tw-color-black: #000;
     --tw-color-white: #fff;
@@ -188,6 +191,12 @@
   .tw\:top-\[anchor\(bottom\)\] {
     top: anchor(bottom);
   }
+  .tw\:right-0 {
+    right: calc(var(--tw-spacing) * 0);
+  }
+  .tw\:bottom-0 {
+    bottom: calc(var(--tw-spacing) * 0);
+  }
   .tw\:bottom-\[anchor\(top\)\] {
     bottom: anchor(top);
   }
@@ -224,6 +233,10 @@
   .tw\:size-2 {
     width: calc(var(--tw-spacing) * 2);
     height: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:size-4 {
+    width: calc(var(--tw-spacing) * 4);
+    height: calc(var(--tw-spacing) * 4);
   }
   .tw\:size-6 {
     width: calc(var(--tw-spacing) * 6);
@@ -312,14 +325,26 @@
   .tw\:border-purple-500 {
     border-color: var(--tw-color-purple-500);
   }
+  .tw\:bg-emerald-100 {
+    background-color: var(--tw-color-emerald-100);
+  }
   .tw\:bg-purple-400 {
     background-color: var(--tw-color-purple-400);
+  }
+  .tw\:bg-red-100 {
+    background-color: var(--tw-color-red-100);
   }
   .tw\:bg-violet-400 {
     background-color: var(--tw-color-violet-400);
   }
   .tw\:bg-white {
     background-color: var(--tw-color-white);
+  }
+  .tw\:stroke-gray-500 {
+    stroke: var(--tw-color-gray-500);
+  }
+  .tw\:p-3 {
+    padding: calc(var(--tw-spacing) * 3);
   }
   .tw\:p-4 {
     padding: calc(var(--tw-spacing) * 4);

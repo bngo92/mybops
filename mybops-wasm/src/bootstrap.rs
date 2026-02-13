@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use leptos::{
     html::{Dialog, Div},
     prelude::*,
@@ -65,19 +67,74 @@ pub fn Accordion(
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct Toast {
+    id: &'static str,
+    set_toast: WriteSignal<HashMap<&'static str, RwSignal<Option<Result<String, String>>>>>,
+}
+
+impl Toast {
+    pub fn new(id: &'static str) -> Self {
+        Self {
+            id,
+            set_toast: use_context().unwrap(),
+        }
+    }
+
+    pub fn set(&self, toast: Result<String, String>) {
+        self.set_toast.update(|toasts| {
+            toasts.entry(self.id).or_default().set(Some(toast));
+        })
+    }
+}
+
 #[component]
-pub fn Alert(
-    result: Result<String, String>,
-    hide: impl FnMut(MouseEvent) + 'static,
+pub fn Toasts(
+    toasts: ReadSignal<HashMap<&'static str, RwSignal<Option<Result<String, String>>>>>,
 ) -> impl IntoView {
-    let (alert_class, body) = match result {
-        Ok(msg) => ("alert alert-success alert-dismissible", msg),
-        Err(msg) => ("alert alert-danger alert-dismissible", msg),
-    };
     view! {
-      <div class=alert_class>
-        {body} <button type="button" class="btn-close" on:click=hide></button>
+      <div class="tw:fixed tw:right-0 tw:bottom-0 tw:p-3 tw:w-full tw:max-w-md">
+        <For
+          each=move || toasts.get()
+          key=|(k, _)| *k
+          children=move |(_, result)| view! { <Alert result=result /> }
+        />
       </div>
+    }
+}
+
+#[component]
+fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
+    let hide = move |_| result.set(None);
+    move || {
+        let Some(result) = result.get() else {
+            return None;
+        };
+        let (alert_class, body) = match result {
+            Ok(msg) => (
+                "tw:flex tw:justify-between tw:p-4 tw:bg-emerald-100 alert-success",
+                msg,
+            ),
+            Err(msg) => (
+                "tw:flex tw:justify-between tw:p-4 tw:bg-red-100 alert-danger",
+                msg,
+            ),
+        };
+        Some(view! {
+          <div class=alert_class>
+            {body} <button type="button" on:click=hide>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="3"
+                class="tw:size-4 tw:stroke-gray-500"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M0 24 24 0M0 0l24 24" />
+              </svg>
+            </button>
+          </div>
+        })
     }
 }
 

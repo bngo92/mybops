@@ -1,8 +1,8 @@
-use crate::bootstrap::{Alert, Modal};
+use crate::bootstrap::{Modal, Toast};
 use arrow::{array::AsArray, datatypes::UInt64Type};
 use js_sys::Error;
 use leptos::{
-    either::{Either, EitherOf3},
+    either::EitherOf3,
     html::{Dialog, Input},
     prelude::*,
 };
@@ -11,7 +11,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response, Url};
+use web_sys::{AbortSignal, Request, RequestInit, RequestMode, Response, Url};
 
 #[derive(Clone)]
 struct ListItem {
@@ -64,7 +64,6 @@ pub fn ListItems(
     );
     let (prev_state, set_prev_state) = signal(None);
     let (state, set_state) = signal(None);
-    let (alert, set_alert) = signal(None);
     let (modal, set_modal) = signal(0);
 
     LocalResource::new(move || async move {
@@ -117,6 +116,7 @@ pub fn ListItems(
     let update_rating = move |(i, rating): (usize, Option<u64>)| {
         set_state.update(|state| state.as_mut().unwrap()[i].rating.set(rating))
     };
+    let toast = Toast::new("list-items-alert");
     let save = Action::new_unsync(move |_| async move {
         let mut update_ids = HashMap::new();
         let mut update_indexes = Vec::new();
@@ -160,6 +160,7 @@ pub fn ListItems(
             let opts = RequestInit::new();
             opts.set_method("POST");
             opts.set_mode(RequestMode::Cors);
+            opts.set_signal(Some(&AbortSignal::timeout_with_u32(1000)));
             let updates = JsValue::from_str(&serde_json::to_string(&update_ids).unwrap());
             opts.set_body(&updates);
             let request =
@@ -172,11 +173,12 @@ pub fn ListItems(
                 Ok(resp) => {
                     let resp_value: Response = resp.dyn_into().unwrap();
                     if resp_value.status() >= 400 {
-                        set_alert.set(Some(Err(JsFuture::from(resp_value.text().unwrap())
+                        let alert = Err(JsFuture::from(resp_value.text().unwrap())
                             .await
                             .unwrap()
                             .as_string()
-                            .unwrap())));
+                            .unwrap());
+                        toast.set(alert);
                     } else {
                         // Update the rating and hidden state values if the save request is successful.
                         set_state.update(|state| {
@@ -203,11 +205,11 @@ pub fn ListItems(
                             }
                         });
                         set_prev_state.set(state.get());
-                        set_alert.set(Some(Ok("Save successful".to_owned())));
+                        toast.set(Ok("Save successful".to_owned()));
                     }
                 }
                 Err(e) => {
-                    set_alert.set(Some(Err(e.dyn_into::<Error>().unwrap().to_string().into())))
+                    toast.set(Err(e.dyn_into::<Error>().unwrap().to_string().into()));
                 }
             }
         }
@@ -511,40 +513,16 @@ pub fn ListItems(
                 {html}
               </div>
             </div>
-            {move || {
-              if let Some(result) = alert.get() {
-                Either::Left(
-                  view! {
-                    <button
-                      type="button"
-                      class="btn btn-success mb-3"
-                      on:click=move |_| {
-                        save.dispatch(());
-                      }
-                      disabled=disabled
-                    >
-                      "Save"
-                    </button>
-                    <Alert result=result hide=move |_| set_alert.set(None) />
-                  },
-                )
-              } else {
-                Either::Right(
-                  view! {
-                    <button
-                      type="button"
-                      class="btn btn-success"
-                      on:click=move |_| {
-                        save.dispatch(());
-                      }
-                      disabled=disabled
-                    >
-                      "Save"
-                    </button>
-                  },
-                )
+            <button
+              type="button"
+              class="btn btn-success mb-3"
+              on:click=move |_| {
+                save.dispatch(());
               }
-            }}
+              disabled=disabled
+            >
+              "Save"
+            </button>
           </form>
         </div>
         <hr />
