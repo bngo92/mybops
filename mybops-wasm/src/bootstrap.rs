@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use leptos::{
     html::{Dialog, Div},
     prelude::*,
     tachys::html::event::MouseEvent,
 };
-use leptos_use::on_click_outside;
+use leptos_use::{UseTimeoutFnReturn, on_click_outside, use_timeout_fn};
 
 #[component]
 pub fn Accordion(
@@ -67,10 +67,17 @@ pub fn Accordion(
     }
 }
 
+#[derive(Clone)]
+pub struct ToastState {
+    result: RwSignal<Option<Result<String, String>>>,
+    schedule_hide: Arc<dyn Fn(()) + Send + Sync>,
+    cancel_hide: Arc<dyn Fn() + Send + Sync>,
+}
+
 #[derive(Clone, Copy)]
 pub struct Toast {
     id: &'static str,
-    set_toast: WriteSignal<HashMap<&'static str, RwSignal<Option<Result<String, String>>>>>,
+    set_toast: WriteSignal<HashMap<&'static str, ToastState>>,
 }
 
 impl Toast {
@@ -83,21 +90,37 @@ impl Toast {
 
     pub fn set(&self, toast: Result<String, String>) {
         self.set_toast.update(|toasts| {
-            toasts.entry(self.id).or_default().set(Some(toast));
+            let entry = toasts.entry(self.id).or_insert_with(|| {
+                let hide = {
+                    let set_toast = self.set_toast;
+                    let id = self.id;
+                    move |_| set_toast.update(|toasts| toasts[id].result.set(None))
+                };
+                let UseTimeoutFnReturn { start, stop, .. } = use_timeout_fn(hide, 5000.);
+                ToastState {
+                    result: RwSignal::new(None),
+                    schedule_hide: Arc::new(start),
+                    cancel_hide: Arc::new(stop),
+                }
+            });
+            (entry.cancel_hide)();
+            // Don't hide errors
+            if toast.is_ok() {
+                (entry.schedule_hide)(())
+            }
+            entry.result.set(Some(toast));
         })
     }
 }
 
 #[component]
-pub fn Toasts(
-    toasts: ReadSignal<HashMap<&'static str, RwSignal<Option<Result<String, String>>>>>,
-) -> impl IntoView {
+pub fn Toasts(toasts: ReadSignal<HashMap<&'static str, ToastState>>) -> impl IntoView {
     view! {
       <div class="tw:fixed tw:right-0 tw:bottom-0 tw:p-3 tw:w-full tw:max-w-md">
         <For
-          each=move || toasts.get()
+          each=move || toasts.read().clone()
           key=|(k, _)| *k
-          children=move |(_, result)| view! { <Alert result=result /> }
+          children=move |(_, toast)| view! { <Alert result=toast.result /> }
         />
       </div>
     }
@@ -107,9 +130,7 @@ pub fn Toasts(
 fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
     let hide = move |_| result.set(None);
     move || {
-        let Some(result) = result.get() else {
-            return None;
-        };
+        let result = result.get()?;
         let (alert_class, body) = match result {
             Ok(msg) => (
                 "tw:flex tw:justify-between tw:p-4 tw:bg-emerald-100 alert-success",
