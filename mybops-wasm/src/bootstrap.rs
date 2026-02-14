@@ -161,16 +161,11 @@ fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
 
 #[component]
 pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> impl IntoView {
-    let body_class = move || {
-        if collapsed.get() {
-            "collapse"
-        } else {
-            "collapse show"
-        }
-    };
     view! {
-      <div class=body_class>
-        <div class="card card-body bg-light">{children()}</div>
+      <div class=move || if collapsed.get() { "tw:hidden" } else { "tw:block" }>
+        <div class="tw:p-4 tw:bg-white tw:rounded-sm tw:border-1 tw:border-gray-200">
+          {children()}
+        </div>
       </div>
     }
 }
