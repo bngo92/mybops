@@ -6,6 +6,8 @@ use leptos::{
 use leptos_router::hooks::use_navigate;
 use mybops::{Id, List, ListMode, Source, SourceType, Spotify};
 
+use crate::base::Button;
+
 // TODO: need to refresh list after edit
 #[component]
 pub fn Edit(
@@ -178,9 +180,9 @@ pub fn Edit(
                     </div>
                     <input class="col-9 col-sm-7 col-md-8" node_ref=*id value=value />
                     <div class="col-auto">
-                      <button type="button" class="btn btn-danger" on:click=onclick>
+                      <Button class="tw:text-white tw:bg-red-500" on:click=onclick>
                         "Delete"
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 }
@@ -296,42 +298,39 @@ pub fn Edit(
         <h4>"Data Sources"</h4>
         <div class="mb-3">{source_html}</div>
         <div class="d-flex gap-3">
-          <button type="button" class="btn btn-primary" on:click=add_source>
+          <Button class="tw:text-white tw:bg-blue-500" on:click=add_source>
             "Add source"
-          </button>
+          </Button>
         </div>
         <hr />
-        <button
-          type="button"
-          class="btn btn-success mb-3"
+        <Button
+          class="tw:text-white tw:bg-primary tw:mb-3!"
           on:click=move |_| {
             save.dispatch(());
           }
           disabled=disabled
         >
           "Save all settings"
-        </button>
+        </Button>
         <div class="d-flex gap-3">
-          <button
-            type="button"
-            class="btn btn-danger"
+          <Button
+            class="tw:text-white tw:bg-red-500"
             on:click=move |_| {
               delete.dispatch(());
             }
             disabled=disabled
           >
             "Delete"
-          </button>
-          <button
-            type="button"
-            class="btn btn-danger"
+          </Button>
+          <Button
+            class="tw:text-white tw:bg-red-500"
             on:click=move |_| {
               delete_all.dispatch(());
             }
             disabled=disabled
           >
             "Delete All"
-          </button>
+          </Button>
         </div>
       </div>
     }

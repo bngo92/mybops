@@ -1,4 +1,5 @@
 use crate::{
+    base::Button,
     bootstrap::Collapse,
     plot::{DataView, DataViewRender},
 };
@@ -25,17 +26,19 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
               <li class="navbar-brand">"Query"</li>
             </ul>
             <div class="d-flex gap-3">
-              <button
-                type="button"
-                class="btn btn-info"
-                style="width: 112px"
+              <Button
+                class="tw:text-white tw:bg-purple-500/80"
+                prop:style="width: 112px"
                 on:click=move |_| set_split_view.set(!split_view.get())
               >
                 {button_text}
-              </button>
-              <button class="btn btn-info" on:click=move |_| logged_in.set(!logged_in.get())>
+              </Button>
+              <Button
+                class="tw:text-white tw:bg-purple-500/80"
+                on:click=move |_| logged_in.set(!logged_in.get())
+              >
                 "Help"
-              </button>
+              </Button>
             </div>
           </>
         },
@@ -216,27 +219,25 @@ pub fn SearchPane() -> impl IntoView {
               />
               {error}
             </div>
-            <button
-              type="button"
-              class="btn btn-success"
+            <Button
+              class="tw:text-white tw:bg-primary"
               on:click=move |_| {
                 search.dispatch(());
               }
-              style="height: fit-content"
+              prop:style="height: fit-content"
             >
               "Search"
-            </button>
-            <button
-              type="button"
-              class="btn btn-success"
+            </Button>
+            <Button
+              class="tw:text-white tw:bg-primary"
               on:click=move |_| {
                 create.dispatch(());
               }
-              style="height: fit-content"
+              prop:style="height: fit-content"
               disabled=move || query.read().is_none()
             >
               "Create List"
-            </button>
+            </Button>
           </div>
         </form>
         {move || {

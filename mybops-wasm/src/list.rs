@@ -1,6 +1,8 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
 
+use crate::base::Button;
+
 pub mod item;
 
 #[component]
@@ -43,16 +45,15 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
             view! {
               <div>
                 <div class="row mt-3">{list_html()}</div>
-                <button
-                  type="button"
-                  class="btn btn-primary"
+                <Button
+                  class="tw:text-white tw:bg-blue-500"
                   on:click=move |_| {
                     create.dispatch(());
                   }
                   disabled=move || !logged_in.get()
                 >
                   "Create List"
-                </button>
+                </Button>
               </div>
             }
         })

@@ -8,6 +8,9 @@ pub fn Button(
     children: Children,
     #[prop(default = "button")] r#type: &'static str,
     class: &'static str,
+    #[prop(optional)]
+    #[prop(into)]
+    disabled: Signal<bool>,
 ) -> impl IntoView {
     view! {
       <button
@@ -16,6 +19,7 @@ pub fn Button(
         class=(["tw:rounded-sm!"], true)
         class=(["tw:px-4"], true)
         class=(["tw:py-2"], true)
+        disabled=disabled
       >
         {children()}
       </button>
@@ -80,13 +84,13 @@ pub fn IframeCompare(
           <iframe width="100%" height="380" prop:frameborder="0" src=right.iframe.clone()></iframe>
         </div>
         <Button
-          class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
+          class="tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
           on:click=on_left_select
         >
           {left.name}
         </Button>
         <Button
-          class="tw:py-2 tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
+          class="tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
           on:click=on_right_select
         >
           {right.name}
@@ -122,7 +126,7 @@ pub fn Input(
           }}
         </div>
         <div>
-          <Button class="tw:text-white tw:bg-purple-400" {..} on:click=onclick disabled=disabled>
+          <Button class="tw:text-white tw:bg-primary" {..} on:click=onclick disabled=disabled>
             "Search"
           </Button>
         </div>

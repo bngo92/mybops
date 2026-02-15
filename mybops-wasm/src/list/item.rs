@@ -1,4 +1,7 @@
-use crate::bootstrap::{Modal, Toast};
+use crate::{
+    base::Button,
+    bootstrap::{Modal, Toast},
+};
 use arrow::{array::AsArray, datatypes::UInt64Type};
 use js_sys::Error;
 use leptos::{
@@ -440,16 +443,15 @@ pub fn ListItems(
                         {item.name.clone()}
                       </a>
                     </label>
-                    <button
-                      type="button"
-                      class="btn btn-danger"
+                    <Button
+                      class="tw:text-white tw:bg-red-500"
                       on:click=move |_| {
                         delete.dispatch((i, item.id.clone()));
                       }
                       disabled=disabled
                     >
                       "Delete"
-                    </button>
+                    </Button>
                   </>
                 }
                 .into_any()
@@ -513,16 +515,15 @@ pub fn ListItems(
                 {html}
               </div>
             </div>
-            <button
-              type="button"
-              class="btn btn-success mb-3"
+            <Button
+              class="tw:text-white tw:bg-primary"
               on:click=move |_| {
                 save.dispatch(());
               }
               disabled=disabled
             >
               "Save"
-            </button>
+            </Button>
           </form>
         </div>
         <hr />
@@ -534,16 +535,15 @@ pub fn ListItems(
           } else {
             Some(
               view! {
-                <button
-                  type="button"
-                  class="btn btn-success"
+                <Button
+                  class="tw:text-white tw:bg-primary"
                   on:click=move |_| {
                     push.dispatch(());
                   }
                   disabled=move || !push_available()
                 >
                   "Push"
-                </button>
+                </Button>
               },
             )
           }

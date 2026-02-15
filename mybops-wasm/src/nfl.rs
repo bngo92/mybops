@@ -10,6 +10,8 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
+use crate::base::Button;
+
 #[derive(Debug, Deserialize)]
 pub struct Scoreboard {
     week: Week,
@@ -526,9 +528,9 @@ pub fn Nfl() -> impl IntoView {
                     <option>"Previous Division Standings"</option>
                   </select>
                 </form>
-                <button type="button" class="btn btn-info" on:click=onclick>
+                <Button class="tw:text-white tw:bg-primary" on:click=onclick>
                   {move || if selected { "Clear" } else { "Select" }}
-                </button>
+                </Button>
                 {html}
               </div>
             }

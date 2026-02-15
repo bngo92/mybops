@@ -1,4 +1,4 @@
-use crate::base::IframeCompare;
+use crate::base::{Button, IframeCompare};
 use leptos::{either::Either, prelude::*};
 use mybops::{ItemMetadata, List};
 use rand::prelude::SliceRandom;
@@ -424,17 +424,16 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
     view! {
       <div>
         <div class="d-flex gap-3">
-          <button
-            type="button"
-            class="btn btn-primary mb-1"
+          <Button
+            class="tw:text-white tw:bg-blue-500"
             on:click=toggle_state
-            style="width: 156.58px"
+            prop:style="width: 170.55px"
           >
             {toggle}
-          </button>
-          <button type="button" class="btn btn-danger mb-1" on:click=reset>
+          </Button>
+          <Button class="tw:text-white tw:bg-red-500" on:click=reset>
             "Reset"
-          </button>
+          </Button>
         </div>
         {html}
       </div>
@@ -608,15 +607,14 @@ fn tournament_bracket_view(
                   <div class="row" style=row_width.clone()>
                     {offsets[item.depth].clone()}
                     <div style=col_width.clone()>
-                      <button
-                        type="button"
-                        class="btn btn-success text-truncate w-100"
-                        style="height: 38px"
+                      <Button
+                        class="tw:w-full tw:text-white tw:bg-primary tw:text-truncate"
+                        prop:style="height: 38px"
                         disabled=disabled
                         on:click=move |_| on_click_select(i)
                       >
                         {title}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 })

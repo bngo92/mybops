@@ -1,4 +1,4 @@
-use crate::bootstrap::Accordion;
+use crate::{base::Button, bootstrap::Accordion};
 use leptos::{html::Input, prelude::*};
 use mybops::{
     Spotify,
@@ -74,9 +74,8 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                               .is_none()
                               .then(|| {
                                 view! {
-                                  <button
-                                    type="button"
-                                    class="btn btn-success"
+                                  <Button
+                                    class="tw:text-white tw:bg-primary"
                                     on:click={
                                       let url = i.url.clone();
                                       move |_| {
@@ -85,7 +84,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                                     }
                                   >
                                     "Import"
-                                  </button>
+                                  </Button>
                                 }
                               })
                           }}
@@ -163,16 +162,15 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                   <input node_ref=import_ref type="text" class="w-100 h-100" value=default_import />
                 </div>
                 <div class="col-2 col-lg-1 pe-2">
-                  <button
-                    type="button"
-                    class="btn btn-success"
+                  <Button
+                    class="tw:text-white tw:bg-primary"
                     on:click=move |_| {
                       import.dispatch(());
                     }
                     disabled=logged_in
                   >
                     "Import"
-                  </button>
+                  </Button>
                 </div>
               </div>
             </form>
