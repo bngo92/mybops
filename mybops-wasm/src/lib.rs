@@ -24,7 +24,7 @@ mod plot;
 mod random;
 mod search;
 mod settings;
-mod tournament;
+pub mod tournament;
 
 #[derive(Clone)]
 pub enum ListsRoute {
