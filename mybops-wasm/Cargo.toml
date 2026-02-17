@@ -14,9 +14,9 @@ arrow = "53.0.0"
 console_error_panic_hook = "0.1.7"
 getrandom = { version = "0.2.12", features = ["js"] }
 js-sys = "0.3.64"
-leptos = { git = "https://github.com/leptos-rs/leptos", features = ["csr"] }
-leptos_router = { git = "https://github.com/leptos-rs/leptos" }
-leptos-use = { path = "../../leptos-use" }
+leptos = { version = "0.8.16", features = ["csr"] }
+leptos_router = "0.8.12"
+leptos-use = "0.18.0"
 mybops = { path = "../mybops" }
 plotters = { git = "https://github.com/plotters-rs/plotters", default-features = false, features = ["histogram", "line_series"] }
 plotters-canvas = { git = "https://github.com/AE1020/plotters-canvas", rev = "aacc00b" }
