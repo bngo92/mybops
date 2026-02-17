@@ -99,6 +99,10 @@ pub fn IframeCompare(
     }
 }
 
+pub const INPUT_STYLE: &str =
+    "tw:px-4 tw:py-2 tw:min-w-full tw:bg-white tw:rounded-sm tw:border tw:border-gray-200";
+pub const READONLY_INPUT_STYLE: &str = "tw:px-4 tw:py-2 tw:border tw:border-transparent";
+
 #[component]
 pub fn Input(
     input_ref: NodeRef<html::Input>,
@@ -113,10 +117,9 @@ pub fn Input(
         <div style="flex-basis: 800px">
           // Copy only the styles from .form-control that are needed for sizing
           <input
-            class="tw:bg-white"
+            class=INPUT_STYLE
             node_ref=input_ref
             type="text"
-            style="padding: .5rem 1rem; font-size: .875rem; border-width: 1px; min-width: 100%"
             placeholder=default
             value=value.clone()
             disabled=disabled

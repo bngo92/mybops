@@ -6,7 +6,7 @@ use leptos::{
 use leptos_router::hooks::use_navigate;
 use mybops::{Id, List, ListMode, Source, SourceType, Spotify};
 
-use crate::base::Button;
+use crate::base::{Button, INPUT_STYLE, READONLY_INPUT_STYLE};
 
 // TODO: need to refresh list after edit
 #[component]
@@ -169,22 +169,21 @@ pub fn Edit(
                     Some(SourceType::ListItems(id)) => id.clone(),
                 };
                 view! {
-                  <div class="row mb-1">
-                    <div class="col-4 col-sm-3 col-md-2">
-                      <select node_ref=*source_ref class="form-select">
-                        <option selected=selected[0]>"Custom"</option>
-                        <option selected=selected[1]>"Spotify"</option>
-                        <option selected=selected[2]>"Setlist"</option>
-                        <option selected=selected[3]>"List Items"</option>
-                      </select>
-                    </div>
-                    <input class="col-9 col-sm-7 col-md-8" node_ref=*id value=value />
-                    <div class="col-auto">
-                      <Button class="tw:text-white tw:bg-red-500" on:click=onclick>
-                        "Delete"
-                      </Button>
-                    </div>
+                  <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+                    <select
+                      node_ref=*source_ref
+                      class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
+                    >
+                      <option selected=selected[0]>"Custom"</option>
+                      <option selected=selected[1]>"Spotify"</option>
+                      <option selected=selected[2]>"Setlist"</option>
+                      <option selected=selected[3]>"List Items"</option>
+                    </select>
                   </div>
+                  <input class=INPUT_STYLE node_ref=*id value=value />
+                  <Button class="tw:text-white tw:bg-red-500" on:click=onclick>
+                    "Delete"
+                  </Button>
                 }
             })
             .collect_view()
@@ -197,110 +196,113 @@ pub fn Edit(
     view! {
       <div>
         <h4>"List Settings"</h4>
-        <form class="mb-4" style="max-width: 800px">
-          <div class="form-floating mb-2">
+        <div class="tw:flex tw:flex-col tw:gap-6">
+          <form class="tw:flex tw:flex-col tw:gap-4 tw:max-w-3xl">
+            <FormInput
+              id="name"
+              label="List name"
+              input=move || {
+                if let ListMode::External = &list.read().mode {
+                  Either::Left(
+                    view! {
+                      <input
+                        type="text"
+                        readonly=true
+                        class=READONLY_INPUT_STYLE
+                        value=list.read().name.clone()
+                        placeholder=""
+                      />
+                    },
+                  )
+                } else {
+                  Either::Right(
+                    view! {
+                      <input
+                        type="text"
+                        class=INPUT_STYLE
+                        node_ref=name_ref
+                        value=list.read().name.clone()
+                        placeholder=""
+                      />
+                    },
+                  )
+                }
+              }
+            />
+            <FormInput
+              id="mode"
+              label="List mode"
+              input=view! {
+                <input
+                  type="text"
+                  readonly=true
+                  class=READONLY_INPUT_STYLE
+                  value=mode
+                  placeholder=""
+                />
+              }
+            />
             {move || {
-              if let ListMode::External = &list.read().mode {
-                Either::Left(
+              if let ListMode::User(external_id) | ListMode::View(external_id) = &list.read().mode {
+                Some(
                   view! {
-                    <input
-                      type="text"
-                      readonly=true
-                      class="form-control-plaintext"
-                      id="name"
-                      value=list.read().name.clone()
-                      placeholder=""
+                    <FormInput
+                      id="externalId"
+                      label="External ID"
+                      input=view! {
+                        <input
+                          class=INPUT_STYLE
+                          node_ref=external_ref
+                          placeholder=""
+                          value=external_id.as_ref().map(|i| i.raw_id.clone()).unwrap_or_default()
+                        />
+                      }
                     />
                   },
                 )
               } else {
-                Either::Right(
-                  view! {
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="name"
-                      node_ref=name_ref
-                      value=list.read().name.clone()
-                      placeholder=""
-                    />
-                  },
-                )
+                None
               }
-            }} <label for="name">"List name"</label>
-          </div>
-          <div class="form-floating mb-2">
-            <input
-              type="text"
-              readonly=true
-              class="form-control-plaintext"
-              id="mode"
-              value=mode
-              placeholder=""
-            />
-            <label for="mode">"List mode"</label>
-          </div>
-          {move || {
-            if let ListMode::User(external_id) | ListMode::View(external_id) = &list.read().mode {
-              Some(
-                view! {
-                  <div class="form-floating mb-3">
-                    <input
-                      class="form-control"
-                      id="externalId"
-                      node_ref=external_ref
-                      placeholder="External ID"
-                      value=external_id.as_ref().map(|i| i.raw_id.clone()).unwrap_or_default()
-                    />
-                    <label for="externalId">"External ID"</label>
-                  </div>
-                },
-              )
-            } else {
-              None
-            }
-          }}
-          <div class="form-floating mb-3">
-            <input
-              class="form-control"
+            }}
+            <FormInput
               id="query"
-              node_ref=query_ref
-              placeholder="External ID"
-              value=list.get().query
+              label="Query"
+              input=view! {
+                <input class=INPUT_STYLE node_ref=query_ref placeholder="" value=list.get().query />
+              }
             />
-            <label for="query">"Query"</label>
+            <div>
+              <div class="tw:flex tw:items-center tw:gap-2">
+                <input
+                  node_ref=favorite_ref
+                  class="tw:my-1! tw:size-4"
+                  type="checkbox"
+                  id="favorite"
+                  checked=list.read().favorite
+                />
+                <label for="favorite">"Favorite"</label>
+              </div>
+              <div class="tw:flex tw:items-center tw:gap-2">
+                <input
+                  node_ref=public_ref
+                  class="tw:my-1! tw:size-4"
+                  type="checkbox"
+                  id="public"
+                  checked=list.read().public
+                />
+                <label for="public">"Public"</label>
+              </div>
+            </div>
+          </form>
+          <div>
+            <h5>"Data Sources"</h5>
+            <div class="tw:grid tw:grid-cols-[10rem_minmax(auto,calc(var(--tw-container-3xl)-10rem-1rem))_min-content] tw:gap-4 mb-3">
+              {source_html}
+            </div>
+            <Button class="tw:text-white tw:bg-blue-500" on:click=add_source>
+              "Add source"
+            </Button>
           </div>
-          <div class="form-check">
-            <label class="form-check-label" for="favorite">
-              "Favorite"
-            </label>
-            <input
-              node_ref=favorite_ref
-              class="form-check-input"
-              type="checkbox"
-              id="favorite"
-              checked=list.read().favorite
-            />
-          </div>
-          <div class="form-check">
-            <label class="form-check-label" for="public">
-              "Public"
-            </label>
-            <input
-              node_ref=public_ref
-              class="form-check-input"
-              type="checkbox"
-              id="public"
-              checked=list.read().public
-            />
-          </div>
-        </form>
-        <h4>"Data Sources"</h4>
-        <div class="mb-3">{source_html}</div>
-        <div class="d-flex gap-3">
-          <Button class="tw:text-white tw:bg-blue-500" on:click=add_source>
-            "Add source"
-          </Button>
         </div>
         <hr />
         <Button
@@ -312,7 +314,7 @@ pub fn Edit(
         >
           "Save all settings"
         </Button>
-        <div class="d-flex gap-3">
+        <div class="tw:flex tw:gap-4">
           <Button
             class="tw:text-white tw:bg-red-500"
             on:click=move |_| {
@@ -334,4 +336,23 @@ pub fn Edit(
         </div>
       </div>
     }
+}
+
+#[component]
+fn FormInput(id: &'static str, label: &'static str, input: impl IntoView) -> impl IntoView {
+    view! {
+      <div class="tw:flex tw:flex-wrap tw:items-baseline tw:gap-x-4">
+        <label class="tw:basis-[10rem]" for=id>
+          {label}
+        </label>
+        <div class="tw:basis-[calc(var(--tw-container-3xl)-10rem-1rem)] tw:flex-1">
+          <FormInputInner input=input prop:id=id />
+        </div>
+      </div>
+    }
+}
+
+#[component]
+fn FormInputInner(input: impl IntoView) -> impl IntoView {
+    input
 }
