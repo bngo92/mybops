@@ -49,7 +49,7 @@ pub fn DataViewRender(
           id="canvas"
           width="640"
           height="426"
-          class=move || if let DataView::Table | DataView::Csv = view.get() { "d-none" } else { "" }
+          class=(["tw:hidden"], move || matches!(view.get(), DataView::Table | DataView::Csv))
         ></canvas>
         {move || {
           if let DataView::Table = view.get() {
@@ -81,22 +81,22 @@ pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
         "min-width: 100%"
     };
     view! {
-      <div class="table-responsive">
-        <table class="table table-striped mb-0 w-auto" style=style>
-          <thead>
-            <tr>
-              <th>"#"</th>
-              {df
-                .schema
-                .fields
-                .iter()
-                .map(|f| view! { <th>{f.name().clone()}</th> })
-                .collect_view()}
-            </tr>
-          </thead>
-          <tbody>{(0..df.arrays[0].len()).map(|i| df_item_view(df, i)).collect_view()}</tbody>
-        </table>
-      </div>
+      <table style=style>
+        <thead>
+          <tr>
+            <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">"#"</th>
+            {df
+              .schema
+              .fields
+              .iter()
+              .map(|f| {
+                view! { <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">{f.name().clone()}</th> }
+              })
+              .collect_view()}
+          </tr>
+        </thead>
+        <tbody>{(0..df.arrays[0].len()).map(|i| df_item_view(df, i)).collect_view()}</tbody>
+      </table>
     }
 }
 
@@ -107,7 +107,13 @@ fn df_item_view(df: &DataFrame, i: usize) -> impl IntoView {
         {df
           .arrays
           .iter()
-          .map(|item| view! { <td>{display::array_value_to_string(item, i).unwrap()}</td> })
+          .map(|item| {
+            view! {
+              <td class="tw:pr-8 tw:border-b! tw:border-gray-100!">
+                {display::array_value_to_string(item, i).unwrap()}
+              </td>
+            }
+          })
           .collect_view()}
       </tr>
     }
