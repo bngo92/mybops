@@ -90,7 +90,9 @@ pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
               .fields
               .iter()
               .map(|f| {
-                view! { <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">{f.name().clone()}</th> }
+                view! {
+                  <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">{f.name().clone()}</th>
+                }
               })
               .collect_view()}
           </tr>

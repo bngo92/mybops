@@ -1,7 +1,11 @@
-use leptos::{html, prelude::*};
+use leptos::{
+    ev::Targeted,
+    html::{self, Select},
+    prelude::*,
+};
 use mybops::ItemMetadata;
 use std::borrow::Cow;
-use web_sys::MouseEvent;
+use web_sys::{Event, HtmlSelectElement, MouseEvent};
 
 #[component]
 pub fn Button(
@@ -133,6 +137,37 @@ pub fn Input(
             "Search"
           </Button>
         </div>
+      </div>
+    }
+}
+
+#[component]
+pub fn SelectWithRef(node_ref: NodeRef<Select>, children: Children) -> impl IntoView {
+    view! {
+      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+        <select
+          node_ref=node_ref
+          class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
+        >
+          {children()}
+        </select>
+      </div>
+    }
+}
+
+#[component]
+pub fn SelectWithCallback(
+    on_change: impl FnMut(Targeted<Event, HtmlSelectElement>) + 'static,
+    children: Children,
+) -> impl IntoView {
+    view! {
+      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+        <select
+          on:change:target=on_change
+          class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
+        >
+          {children()}
+        </select>
       </div>
     }
 }

@@ -6,7 +6,7 @@ use leptos::{
 use leptos_router::hooks::use_navigate;
 use mybops::{Id, List, ListMode, Source, SourceType, Spotify};
 
-use crate::base::{Button, INPUT_STYLE, READONLY_INPUT_STYLE};
+use crate::base::{Button, INPUT_STYLE, READONLY_INPUT_STYLE, SelectWithRef};
 
 // TODO: need to refresh list after edit
 #[component]
@@ -169,17 +169,12 @@ pub fn Edit(
                     Some(SourceType::ListItems(id)) => id.clone(),
                 };
                 view! {
-                  <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
-                    <select
-                      node_ref=*source_ref
-                      class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
-                    >
-                      <option selected=selected[0]>"Custom"</option>
-                      <option selected=selected[1]>"Spotify"</option>
-                      <option selected=selected[2]>"Setlist"</option>
-                      <option selected=selected[3]>"List Items"</option>
-                    </select>
-                  </div>
+                  <SelectWithRef node_ref=*source_ref>
+                    <option selected=selected[0]>"Custom"</option>
+                    <option selected=selected[1]>"Spotify"</option>
+                    <option selected=selected[2]>"Setlist"</option>
+                    <option selected=selected[3]>"List Items"</option>
+                  </SelectWithRef>
                   <input class=INPUT_STYLE node_ref=*id value=value />
                   <Button class="tw:text-white tw:bg-red-500" on:click=onclick>
                     "Delete"

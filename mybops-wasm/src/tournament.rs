@@ -1,4 +1,4 @@
-use crate::base::{Button, IframeCompare};
+use crate::base::{Button, IframeCompare, SelectWithCallback};
 use leptos::{either::Either, prelude::*};
 use mybops::{ItemMetadata, List};
 use rand::prelude::SliceRandom;
@@ -379,20 +379,18 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                           view! {
                             <h2>{format!("Winner: {}", winner.name)}</h2>
                             // TODO: only show if iframe exists
-                            <div class="row">
-                              <div class="col-6">
-                                <iframe
-                                  width="100%"
-                                  height="380"
-                                  prop:frameborder="0"
-                                  src=winner.iframe
-                                ></iframe>
-                              </div>
+                            <div class="tw:w-full tw:max-w-3xl">
+                              <iframe
+                                width="100%"
+                                height="380"
+                                prop:frameborder="0"
+                                src=winner.iframe
+                              ></iframe>
                             </div>
                           }
                         })
                     }}
-                    <div class="overflow-scroll">
+                    <div class="tw:overflow-scroll">
                       {tournament_bracket_view(fields.bracket, fields.list.items, update, false)}
                     </div>
                     {move || {
@@ -402,15 +400,13 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                         .clone()
                         .map(|src| {
                           view! {
-                            <div class="row">
-                              <div class="col-12 col-lg-10 col-xl-8">
-                                <iframe
-                                  width="100%"
-                                  height="380"
-                                  prop:frameborder="0"
-                                  src=src
-                                ></iframe>
-                              </div>
+                            <div class="tw:w-full tw:max-w-3xl">
+                              <iframe
+                                width="100%"
+                                height="380"
+                                prop:frameborder="0"
+                                src=src
+                              ></iframe>
                             </div>
                           }
                         })
@@ -423,7 +419,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
     };
     view! {
       <div>
-        <div class="d-flex gap-3">
+        <div class="tw:flex tw:gap-4">
           <Button
             class="tw:text-white tw:bg-blue-500"
             on:click=toggle_state
@@ -454,15 +450,13 @@ fn match_view(
         Either::Left(view! {
           <div>
             <h2>{format!("Winner: {}", winner.name)}</h2>
-            <div class="row">
-              <div class="col-6">
-                <iframe
-                  width="100%"
-                  height="380"
-                  prop:frameborder="0"
-                  src=winner.iframe.clone()
-                ></iframe>
-              </div>
+            <div class="tw:w-full tw:max-w-3xl">
+              <iframe
+                width="100%"
+                height="380"
+                prop:frameborder="0"
+                src=winner.iframe.clone()
+              ></iframe>
             </div>
           </div>
         })
@@ -514,7 +508,7 @@ fn match_view(
     };
     let view = if let ViewState::Tournament = fields.view_state {
         Either::Left(view! {
-          <div class="overflow-scroll">
+          <div class="tw:overflow-scroll">
             {tournament_bracket_view(fields.bracket, fields.list.items, update, true)}
           </div>
         })
@@ -546,28 +540,23 @@ fn match_view(
     };
     view! {
       <div>
-        {select} <div class="row mt-4">
-          <div class="col-auto">
-            <select
-              class="form-select"
-              on:change:target=move |ev| {
-                set_state
-                  .update(|fields| {
-                    fields.view_state = match ev.target().value().as_str() {
-                      "Tournament View" => ViewState::Tournament,
-                      "List View" => ViewState::List,
-                      _ => unreachable!(),
-                    };
-                  })
-              }
-            >
-              <option selected=matches!(
-                fields.view_state,
-                ViewState::Tournament
-              )>"Tournament View"</option>
-              <option selected=matches!(fields.view_state, ViewState::List)>"List View"</option>
-            </select>
-          </div>
+        {select} <div class="tw:w-fit">
+          <SelectWithCallback on_change=move |ev| {
+            set_state
+              .update(|fields| {
+                fields.view_state = match ev.target().value().as_str() {
+                  "Tournament View" => ViewState::Tournament,
+                  "List View" => ViewState::List,
+                  _ => unreachable!(),
+                };
+              })
+          }>
+            <option selected=matches!(
+              fields.view_state,
+              ViewState::Tournament
+            )>"Tournament View"</option>
+            <option selected=matches!(fields.view_state, ViewState::List)>"List View"</option>
+          </SelectWithCallback>
         </div> {view}
       </div>
     }
@@ -603,12 +592,13 @@ fn tournament_bracket_view(
                 };
                 let disabled = disabled || item.disabled;
                 let mut on_click_select = on_click_select.clone();
+                // TODO: fix gap
                 Either::Left(view! {
-                  <div class="row" style=row_width.clone()>
+                  <div class="tw:flex" style=row_width.clone()>
                     {offsets[item.depth].clone()}
                     <div style=col_width.clone()>
                       <Button
-                        class="tw:w-full tw:text-white tw:bg-primary tw:text-truncate"
+                        class="tw:w-full tw:text-white tw:bg-primary tw:truncate"
                         prop:style="height: 38px"
                         disabled=disabled
                         on:click=move |_| on_click_select(i)

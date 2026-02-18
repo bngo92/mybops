@@ -263,6 +263,9 @@
   .tw\:h-full {
     height: 100%;
   }
+  .tw\:w-fit {
+    width: fit-content;
+  }
   .tw\:w-full {
     width: 100%;
   }
@@ -338,6 +341,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .tw\:overflow-scroll {
+    overflow: scroll;
   }
   .tw\:overflow-x-auto {
     overflow-x: auto;
