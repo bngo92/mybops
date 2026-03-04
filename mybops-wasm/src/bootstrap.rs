@@ -208,9 +208,9 @@ pub fn Modal(
         node_ref=modal_ref
       >
         <div class="tw:flex tw:justify-between tw:p-4">
-          <h1 class="">{header}</h1>
+          <h1>{header}</h1>
           <form method="dialog">
-            <button class="">
+            <button>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
