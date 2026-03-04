@@ -158,15 +158,15 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                 <div class="tw:basis-3xl">
                   <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
                 </div>
-                  <Button
-                    class="tw:text-white tw:bg-primary"
-                    on:click=move |_| {
-                      import.dispatch(());
-                    }
-                    disabled=logged_in
-                  >
-                    "Import"
-                  </Button>
+                <Button
+                  class="tw:text-white tw:bg-primary"
+                  on:click=move |_| {
+                    import.dispatch(());
+                  }
+                  disabled=logged_in
+                >
+                  "Import"
+                </Button>
               </div>
             </form>
           </div>
