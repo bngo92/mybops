@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     Content, ListsRoute,
-    base::Input,
+    base::{Input, SelectWithCallback},
     bootstrap::{Direction, Dropdown, Modal, Toasts},
     docs,
     edit::Edit,
@@ -228,7 +228,7 @@ fn AppImpl() -> impl IntoView {
               </div>
             </div>
           </div>
-          <div class="flex-grow-1 h-100 w-100 d-flex flex-column">
+          <div class="tw:flex tw:flex-col tw:flex-1 tw:h-full">
             <Routes fallback=crate::not_found>
               <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
               <Route path=path!("/docs") view=docs::docs />
@@ -471,39 +471,37 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                 None
             } else {
                 Some(view! {
-                  <li class="nav-item dropdown">
-                    <button
-                      popovertarget="list-dropdown"
-                      class="tw:flex tw:gap-1 tw:items-baseline tw:text-black tw:py-2 tw:pr-1 tw:pl-3"
+                  <button
+                    popovertarget="list-dropdown"
+                    class="tw:flex tw:gap-1 tw:items-baseline tw:text-black"
+                  >
+                    {toggle}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="tw:size-2"
                     >
-                      {toggle}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        class="tw:size-2"
-                      >
-                        <polygon points="0,0 20,0 10,10" />
-                      </svg>
-                    </button>
-                    <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
-                      <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
-                        "Tournament"
-                      </a>
-                      <a
-                        class="dropdown-item"
-                        href=format!("/lists/{}/tournament?mode=random", list.id)
-                      >
-                        "Random Tournament"
-                      </a>
-                      <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
-                        "Random Matches"
-                      </a>
-                      <a class="dropdown-item" href=format!("/lists/{}/match?mode=rounds", list.id)>
-                        "Random Rounds"
-                      </a>
-                    </Dropdown>
-                  </li>
+                      <polygon points="0,0 20,0 10,10" />
+                    </svg>
+                  </button>
+                  <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
+                    <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                      "Tournament"
+                    </a>
+                    <a
+                      class="dropdown-item"
+                      href=format!("/lists/{}/tournament?mode=random", list.id)
+                    >
+                      "Random Tournament"
+                    </a>
+                    <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                      "Random Matches"
+                    </a>
+                    <a class="dropdown-item" href=format!("/lists/{}/match?mode=rounds", list.id)>
+                      "Random Rounds"
+                    </a>
+                  </Dropdown>
                 })
             }
         }
@@ -520,8 +518,8 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             Some(ListState::NotFound) => unreachable!(),
             Some(ListState::Success(list)) => *list.clone(),
         };
-        let mut tabs = ["nav-link"; 3];
-        let active = "nav-link active";
+        let mut tabs = ["tw:text-black! tw:no-underline!"; 3];
+        let active = "tw:text-black! tw:no-underline!";
         let view = view();
         match view {
             ListPage::View => tabs[0] = active,
@@ -559,61 +557,53 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             }
         };
         let user = crate::user_list(&list, &user.read());
+        // TODO: fix dropdown centering
         Some(view! {
           <Content
             heading=list.name.clone()
             nav=view! {
-              <>
-                <ul class="navbar-nav me-auto">
-                  <li class="nav-item">
-                    <a class=tabs[0] href=format!("/lists/{}", list.id)>
-                      "View"
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class=tabs[1] href=format!("/lists/{}/items", list.id)>
-                      "Items"
-                    </a>
-                  </li>
+              <div class="tw:flex tw:justify-between tw:items-baseline tw:text-sm tw:font-medium">
+                <div class="tw:flex tw:gap-8 tw:flex-col tw:md:flex-row tw:items-baseline">
+                  <a class=tabs[0] href=format!("/lists/{}", list.id)>
+                    "View"
+                  </a>
+                  <a class=tabs[1] href=format!("/lists/{}/items", list.id)>
+                    "Items"
+                  </a>
                   {move || {
                     if user {
                       Some(
                         view! {
                           {dropdown_html.clone()}
-                          <li class="nav-item">
-                            <a class=tabs[2] href=format!("/lists/{}/edit", list_signal().id)>
-                              "Settings"
-                            </a>
-                          </li>
+                          <a class=tabs[2] href=format!("/lists/{}/edit", list_signal().id)>
+                            "Settings"
+                          </a>
                         },
                       )
                     } else {
                       None
                     }
                   }}
-                </ul>
+                </div>
                 {move || {
                   if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
                     Some(
                       view! {
-                        <div class="d-flex gap-3 align-items-baseline">
-                          <span class="navbar-text text-nowrap">"Item Mode:"</span>
-                          <select
-                            class="form-select"
-                            on:input:target=move |ev| {
-                              set_mode
-                                .set(
-                                  match ev.target().value().as_str() {
-                                    "Update" => ItemMode::Update,
-                                    "Delete" => ItemMode::Delete,
-                                    _ => unreachable!(),
-                                  },
-                                )
-                            }
-                          >
+                        <div class="tw:flex tw:gap-4 tw:items-baseline">
+                          <span class="tw:text-black tw:text-nowrap">"Item Mode:"</span>
+                          <SelectWithCallback on_change=move |ev| {
+                            set_mode
+                              .set(
+                                match ev.target().value().as_str() {
+                                  "Update" => ItemMode::Update,
+                                  "Delete" => ItemMode::Delete,
+                                  _ => unreachable!(),
+                                },
+                              )
+                          }>
                             <option selected=true>"Update"</option>
                             <option>"Delete"</option>
-                          </select>
+                          </SelectWithCallback>
                         </div>
                       },
                     )
@@ -621,7 +611,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                     None
                   }
                 }}
-              </>
+              </div>
             }
             content=view! {
               <>

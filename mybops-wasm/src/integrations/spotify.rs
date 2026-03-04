@@ -101,9 +101,9 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
     };
     crate::nav_content(
         view! {
-          <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">"Spotify"</li>
-          </ul>
+          <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+            "Spotify"
+          </a>
         },
         view! {
           <div>

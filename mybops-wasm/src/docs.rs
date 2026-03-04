@@ -3,9 +3,9 @@ use leptos::prelude::*;
 pub fn docs() -> impl IntoView {
     crate::nav_content(
         view! {
-          <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">"Docs"</li>
-          </ul>
+          <a href="#" class="tw:text-xl tw:text-black! tw:no-underline!">
+            "Docs"
+          </a>
         },
         view! {
           <div>

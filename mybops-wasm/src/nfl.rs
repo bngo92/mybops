@@ -515,11 +515,10 @@ pub fn Nfl() -> impl IntoView {
         };
         Some(crate::nav_content(
             view! {
-              <ul class="navbar-nav me-auto">
-                <li class="navbar-brand">"NFL"</li>
-              </ul>
-            }
-            .into_any(),
+              <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+                "NFL"
+              </a>
+            },
             view! {
               <div>
                 <form class="d-flex">

@@ -73,12 +73,10 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
 
 fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
-      <>
-        <nav class="navbar navbar-expand navbar-bg py-2">
-          <div class="container-fluid">{nav}</div>
-        </nav>
-        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
-      </>
+      <nav class="tw:flex tw:gap-4 tw:justify-between tw:items-baseline tw:p-3 tw:bg-primary">
+        {nav}
+      </nav>
+      <div class="tw:flex-1 tw:p-3 tw:overflow-y-auto tw:bg-pink-50/10">{content}</div>
     }
 }
 
@@ -86,24 +84,20 @@ fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
 fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     let (collapse, set_collapse) = signal(true);
 
-    let class = move || {
-        if collapse.get() {
-            "collapse navbar-collapse"
-        } else {
-            "navbar-collapse"
-        }
-    };
     view! {
       <>
-        <nav class="navbar navbar-expand-sm navbar-bg py-2" style="background-color: #2fb380;">
-          <div class="container-fluid">
-            <a class="navbar-brand" href="#">
+        <nav class="tw:flex tw:flex-col tw:md:flex-row tw:gap-8 tw:items-baseline tw:p-3 tw:bg-primary">
+          <div class="tw:flex tw:justify-between tw:w-full tw:md:w-auto">
+            <a
+              href="#"
+              class="tw:w-full tw:md:w-auto tw:text-lg tw:font-medium tw:text-black! tw:no-underline!"
+            >
               {heading}
             </a>
             <button
-              class="navbar-toggler"
+              class="tw:md:hidden tw:flex-1 tw:s-fit tw:text-black"
               type="button"
-              on:click=move |_| set_collapse.set(collapse.get())
+              on:click=move |_| set_collapse.set(!collapse.get())
             >
               {move || {
                 if collapse.get() {
@@ -111,15 +105,16 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
                     view! {
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        class="bi bi-plus-lg"
-                        viewBox="0 0 16 16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="tw:size-4"
                       >
                         <path
-                          fill-rule="evenodd"
-                          d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 4.5v15m7.5-7.5h-15"
                         />
                       </svg>
                     },
@@ -129,26 +124,23 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
                     view! {
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        class="bi bi-dash-lg"
-                        viewBox="0 0 16 16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="tw:size-4"
                       >
-                        <path
-                          fill-rule="evenodd"
-                          d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8"
-                        />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                       </svg>
                     },
                   )
                 }
               }}
             </button>
-            <div class=class>{nav}</div>
           </div>
+          <div class=(["tw:hidden", "tw:md:block"], collapse)>{nav}</div>
         </nav>
-        <div class="main-bg container-fluid flex-grow-1 pt-3 overflow-y-auto">{content}</div>
+        <div class="tw:flex-1 tw:p-3 tw:overflow-y-auto tw:bg-pink-50/10">{content}</div>
       </>
     }
 }

@@ -8,9 +8,9 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
     // Should we link to Google profile?
     crate::nav_content(
         view! {
-          <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">"Settings"</li>
-          </ul>
+          <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+            "Settings"
+          </a>
         },
         view! {
           <div>

@@ -22,9 +22,9 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
     crate::nav_content(
         view! {
           <>
-            <ul class="navbar-nav me-auto">
-              <li class="navbar-brand">"Query"</li>
-            </ul>
+            <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+              "Query"
+            </a>
             <div class="d-flex gap-3">
               <Button
                 class="tw:text-white tw:bg-purple-500/80"

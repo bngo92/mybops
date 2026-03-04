@@ -36,9 +36,9 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
     };
     crate::nav_content(
         view! {
-          <ul class="navbar-nav me-auto">
-            <li class="navbar-brand">"All Lists"</li>
-          </ul>
+          <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+            "All Lists"
+          </a>
         }
         .into_any(),
         (move || {

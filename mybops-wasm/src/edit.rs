@@ -191,7 +191,7 @@ pub fn Edit(
     view! {
       <div>
         <h4>"List Settings"</h4>
-        <div class="tw:flex tw:flex-col tw:gap-6">
+        <div class="tw:flex tw:flex-col tw:gap-8">
           <form class="tw:flex tw:flex-col tw:gap-4 tw:max-w-3xl">
             <FormInput
               id="name"
