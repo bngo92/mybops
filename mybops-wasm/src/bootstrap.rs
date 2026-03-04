@@ -33,7 +33,7 @@ pub fn Accordion(
         Callback::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
     };
     view! {
-      <div class="tw:mb-3 tw:bg-white tw:rounded-sm tw:border-1 tw:border-gray-200">
+      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
         <h2
           class="tw:px-5 tw:py-4 tw:m-0! tw:text-base! tw:border-gray-200"
           class=("tw:border-b", move || !collapsed())
@@ -163,7 +163,7 @@ fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
 pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> impl IntoView {
     view! {
       <div class=move || if collapsed.get() { "tw:hidden" } else { "tw:block" }>
-        <div class="tw:p-4 tw:bg-white tw:rounded-sm tw:border-1 tw:border-gray-200">
+        <div class="tw:p-4 tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
           {children()}
         </div>
       </div>

@@ -225,9 +225,6 @@
   .tw\:my-1\! {
     margin-block: calc(var(--tw-spacing) * 1) !important;
   }
-  .tw\:mb-3 {
-    margin-bottom: calc(var(--tw-spacing) * 3);
-  }
   .tw\:mb-3\! {
     margin-bottom: calc(var(--tw-spacing) * 3) !important;
   }
@@ -307,6 +304,9 @@
     --tw-translate-y: calc(calc(1/2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
+  .tw\:list-disc {
+    list-style-type: disc;
+  }
   .tw\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -370,10 +370,6 @@
     border-radius: var(--tw-radius-sm) !important;
   }
   .tw\:border {
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-  }
-  .tw\:border-1 {
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
@@ -528,6 +524,11 @@
   .tw\:md\:w-auto {
     @media (width >= 48rem) {
       width: auto;
+    }
+  }
+  .tw\:md\:grid-cols-2 {
+    @media (width >= 48rem) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .tw\:md\:flex-row {

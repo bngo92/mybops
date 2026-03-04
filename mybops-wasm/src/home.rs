@@ -1,5 +1,5 @@
 use crate::{
-    base::Button,
+    base::{Button, SelectWithRef},
     bootstrap::{Accordion, Collapse},
 };
 use leptos::{either::Either, html::Select, prelude::*};
@@ -23,17 +23,13 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
             return None;
         };
         let disabled = !logged_in.get();
-        let mut column = Vec::new();
-        let mut left = Vec::new();
-        let mut right = Vec::new();
-        for (l, &r) in lists.iter().zip([false, true].iter().cycle()) {
-            column.push(view! { <Widget list=l.clone() select_ref=select_ref /> });
-            if r {
-                right.push(view! { <Widget list=l.clone() select_ref=select_ref /> });
-            } else {
-                left.push(view! { <Widget list=l.clone() select_ref=select_ref /> });
-            }
-        }
+        let (help, set_help) = signal(logged_in.get());
+        let column = lists
+            .iter()
+            .map(|l| {
+                view! { <Widget list=l.clone() select_ref=select_ref /> }
+            })
+            .collect_view();
         Some(crate::nav_content(
             view! {
               <>
@@ -42,15 +38,15 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                 </a>
                 <div class="tw:flex tw:gap-4 tw:items-baseline">
                   <span class="tw:text-black tw:text-nowrap">"Sort Mode:"</span>
-                  <select node_ref=select_ref class="form-select">
+                  <SelectWithRef node_ref=select_ref>
                     <option>"Tournament"</option>
                     <option selected=true>"Random Tournament"</option>
                     <option>"Random Matches"</option>
                     <option>"Random Rounds"</option>
-                  </select>
+                  </SelectWithRef>
                   <Button
                     class="tw:text-white tw:bg-purple-500/80"
-                    on:click=move |_| logged_in.set(!logged_in.get())
+                    on:click=move |_| set_help.set(!help.get())
                   >
                     "Help"
                   </Button>
@@ -58,34 +54,34 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
               </>
             },
             view! {
-              <div>
-                <Collapse collapsed=logged_in>
+              <div class="tw:flex tw:flex-col tw:gap-4">
+                <Collapse collapsed=help>
                   <p>
                     "mybops is an app that helps you filter your data and remove flops from your life.
-                      Use it to gain insights about your favorite songs, TV shows, and even restaurants.
-                      mybops makes it easy to rate and/or rank what's important to you."
+                    Use it to gain insights about your favorite songs, TV shows, and even restaurants.
+                    mybops makes it easy to rate and/or rank what's important to you."
                   </p>
                   <p>
                     "The data is organized into lists of items and your lists are displayed here on the home page using user-defined widgets.
-                      The fastest way to rank your items is with a randomly generated tournament.
-                      You can start a tournament for a list by clicking the "
+                    The fastest way to rank your items is with a randomly generated tournament.
+                    You can start a tournament for a list by clicking the "
                     <Button class="tw:text-white tw:bg-primary">"Rank"</Button>
                     " button below the list widget. Here is the full list of sort modes:"
                   </p>
                   <ul>
-                    <li>
+                    <li class="tw:list-disc">
                       <strong>"Tournament"</strong>
                       " - Sort by choosing between items that are organized using a seeded tournament."
                     </li>
-                    <li>
+                    <li class="tw:list-disc">
                       <strong>"Random Tournament"</strong>
                       " - Sort by choosing between items that are organized using a randomly generated tournament."
                     </li>
-                    <li>
+                    <li class="tw:list-disc">
                       <strong>"Random Matches"</strong>
                       " - Sort by choosing between randomly selected items."
                     </li>
-                    <li>
+                    <li class="tw:list-disc">
                       <strong>"Random Rounds"</strong>
                       " - This mode is similar to Random Matches except every item will be selected before an item is repeated."
                     </li>
@@ -95,44 +91,27 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                     <Button class="tw:text-white tw:bg-primary">"Rate"</Button>" button."
                   </p>
                   <p>"You can also:"</p>
-                  <ul class="mb-0">
-                    <li>"View items in the list by clicking on the widget to expand it."</li>
-                    <li>
+                  <ul>
+                    <li class="tw:list-disc">
+                      "View items in the list by clicking on the widget to expand it."
+                    </li>
+                    <li class="tw:list-disc">
                       "Search for data about your ratings and rankings by going to the "
                       <a href="/search">"Search"</a>" page."
                     </li>
                   </ul>
                 </Collapse>
-                <div class="mt-3">
-                  <div class="d-md-none">
-                    {column}
-                    <Button
-                      class="tw:text-white tw:bg-blue-500"
-                      on:click=move |_| {
-                        create.dispatch(());
-                      }
-                      disabled=disabled
-                    >
-                      "Create List"
-                    </Button>
-                  </div>
-                  <div class="d-none d-md-block">
-                    <div class="d-grid gap-3" style="grid-template-columns: 1fr 1fr">
-                      <div>
-                        {left}
-                        <Button
-                          class="tw:text-white tw:bg-blue-500"
-                          on:click=move |_| {
-                            create.dispatch(());
-                          }
-                          disabled=disabled
-                        >
-                          "Create List"
-                        </Button>
-                      </div>
-                      <div>{right}</div>
-                    </div>
-                  </div>
+                <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{column}</div>
+                <div>
+                  <Button
+                    class="tw:text-white tw:bg-blue-500"
+                    on:click=move |_| {
+                      create.dispatch(());
+                    }
+                    disabled=disabled
+                  >
+                    "Create List"
+                  </Button>
                 </div>
               </div>
             },
@@ -196,7 +175,7 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
     // TODO: support actions on views
     let disabled = matches!(list.mode, ListMode::View(_));
     view! {
-      <>
+      <div class="tw:flex tw:flex-col tw:gap-4">
         <Accordion
           header=list.name.clone()
           collapsed=move || Some(collapsed.get())
@@ -212,22 +191,18 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
             }
           }}
         </Accordion>
-        <div class="row mb-3">
-          <div class="col-auto">
-            <Button
-              class="tw:text-white tw:bg-primary"
-              on:click=move |_| use_navigate()(&format!("/lists/{}/items", id), Default::default())
-              disabled=disabled
-            >
-              "Rate"
-            </Button>
-          </div>
-          <div class="col-auto">
-            <Button class="tw:text-white tw:bg-primary" on:click=compare disabled=disabled>
-              "Rank"
-            </Button>
-          </div>
+        <div class="tw:flex tw:gap-4">
+          <Button
+            class="tw:text-white tw:bg-primary"
+            on:click=move |_| use_navigate()(&format!("/lists/{}/items", id), Default::default())
+            disabled=disabled
+          >
+            "Rate"
+          </Button>
+          <Button class="tw:text-white tw:bg-primary" on:click=compare disabled=disabled>
+            "Rank"
+          </Button>
         </div>
-      </>
+      </div>
     }
 }
