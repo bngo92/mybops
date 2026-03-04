@@ -1,4 +1,7 @@
-use crate::{base::Button, bootstrap::Accordion};
+use crate::{
+    base::{Button, INPUT_STYLE},
+    bootstrap::Accordion,
+};
 use leptos::{html::Input, prelude::*};
 use mybops::{
     Spotify,
@@ -66,32 +69,30 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                 .into_iter()
                 .map(|i| {
                     view! {
-                      <div class="row">
-                        <div class="col">
-                          <a href=i.url.clone()>{i.name.clone()}</a>
-                          {move || {
-                            i.user_score
-                              .is_none()
-                              .then(|| {
-                                view! {
-                                  <Button
-                                    class="tw:text-white tw:bg-primary"
-                                    on:click={
-                                      let url = i.url.clone();
-                                      move |_| {
-                                        import_track.dispatch(url.clone());
-                                      }
+                      <div>
+                        <a href=i.url.clone()>{i.name.clone()}</a>
+                        {move || {
+                          i.user_score
+                            .is_none()
+                            .then(|| {
+                              view! {
+                                <Button
+                                  class="tw:text-white tw:bg-primary"
+                                  on:click={
+                                    let url = i.url.clone();
+                                    move |_| {
+                                      import_track.dispatch(url.clone());
                                     }
-                                  >
-                                    "Import"
-                                  </Button>
-                                }
-                              })
-                          }}
-                        </div>
-                        <div class="col-1">{i.rating}</div>
-                        <div class="col-1">{i.user_score}</div>
+                                  }
+                                >
+                                  "Import"
+                                </Button>
+                              }
+                            })
+                        }}
                       </div>
+                      <div>{i.rating}</div>
+                      <div>{i.user_score}</div>
                     }
                 })
                 .collect()
@@ -111,16 +112,12 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
               {move || {
                 if logged_in.get() {
                   view! {
-                    <div class="row">
-                      <div class="col"></div>
-                      <div class="col-1">
-                        <strong>"Rating"</strong>
-                      </div>
-                      <div class="col-1">
-                        <strong>"User Score"</strong>
-                      </div>
+                    <div class="tw:grid tw:grid-cols-[1fr_6rem_6rem] tw:gap-1">
+                      <div></div>
+                      <strong>"Rating"</strong>
+                      <strong>"User Score"</strong>
+                      {track_html}
                     </div>
-                    {track_html}
                   }
                     .into_any()
                 } else {
@@ -157,11 +154,10 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
             </Accordion>
             <h2>"Import from Spotify link"</h2>
             <form>
-              <div class="row">
-                <div class="col-12 col-md-8 col-lg-9">
-                  <input node_ref=import_ref type="text" class="w-100 h-100" value=default_import />
+              <div class="tw:flex tw:gap-2">
+                <div class="tw:basis-3xl">
+                  <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
                 </div>
-                <div class="col-2 col-lg-1 pe-2">
                   <Button
                     class="tw:text-white tw:bg-primary"
                     on:click=move |_| {
@@ -171,7 +167,6 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                   >
                     "Import"
                   </Button>
-                </div>
               </div>
             </form>
           </div>

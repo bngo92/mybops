@@ -293,6 +293,9 @@
   .tw\:flex-1 {
     flex: 1;
   }
+  .tw\:basis-3xl {
+    flex-basis: var(--tw-container-3xl);
+  }
   .tw\:basis-\[10rem\] {
     flex-basis: 10rem;
   }
@@ -306,6 +309,9 @@
   }
   .tw\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tw\:grid-cols-\[1fr_6rem_6rem\] {
+    grid-template-columns: 1fr 6rem 6rem;
   }
   .tw\:grid-cols-\[10rem_minmax\(auto\,calc\(var\(--tw-container-3xl\)-10rem-1rem\)\)_min-content\] {
     grid-template-columns: 10rem minmax(auto,calc(var(--tw-container-3xl) - 10rem - 1rem)) min-content;
