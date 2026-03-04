@@ -10,7 +10,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
-use crate::base::Button;
+use crate::base::{Button, SelectWithCallback};
 
 #[derive(Debug, Deserialize)]
 pub struct Scoreboard {
@@ -398,9 +398,9 @@ pub fn Nfl() -> impl IntoView {
                     .into_any()
                 } else {
                     view! {
-                      <div class="form-check">
-                        <label class="form-check-label">{team_record.clone()}</label>
-                        <input node_ref=*team_ref class="form-check-input" type="checkbox" />
+                      <div class="tw:flex tw:gap-2">
+                        <input node_ref=*team_ref type="checkbox" />
+                        <label>{team_record.clone()}</label>
                       </div>
                     }
                     .into_any()
@@ -491,7 +491,7 @@ pub fn Nfl() -> impl IntoView {
             teams.len() + 1
         );
         let html = view! {
-          <div class="d-grid gap-3" style=style>
+          <div class="tw:grid tw:gap-4" style=style>
             <div></div>
             {header}
             {games_html}
@@ -521,11 +521,11 @@ pub fn Nfl() -> impl IntoView {
             },
             view! {
               <div>
-                <form class="d-flex">
-                  <label class="col-form-label pe-2">"Sort by:"</label>
-                  <select class="form-select" style="width: auto">
+                <form class="tw:flex tw:gap-2 tw:items-baseline">
+                  <label>"Sort by:"</label>
+                  <SelectWithCallback on_change=|_| ()>
                     <option>"Previous Division Standings"</option>
-                  </select>
+                  </SelectWithCallback>
                 </form>
                 <Button class="tw:text-white tw:bg-primary" on:click=onclick>
                   {move || if selected { "Clear" } else { "Select" }}
