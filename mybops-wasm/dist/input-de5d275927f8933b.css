@@ -266,6 +266,9 @@
   .tw\:h-full {
     height: 100%;
   }
+  .tw\:w-32 {
+    width: calc(var(--tw-spacing) * 32);
+  }
   .tw\:w-fit {
     width: fit-content;
   }
