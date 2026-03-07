@@ -23,12 +23,8 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
             .iter()
             .map(|l| {
                 view! {
-                  <div class="col-12 col-md-6 mb-4">
-                    <div class="card">
-                      <div class="card-body">
-                        <a href=format!("/lists/{}", l.id)>{l.name.clone()}</a>
-                      </div>
-                    </div>
+                  <div class="tw:px-4 tw:py-2 tw:rounded-sm tw:border tw:border-gray-300">
+                    <a href=format!("/lists/{}", l.id)>{l.name.clone()}</a>
                   </div>
                 }
             })
@@ -43,17 +39,19 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
         .into_any(),
         (move || {
             view! {
-              <div>
-                <div class="row mt-3">{list_html()}</div>
-                <Button
-                  class="tw:text-white tw:bg-blue-500"
-                  on:click=move |_| {
-                    create.dispatch(());
-                  }
-                  disabled=move || !logged_in.get()
-                >
-                  "Create List"
-                </Button>
+              <div class="tw:flex tw:flex-col tw:gap-4">
+                <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{list_html()}</div>
+                <div>
+                  <Button
+                    class="tw:text-white tw:bg-blue-500"
+                    on:click=move |_| {
+                      create.dispatch(());
+                    }
+                    disabled=move || !logged_in.get()
+                  >
+                    "Create List"
+                  </Button>
+                </div>
               </div>
             }
         })
