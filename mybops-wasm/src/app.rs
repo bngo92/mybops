@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     Content, ListsRoute,
-    base::{Input, SelectWithCallback},
+    base::{Button, Input, SelectWithCallback},
     bootstrap::{Direction, Dropdown, Modal, Toasts},
     docs,
     edit::Edit,
@@ -26,7 +26,7 @@ use leptos::{
 };
 use leptos_router::{
     components::*,
-    hooks::{use_params, use_query_map},
+    hooks::{use_navigate, use_params, use_query_map},
     params::Params,
     path,
 };
@@ -81,150 +81,144 @@ fn AppImpl() -> impl IntoView {
     //let onclick = ctx.link().callback(|_| Msg::Logout);
     // TODO: make anchors active if active
     let search = /*if location.pathname().unwrap() == "/search" {
-        "nav-link active"
+        ""
     } else */{
-        "nav-link text-white"
-    };
-    let sidebar_class = move || {
-        if sidebar.get() {
-            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark show"
-        } else {
-            "p-3 bg-dark flex-shrink-0 h-100 offcanvas-sm offcanvas-start text-bg-dark"
-        }
+        "tw:text-white! tw:no-underline!"
     };
     let origin = location().origin().unwrap();
     let modal_ref = NodeRef::<Dialog>::new();
     view! {
       <div>
-        <nav class="navbar navbar-expand navbar-dark bg-dark d-sm-none">
-          <div class="container-lg d-flex justify-content-start gap-3">
+        <nav class="tw:md:hidden tw:bg-mist-800">
+          <div class="tw:flex tw:gap-4 tw:p-3">
             <button
               type="button"
-              class="border-0"
               style="background-color: transparent; color: rgba(255,255,255,0.85)"
               on:click=move |_| set_sidebar.set(true)
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-list"
-                viewBox="0 0 16 16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="tw:size-6"
               >
                 <path
-                  fill-rule="evenodd"
-                  d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                 />
               </svg>
             </button>
-            <a class="navbar-brand" href="/">
+            <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
               "mybops"
             </a>
           </div>
         </nav>
-        <div class="d-flex vh-100 min-vh-100 align-items-stretch">
-          <div class=sidebar_class style="width: 200px;">
-            <div class="h-100 offcanvas-body d-flex flex-column">
-              <div class="d-flex gap-2 align-items-baseline" data-bs-theme="dark">
-                <a class="text-white text-decoration-none fs-5" href="/">
+        <div class="tw:flex tw:w-screen tw:h-dvh">
+          <div
+            class="tw:fixed tw:md:static tw:top-0 tw:md:visible tw:p-4 tw:h-full tw:text-white tw:bg-mist-800"
+            class=("tw:invisible", move || !sidebar.get())
+            style="width: 200px;"
+          >
+            <div class="tw:flex tw:flex-col tw:h-full">
+              <div class="tw:flex tw:gap-4 tw:items-end" data-bs-theme="dark">
+                <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
                   "mybops"
                 </a>
-                <button
-                  type="button"
-                  class="btn-close d-sm-none"
-                  on:click=move |_| set_sidebar.set(false)
-                ></button>
+                <button type="button" class="tw:md:hidden" on:click=move |_| set_sidebar.set(false)>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="tw:size-8"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
               <hr />
-              <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item">
-                  <a class=search href="/lists">
-                    "Lists"
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a class=search href="/search">
-                    "Query"
-                  </a>
-                </li>
-                <li class="nav-item dropdown">
-                  <button
-                    popovertarget="integrations-dropdown"
-                    class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
+              <div class="tw:flex tw:flex-col tw:flex-1 tw:gap-4">
+                <a class=search href="/lists">
+                  "Lists"
+                </a>
+                <a class=search href="/search">
+                  "Query"
+                </a>
+                <button
+                  popovertarget="integrations-dropdown"
+                  class="tw:flex tw:gap-1 tw:items-baseline"
+                >
+                  "Integrations"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="tw:size-2"
                   >
-                    "Integrations"
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="tw:size-2"
-                    >
-                      <polygon points="0,0 20,0 10,10" />
-                    </svg>
-                  </button>
-                  <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
-                    <a class="dropdown-item" href="/integrations/spotify">
-                      "Spotify"
-                    </a>
-                  </Dropdown>
-                </li>
-                <li class="nav-item">
-                  <a class=search href="/docs">
-                    "Docs"
+                    <polygon points="0,0 20,0 10,10" />
+                  </svg>
+                </button>
+                <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
+                  <a class="tw:text-black! tw:no-underline!" href="/integrations/spotify">
+                    "Spotify"
                   </a>
-                </li>
-              </ul>
+                </Dropdown>
+                <a class=search href="/docs">
+                  "Docs"
+                </a>
+              </div>
               <hr />
               <div>
-                <ul class="nav nav-pills flex-column">
-                  {move || {
-                    if let Some(user) = user.get().flatten() {
-                      Either::Left(
-                        view! {
-                          <li class="nav-item dropdown">
-                            <button
-                              popovertarget="login-dropdown"
-                              class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
-                            >
-                              {user.user_id}
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                                class="tw:size-2"
-                              >
-                                <polygon points="0,0 20,0 10,10" />
-                              </svg>
-                            </button>
-                            <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
-                              <a class="dropdown-item" href="/settings">
-                                "Settings"
-                              </a>
-                              <a class="dropdown-item" href="/api/logout" rel="external">
-                                "Log out"
-                              </a>
-                            </Dropdown>
-                          </li>
-                        },
-                      )
-                    } else {
-                      Either::Right(
-                        view! {
-                          <li class="nav-item">
-                            <a
-                              class=search
-                              href="#"
-                              on:click=move |_| modal_ref.get().unwrap().show_modal().unwrap()
-                            >
-                              "Log in"
-                            </a>
-                          </li>
-                        },
-                      )
-                    }
-                  }}
-                </ul>
+                {move || {
+                  if let Some(user) = user.get().flatten() {
+                    Either::Left(
+                      view! {
+                        <button
+                          popovertarget="login-dropdown"
+                          class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
+                        >
+                          {user.user_id}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            class="tw:size-2"
+                          >
+                            <polygon points="0,0 20,0 10,10" />
+                          </svg>
+                        </button>
+                        <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
+                          <a class="tw:text-black! tw:no-underline!" href="/settings">
+                            "Settings"
+                          </a>
+                          <a
+                            class="tw:text-black! tw:no-underline!"
+                            href="/api/logout"
+                            rel="external"
+                          >
+                            "Log out"
+                          </a>
+                        </Dropdown>
+                      },
+                    )
+                  } else {
+                    Either::Right(
+                      view! {
+                        <a
+                          class=search
+                          href="#"
+                          on:click=move |_| modal_ref.get().unwrap().show_modal().unwrap()
+                        >
+                          "Log in"
+                        </a>
+                      },
+                    )
+                  }
+                }}
               </div>
             </div>
           </div>
@@ -302,25 +296,40 @@ fn AppImpl() -> impl IntoView {
             </Routes>
           </div>
           <Modal header="Log in".to_owned() modal_ref=modal_ref>
-            <div class="modal-body d-grid gap-2">
-              <a
-                class="btn btn-success"
-                href=format!(
-                  "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
-                  origin.as_str(),
-                )
+            <div class="tw:flex tw:flex-col tw:gap-4">
+              <Button
+                class="tw:text-white tw:bg-primary"
+                on:click={
+                  let origin = origin.clone();
+                  move |_| {
+                    let navigate = use_navigate();
+                    navigate(
+                      &format!(
+                        "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
+                        origin.as_str(),
+                      ),
+                      Default::default(),
+                    )
+                  }
+                }
               >
                 "Log in with Spotify"
-              </a>
-              <a
-                class="btn btn-success"
-                href=format!(
-                  "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
-                  origin.as_str(),
-                )
+              </Button>
+              <Button
+                class="tw:text-white tw:bg-primary"
+                on:click=move |_| {
+                  let navigate = use_navigate();
+                  navigate(
+                    &format!(
+                      "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                      origin.as_str(),
+                    ),
+                    Default::default(),
+                  )
+                }
               >
                 "Log in with Google"
-              </a>
+              </Button>
             </div>
           </Modal>
           <Toasts toasts=toasts />
@@ -352,31 +361,26 @@ fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
     });
 
     view! {
-      <div class="row">
-        <div class="col-auto">
-          <select
-            class="form-select mb-3"
-            on:change:target=move |ev| {
-              let view = match ev.target().value().as_str() {
-                "Table" => DataView::Table,
-                "Column Graph" => DataView::ColumnGraph,
-                "Line Graph" => DataView::LineGraph,
-                "Scatter Plot" => DataView::ScatterPlot,
-                "Cumulative Line Graph" => DataView::CumLineGraph,
-                "CSV" => DataView::Csv,
-                _ => unreachable!(),
-              };
-              set_view.set(view)
-            }
-          >
-            <option selected=true>"Table"</option>
-            <option>"Column Graph"</option>
-            <option>"Line Graph"</option>
-            <option>"Scatter Plot"</option>
-            <option>"Cumulative Line Graph"</option>
-            <option>"CSV"</option>
-          </select>
-        </div>
+      <div class="tw:flex tw:flex-col tw:gap-4">
+        <SelectWithCallback on_change=move |ev| {
+          let view = match ev.target().value().as_str() {
+            "Table" => DataView::Table,
+            "Column Graph" => DataView::ColumnGraph,
+            "Line Graph" => DataView::LineGraph,
+            "Scatter Plot" => DataView::ScatterPlot,
+            "Cumulative Line Graph" => DataView::CumLineGraph,
+            "CSV" => DataView::Csv,
+            _ => unreachable!(),
+          };
+          set_view.set(view)
+        }>
+          <option selected=true>"Table"</option>
+          <option>"Column Graph"</option>
+          <option>"Line Graph"</option>
+          <option>"Scatter Plot"</option>
+          <option>"Cumulative Line Graph"</option>
+          <option>"CSV"</option>
+        </SelectWithCallback>
         <Input
           input_ref=query_ref
           value=Some(list.get().query)
@@ -486,19 +490,28 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                     </svg>
                   </button>
                   <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
-                    <a class="dropdown-item" href=format!("/lists/{}/tournament", list.id)>
+                    <a
+                      class="tw:text-black! tw:no-underline!"
+                      href=format!("/lists/{}/tournament", list.id)
+                    >
                       "Tournament"
                     </a>
                     <a
-                      class="dropdown-item"
+                      class="tw:text-black! tw:no-underline!"
                       href=format!("/lists/{}/tournament?mode=random", list.id)
                     >
                       "Random Tournament"
                     </a>
-                    <a class="dropdown-item" href=format!("/lists/{}/match", list.id)>
+                    <a
+                      class="tw:text-black! tw:no-underline!"
+                      href=format!("/lists/{}/match", list.id)
+                    >
                       "Random Matches"
                     </a>
-                    <a class="dropdown-item" href=format!("/lists/{}/match?mode=rounds", list.id)>
+                    <a
+                      class="tw:text-black! tw:no-underline!"
+                      href=format!("/lists/{}/match?mode=rounds", list.id)
+                    >
                       "Random Rounds"
                     </a>
                   </Dropdown>
