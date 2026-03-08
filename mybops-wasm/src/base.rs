@@ -21,11 +21,11 @@ pub fn Button(
       <button
         type=r#type
         class=class
-        class=(["tw:bg-primary", "tw:disabled:bg-primary/65", "tw:text-white"], style == "primary")
-        class=(["tw:bg-red-500", "tw:disabled:bg-red-500/65", "tw:text-white"], style == "danger")
-        class=(["tw:rounded-sm!"], true)
-        class=(["tw:px-4"], true)
-        class=(["tw:py-2"], true)
+        class=(["bg-primary", "disabled:bg-primary/65", "text-white"], style == "primary")
+        class=(["bg-red-500", "disabled:bg-red-500/65", "text-white"], style == "danger")
+        class=(["rounded-sm"], true)
+        class=(["px-4"], true)
+        class=(["py-2"], true)
         disabled=disabled
       >
         {children()}
@@ -47,11 +47,11 @@ pub fn IframeCompare(
 ) -> impl IntoView {
     let (flag, set_flag) = signal(IframeCompareMsg::Left);
     view! {
-      <div class="tw:grid tw:lg:hidden tw:grid-cols-2 tw:mb-px tw:text-center">
+      <div class="grid lg:hidden grid-cols-2 mb-px text-center">
         <a
-          class="tw:h-full tw:text-gray-700! tw:no-underline! tw:border-b-2"
-          class=("tw:border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Left))
-          class=("tw:border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Right))
+          class="h-full text-gray-700 border-b-2"
+          class=("border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Left))
+          class=("border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Right))
           aria-label="Show left item"
           href="#"
           on:click=move |_| set_flag.set(IframeCompareMsg::Left)
@@ -59,17 +59,17 @@ pub fn IframeCompare(
           {left.name.clone()}
         </a>
         <a
-          class="tw:h-full tw:text-gray-700! tw:no-underline! tw:border-b-2"
-          class=("tw:border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Left))
-          class=("tw:border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Right))
+          class="h-full text-gray-700 border-b-2"
+          class=("border-gray-300", move || matches!(*flag.read(), IframeCompareMsg::Left))
+          class=("border-purple-500", move || matches!(*flag.read(), IframeCompareMsg::Right))
           href="#"
           on:click=move |_| set_flag.set(IframeCompareMsg::Right)
         >
           {right.name.clone()}
         </a>
       </div>
-      <div class="tw:grid tw:grid-cols-2 tw:gap-x-6">
-        <div class="tw:col-span-full tw:lg:hidden">
+      <div class="grid grid-cols-2 gap-x-6">
+        <div class="col-span-full lg:hidden">
           <iframe
             width="100%"
             height="380"
@@ -84,31 +84,24 @@ pub fn IframeCompare(
             }
           ></iframe>
         </div>
-        <div class="tw:hidden tw:lg:block">
+        <div class="hidden lg:block">
           <iframe width="100%" height="380" prop:frameborder="0" src=left.iframe.clone()></iframe>
         </div>
-        <div class="tw:hidden tw:lg:block">
+        <div class="hidden lg:block">
           <iframe width="100%" height="380" prop:frameborder="0" src=right.iframe.clone()></iframe>
         </div>
-        <Button
-          class="tw:w-full tw:truncate tw:text-white tw:bg-violet-400"
-          on:click=on_left_select
-        >
+        <Button class="w-full truncate text-white bg-violet-400" on:click=on_left_select>
           {left.name}
         </Button>
-        <Button
-          class="tw:w-full tw:truncate tw:text-white tw:bg-purple-400"
-          on:click=on_right_select
-        >
+        <Button class="w-full truncate text-white bg-purple-400" on:click=on_right_select>
           {right.name}
         </Button>
       </div>
     }
 }
 
-pub const INPUT_STYLE: &str =
-    "tw:px-4 tw:py-2 tw:min-w-full tw:bg-white tw:rounded-sm tw:border tw:border-gray-200";
-pub const READONLY_INPUT_STYLE: &str = "tw:px-4 tw:py-2 tw:border tw:border-transparent";
+pub const INPUT_STYLE: &str = "px-4 py-2 min-w-full bg-white rounded-sm border border-gray-200";
+pub const READONLY_INPUT_STYLE: &str = "px-4 py-2 border border-transparent";
 
 #[component]
 pub fn Input(
@@ -120,7 +113,7 @@ pub fn Input(
     disabled: bool,
 ) -> impl IntoView {
     view! {
-      <div class="tw:flex tw:gap-2">
+      <div class="flex gap-2">
         <div style="flex-basis: 800px">
           // Copy only the styles from .form-control that are needed for sizing
           <input
@@ -132,7 +125,7 @@ pub fn Input(
             disabled=disabled
           />
           {move || {
-            error.get().map(|error| view! { <div class="tw:text-sm tw:text-red-500">{error}</div> })
+            error.get().map(|error| view! { <div class="text-sm text-red-500">{error}</div> })
           }}
         </div>
         <div>
@@ -147,10 +140,10 @@ pub fn Input(
 #[component]
 pub fn SelectWithRef(node_ref: NodeRef<Select>, children: Children) -> impl IntoView {
     view! {
-      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+      <div class="bg-white rounded-sm border border-gray-200">
         <select
           node_ref=node_ref
-          class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
+          class="px-4 py-2 size-full border-e-[calc(var(--spacing)*2)] border-transparent"
         >
           {children()}
         </select>
@@ -164,10 +157,10 @@ pub fn SelectWithCallback(
     children: Children,
 ) -> impl IntoView {
     view! {
-      <div class="tw:size-fit tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+      <div class="size-fit bg-white rounded-sm border border-gray-200">
         <select
           on:change:target=on_change
-          class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
+          class="px-4 py-2 size-full border-e-[calc(var(--spacing)*2)] border-transparent"
         >
           {children()}
         </select>
@@ -187,10 +180,10 @@ pub fn responsive_table_view(
     let left_items = left_items.into_iter().map(|(item, _)| item);
     let right_items = right_items.into_iter().map(|(item, _)| item);
     view! {
-      <div class="tw:grid tw:grid-cols-2 tw:gap-x-6">
-        <div class="tw:hidden tw:lg:block">{table_view(header, left_items)}</div>
-        <div class="tw:hidden tw:lg:block">{table_view(header, right_items)}</div>
-        <div class="tw:lg:hidden tw:col-span-full">{table_view(header, items.into_iter())}</div>
+      <div class="grid grid-cols-2 gap-x-6">
+        <div class="hidden lg:block">{table_view(header, left_items)}</div>
+        <div class="hidden lg:block">{table_view(header, right_items)}</div>
+        <div class="lg:hidden col-span-full">{table_view(header, items.into_iter())}</div>
       </div>
     }
 }
@@ -200,14 +193,14 @@ pub fn table_view<'a>(
     items: impl Iterator<Item = Option<(i32, Cow<'a, [String]>)>>,
 ) -> impl IntoView {
     view! {
-      <div class="tw:overflow-x-auto">
-        <table class="tw:w-full">
+      <div class="overflow-x-auto">
+        <table class="w-full">
           <thead>
             <tr>
-              <th class="tw:p-4">"#"</th>
+              <th class="p-4">"#"</th>
               {header
                 .iter()
-                .map(|item| view! { <th class="tw:p-4">{item.to_owned()}</th> })
+                .map(|item| view! { <th class="p-4">{item.to_owned()}</th> })
                 .collect_view()}
             </tr>
           </thead>
@@ -221,12 +214,12 @@ fn item_view(item: Option<(i32, Cow<[String]>)>, len: usize) -> impl IntoView {
     item.map(|(i, item)| {
         view! {
           <tr>
-            <th class="tw:p-4">{i}</th>
+            <th class="p-4">{i}</th>
             {item
               .iter()
               .take(len)
               .map(|item| {
-                view! { <td class="tw:p-4 tw:max-w-[424px] tw:truncate">{item.clone()}</td> }
+                view! { <td class="p-4 max-w-[424px] truncate">{item.clone()}</td> }
               })
               .collect_view()}
           </tr>

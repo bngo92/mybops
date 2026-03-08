@@ -77,7 +77,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                             .then(|| {
                               view! {
                                 <Button
-                                  class="tw:text-white tw:bg-primary"
+                                  class="text-white bg-primary"
                                   on:click={
                                     let url = i.url.clone();
                                     move |_| {
@@ -102,7 +102,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
     };
     crate::nav_content(
         view! {
-          <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+          <a href="#" class="text-lg font-medium text-black">
             "Spotify"
           </a>
         },
@@ -112,7 +112,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
               {move || {
                 if logged_in.get() {
                   view! {
-                    <div class="tw:grid tw:grid-cols-[1fr_6rem_6rem] tw:gap-1">
+                    <div class="grid grid-cols-[1fr_6rem_6rem] gap-1">
                       <div></div>
                       <strong>"Rating"</strong>
                       <strong>"User Score"</strong>
@@ -154,12 +154,12 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
             </Accordion>
             <h2>"Import from Spotify link"</h2>
             <form>
-              <div class="tw:flex tw:gap-2">
-                <div class="tw:basis-3xl">
+              <div class="flex gap-2">
+                <div class="basis-3xl">
                   <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
                 </div>
                 <Button
-                  class="tw:text-white tw:bg-primary"
+                  class="text-white bg-primary"
                   on:click=move |_| {
                     import.dispatch(());
                   }

@@ -83,14 +83,14 @@ fn AppImpl() -> impl IntoView {
     let search = /*if location.pathname().unwrap() == "/search" {
         ""
     } else */{
-        "tw:text-white! tw:no-underline!"
+        "text-white"
     };
     let origin = location().origin().unwrap();
     let modal_ref = NodeRef::<Dialog>::new();
     view! {
       <div>
-        <nav class="tw:md:hidden tw:bg-mist-800">
-          <div class="tw:flex tw:gap-4 tw:p-3">
+        <nav class="md:hidden bg-mist-800">
+          <div class="flex gap-4 p-3">
             <button
               type="button"
               style="background-color: transparent; color: rgba(255,255,255,0.85)"
@@ -102,7 +102,7 @@ fn AppImpl() -> impl IntoView {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="tw:size-6"
+                class="size-6"
               >
                 <path
                   stroke-linecap="round"
@@ -111,35 +111,31 @@ fn AppImpl() -> impl IntoView {
                 />
               </svg>
             </button>
-            <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
+            <a class="text-xl text-white" href="/">
               "mybops"
             </a>
           </div>
         </nav>
-        <div class="tw:flex tw:w-screen tw:h-dvh">
+        <div class="flex w-screen h-dvh">
           <div
-            class="tw:fixed tw:md:static tw:top-0 tw:md:visible tw:p-4 tw:h-full tw:text-white tw:bg-mist-800"
-            class=("tw:invisible", move || !sidebar.get())
+            class="fixed md:static top-0 md:visible p-4 h-full text-white bg-mist-800"
+            class=("invisible", move || !sidebar.get())
             style="width: 200px;"
           >
-            <div class="tw:flex tw:flex-col tw:gap-4 tw:h-full">
-              <div class="tw:flex tw:flex-col tw:gap-4 tw:h-full">
-                <div class="tw:flex tw:gap-4 tw:items-end">
-                  <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
+            <div class="flex flex-col gap-4 h-full">
+              <div class="flex flex-col gap-4 h-full">
+                <div class="flex gap-4 items-end">
+                  <a class="text-xl text-white" href="/">
                     "mybops"
                   </a>
-                  <button
-                    type="button"
-                    class="tw:md:hidden"
-                    on:click=move |_| set_sidebar.set(false)
-                  >
+                  <button type="button" class="md:hidden" on:click=move |_| set_sidebar.set(false)>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke-width="1.5"
                       stroke="currentColor"
-                      class="tw:size-8"
+                      class="size-8"
                     >
                       <path
                         stroke-linecap="round"
@@ -149,30 +145,27 @@ fn AppImpl() -> impl IntoView {
                     </svg>
                   </button>
                 </div>
-                <hr class="tw:text-gray-600" />
-                <div class="tw:flex tw:flex-col tw:flex-1 tw:gap-4">
+                <hr class="text-gray-600" />
+                <div class="flex flex-col flex-1 gap-4">
                   <a class=search href="/lists">
                     "Lists"
                   </a>
                   <a class=search href="/search">
                     "Query"
                   </a>
-                  <button
-                    popovertarget="integrations-dropdown"
-                    class="tw:flex tw:gap-1 tw:items-baseline"
-                  >
+                  <button popovertarget="integrations-dropdown" class="flex gap-1 items-baseline">
                     "Integrations"
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
-                      class="tw:size-2"
+                      class="size-2"
                     >
                       <polygon points="0,0 20,0 10,10" />
                     </svg>
                   </button>
                   <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
-                    <a class="tw:text-black! tw:no-underline!" href="/integrations/spotify">
+                    <a class="text-black" href="/integrations/spotify">
                       "Spotify"
                     </a>
                   </Dropdown>
@@ -181,7 +174,7 @@ fn AppImpl() -> impl IntoView {
                   </a>
                 </div>
               </div>
-              <hr class="tw:text-gray-600" />
+              <hr class="text-gray-600" />
               <div>
                 {move || {
                   if let Some(user) = user.get().flatten() {
@@ -189,27 +182,23 @@ fn AppImpl() -> impl IntoView {
                       view! {
                         <button
                           popovertarget="login-dropdown"
-                          class="tw:flex tw:gap-1 tw:items-baseline tw:px-4 tw:py-2"
+                          class="flex gap-1 items-baseline px-4 py-2"
                         >
                           {user.user_id}
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 20 20"
                             fill="currentColor"
-                            class="tw:size-2"
+                            class="size-2"
                           >
                             <polygon points="0,0 20,0 10,10" />
                           </svg>
                         </button>
                         <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
-                          <a class="tw:text-black! tw:no-underline!" href="/settings">
+                          <a class="text-black" href="/settings">
                             "Settings"
                           </a>
-                          <a
-                            class="tw:text-black! tw:no-underline!"
-                            href="/api/logout"
-                            rel="external"
-                          >
+                          <a class="text-black" href="/api/logout" rel="external">
                             "Log out"
                           </a>
                         </Dropdown>
@@ -232,7 +221,7 @@ fn AppImpl() -> impl IntoView {
               </div>
             </div>
           </div>
-          <div class="tw:flex tw:flex-col tw:flex-1 tw:h-full">
+          <div class="flex flex-col flex-1 h-full">
             <Routes fallback=crate::not_found>
               <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
               <Route path=path!("/docs") view=docs::docs />
@@ -306,9 +295,9 @@ fn AppImpl() -> impl IntoView {
             </Routes>
           </div>
           <Modal header="Log in".to_owned() modal_ref=modal_ref>
-            <div class="tw:flex tw:flex-col tw:gap-4">
+            <div class="flex flex-col gap-4">
               <Button
-                class="tw:text-white tw:bg-primary"
+                class="text-white bg-primary"
                 on:click={
                   let origin = origin.clone();
                   move |_| {
@@ -326,7 +315,7 @@ fn AppImpl() -> impl IntoView {
                 "Log in with Spotify"
               </Button>
               <Button
-                class="tw:text-white tw:bg-primary"
+                class="text-white bg-primary"
                 on:click=move |_| {
                   let navigate = use_navigate();
                   navigate(
@@ -371,7 +360,7 @@ fn ListView(#[prop(into)] list: Signal<List>) -> impl IntoView {
     });
 
     view! {
-      <div class="tw:flex tw:flex-col tw:gap-4">
+      <div class="flex flex-col gap-4">
         <SelectWithCallback on_change=move |ev| {
           let view = match ev.target().value().as_str() {
             "Table" => DataView::Table,
@@ -487,41 +476,29 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                 Some(view! {
                   <button
                     popovertarget="list-dropdown"
-                    class="tw:flex tw:gap-1 tw:items-baseline tw:text-black"
+                    class="flex gap-1 items-baseline text-black"
                   >
                     {toggle}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
-                      class="tw:size-2"
+                      class="size-2"
                     >
                       <polygon points="0,0 20,0 10,10" />
                     </svg>
                   </button>
                   <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
-                    <a
-                      class="tw:text-black! tw:no-underline!"
-                      href=format!("/lists/{}/tournament", list.id)
-                    >
+                    <a class="text-black" href=format!("/lists/{}/tournament", list.id)>
                       "Tournament"
                     </a>
-                    <a
-                      class="tw:text-black! tw:no-underline!"
-                      href=format!("/lists/{}/tournament?mode=random", list.id)
-                    >
+                    <a class="text-black" href=format!("/lists/{}/tournament?mode=random", list.id)>
                       "Random Tournament"
                     </a>
-                    <a
-                      class="tw:text-black! tw:no-underline!"
-                      href=format!("/lists/{}/match", list.id)
-                    >
+                    <a class="text-black" href=format!("/lists/{}/match", list.id)>
                       "Random Matches"
                     </a>
-                    <a
-                      class="tw:text-black! tw:no-underline!"
-                      href=format!("/lists/{}/match?mode=rounds", list.id)
-                    >
+                    <a class="text-black" href=format!("/lists/{}/match?mode=rounds", list.id)>
                       "Random Rounds"
                     </a>
                   </Dropdown>
@@ -541,8 +518,8 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             Some(ListState::NotFound) => unreachable!(),
             Some(ListState::Success(list)) => *list.clone(),
         };
-        let mut tabs = ["tw:text-black! tw:no-underline!"; 3];
-        let active = "tw:text-black! tw:no-underline!";
+        let mut tabs = ["text-black"; 3];
+        let active = "text-black";
         let view = view();
         match view {
             ListPage::View => tabs[0] = active,
@@ -585,8 +562,8 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
           <Content
             heading=list.name.clone()
             nav=view! {
-              <div class="tw:flex tw:flex-col tw:lg:flex-row tw:gap-6 tw:justify-between tw:items-baseline tw:text-sm tw:font-medium">
-                <div class="tw:flex tw:gap-8 tw:flex-col tw:lg:flex-row tw:items-baseline">
+              <div class="flex flex-col lg:flex-row gap-6 justify-between items-baseline text-sm font-medium">
+                <div class="flex gap-8 flex-col lg:flex-row items-baseline">
                   <a class=tabs[0] href=format!("/lists/{}", list.id)>
                     "View"
                   </a>
@@ -612,8 +589,8 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                   if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
                     Some(
                       view! {
-                        <div class="tw:flex tw:gap-4 tw:items-baseline">
-                          <span class="tw:text-black tw:text-nowrap">"Item Mode:"</span>
+                        <div class="flex gap-4 items-baseline">
+                          <span class="text-black text-nowrap">"Item Mode:"</span>
                           <SelectWithCallback on_change=move |ev| {
                             set_mode
                               .set(

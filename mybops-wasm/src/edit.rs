@@ -191,8 +191,8 @@ pub fn Edit(
     view! {
       <div>
         <h4>"List Settings"</h4>
-        <div class="tw:flex tw:flex-col tw:gap-8">
-          <form class="tw:flex tw:flex-col tw:gap-4 tw:max-w-3xl">
+        <div class="flex flex-col gap-8">
+          <form class="flex flex-col gap-4 max-w-3xl">
             <FormInput
               id="name"
               label="List name"
@@ -267,20 +267,20 @@ pub fn Edit(
               }
             />
             <div>
-              <div class="tw:flex tw:items-center tw:gap-2">
+              <div class="flex items-center gap-2">
                 <input
                   node_ref=favorite_ref
-                  class="tw:my-1! tw:size-4"
+                  class="my-1 size-4"
                   type="checkbox"
                   id="favorite"
                   checked=list.read().favorite
                 />
                 <label for="favorite">"Favorite"</label>
               </div>
-              <div class="tw:flex tw:items-center tw:gap-2">
+              <div class="flex items-center gap-2">
                 <input
                   node_ref=public_ref
-                  class="tw:my-1! tw:size-4"
+                  class="my-1 size-4"
                   type="checkbox"
                   id="public"
                   checked=list.read().public
@@ -291,18 +291,18 @@ pub fn Edit(
           </form>
           <div>
             <h5>"Data Sources"</h5>
-            <div class="tw:grid tw:grid-cols-[10rem_minmax(auto,calc(var(--tw-container-3xl)-10rem-1rem))_min-content] tw:gap-4 mb-3">
+            <div class="grid grid-cols-[10rem_minmax(auto,calc(var(--container-3xl)-10rem-1rem))_min-content] gap-4 mb-3">
               {source_html}
             </div>
-            <Button class="tw:text-white tw:bg-blue-500" on:click=add_source>
+            <Button class="text-white bg-blue-500" on:click=add_source>
               "Add source"
             </Button>
           </div>
         </div>
-        <hr class="tw:text-gray-300" />
+        <hr class="text-gray-300" />
         <Button
           style="primary"
-          class="tw:mb-3!"
+          class="mb-3"
           on:click=move |_| {
             save.dispatch(());
           }
@@ -310,9 +310,9 @@ pub fn Edit(
         >
           "Save all settings"
         </Button>
-        <div class="tw:flex tw:gap-4">
+        <div class="flex gap-4">
           <Button
-            class="tw:text-white tw:bg-red-500"
+            class="text-white bg-red-500"
             on:click=move |_| {
               delete.dispatch(());
             }
@@ -321,7 +321,7 @@ pub fn Edit(
             "Delete"
           </Button>
           <Button
-            class="tw:text-white tw:bg-red-500"
+            class="text-white bg-red-500"
             on:click=move |_| {
               delete_all.dispatch(());
             }
@@ -337,11 +337,11 @@ pub fn Edit(
 #[component]
 fn FormInput(id: &'static str, label: &'static str, input: impl IntoView) -> impl IntoView {
     view! {
-      <div class="tw:flex tw:flex-wrap tw:items-baseline tw:gap-x-4">
-        <label class="tw:basis-[10rem]" for=id>
+      <div class="flex flex-wrap items-baseline gap-x-4">
+        <label class="basis-[10rem]" for=id>
           {label}
         </label>
-        <div class="tw:basis-[calc(var(--tw-container-3xl)-10rem-1rem)] tw:flex-1">
+        <div class="basis-[calc(var(--container-3xl)-10rem-1rem)] flex-1">
           <FormInputInner input=input prop:id=id />
         </div>
       </div>

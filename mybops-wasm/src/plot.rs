@@ -49,7 +49,7 @@ pub fn DataViewRender(
           id="canvas"
           width="640"
           height="426"
-          class=(["tw:hidden"], move || matches!(view.get(), DataView::Table | DataView::Csv))
+          class=(["hidden"], move || matches!(view.get(), DataView::Table | DataView::Csv))
         ></canvas>
         {move || {
           if let DataView::Table = view.get() {
@@ -84,15 +84,13 @@ pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
       <table style=style>
         <thead>
           <tr>
-            <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">"#"</th>
+            <th class="pr-8 border-b border-gray-200">"#"</th>
             {df
               .schema
               .fields
               .iter()
               .map(|f| {
-                view! {
-                  <th class="tw:pr-8 tw:border-b! tw:border-gray-200!">{f.name().clone()}</th>
-                }
+                view! { <th class="pr-8 border-b border-gray-200">{f.name().clone()}</th> }
               })
               .collect_view()}
           </tr>
@@ -111,7 +109,7 @@ fn df_item_view(df: &DataFrame, i: usize) -> impl IntoView {
           .iter()
           .map(|item| {
             view! {
-              <td class="tw:pr-8 tw:border-b! tw:border-gray-100!">
+              <td class="pr-8 border-b border-gray-100">
                 {display::array_value_to_string(item, i).unwrap()}
               </td>
             }

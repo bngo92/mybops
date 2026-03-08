@@ -379,7 +379,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                           view! {
                             <h2>{format!("Winner: {}", winner.name)}</h2>
                             // TODO: only show if iframe exists
-                            <div class="tw:w-full tw:max-w-3xl">
+                            <div class="w-full max-w-3xl">
                               <iframe
                                 width="100%"
                                 height="380"
@@ -390,7 +390,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                           }
                         })
                     }}
-                    <div class="tw:overflow-scroll">
+                    <div class="overflow-scroll">
                       {tournament_bracket_view(fields.bracket, fields.list.items, update, false)}
                     </div>
                     {move || {
@@ -400,7 +400,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                         .clone()
                         .map(|src| {
                           view! {
-                            <div class="tw:w-full tw:max-w-3xl">
+                            <div class="w-full max-w-3xl">
                               <iframe
                                 width="100%"
                                 height="380"
@@ -419,12 +419,8 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
     };
     view! {
       <div>
-        <div class="tw:flex tw:gap-4">
-          <Button
-            class="tw:text-white tw:bg-blue-500"
-            on:click=toggle_state
-            prop:style="width: 170.55px"
-          >
+        <div class="flex gap-4">
+          <Button class="text-white bg-blue-500" on:click=toggle_state prop:style="width: 170.55px">
             {toggle}
           </Button>
           <Button style="danger" on:click=reset>
@@ -450,7 +446,7 @@ fn match_view(
         Either::Left(view! {
           <div>
             <h2>{format!("Winner: {}", winner.name)}</h2>
-            <div class="tw:w-full tw:max-w-3xl">
+            <div class="w-full max-w-3xl">
               <iframe
                 width="100%"
                 height="380"
@@ -508,7 +504,7 @@ fn match_view(
     };
     let view = if let ViewState::Tournament = fields.view_state {
         Either::Left(view! {
-          <div class="tw:overflow-scroll">
+          <div class="overflow-scroll">
             {tournament_bracket_view(fields.bracket, fields.list.items, update, true)}
           </div>
         })
@@ -540,7 +536,7 @@ fn match_view(
     };
     view! {
       <div>
-        {select} <div class="tw:w-fit">
+        {select} <div class="w-fit">
           <SelectWithCallback on_change=move |ev| {
             set_state
               .update(|fields| {
@@ -594,12 +590,12 @@ fn tournament_bracket_view(
                 let mut on_click_select = on_click_select.clone();
                 // TODO: fix gap
                 Either::Left(view! {
-                  <div class="tw:flex" style=row_width.clone()>
+                  <div class="flex" style=row_width.clone()>
                     {offsets[item.depth].clone()}
                     <div style=col_width.clone()>
                       <Button
                         style="primary"
-                        class="tw:w-full tw:truncate"
+                        class="w-full truncate"
                         prop:style="height: 38px"
                         disabled=disabled
                         on:click=move |_| on_click_select(i)

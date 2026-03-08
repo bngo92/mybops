@@ -398,7 +398,7 @@ pub fn Nfl() -> impl IntoView {
                     .into_any()
                 } else {
                     view! {
-                      <div class="tw:flex tw:gap-2">
+                      <div class="flex gap-2">
                         <input node_ref=*team_ref type="checkbox" />
                         <label>{team_record.clone()}</label>
                       </div>
@@ -491,7 +491,7 @@ pub fn Nfl() -> impl IntoView {
             teams.len() + 1
         );
         let html = view! {
-          <div class="tw:grid tw:gap-4" style=style>
+          <div class="grid gap-4" style=style>
             <div></div>
             {header}
             {games_html}
@@ -515,13 +515,13 @@ pub fn Nfl() -> impl IntoView {
         };
         Some(crate::nav_content(
             view! {
-              <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+              <a href="#" class="text-lg font-medium text-black">
                 "NFL"
               </a>
             },
             view! {
               <div>
-                <form class="tw:flex tw:gap-2 tw:items-baseline">
+                <form class="flex gap-2 items-baseline">
                   <label>"Sort by:"</label>
                   <SelectWithCallback on_change=|_| ()>
                     <option>"Previous Division Standings"</option>

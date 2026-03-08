@@ -22,18 +22,18 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
     crate::nav_content(
         view! {
           <>
-            <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+            <a href="#" class="text-lg font-medium text-black">
               "Query"
             </a>
-            <div class="tw:flex tw:gap-4">
+            <div class="flex gap-4">
               <Button
-                class="tw:w-32 tw:text-white tw:bg-purple-500/80"
+                class="w-32 text-white bg-purple-500/80"
                 on:click=move |_| set_split_view.set(!split_view.get())
               >
                 {button_text}
               </Button>
               <Button
-                class="tw:text-white tw:bg-purple-500/80"
+                class="text-white bg-purple-500/80"
                 on:click=move |_| logged_in.set(!logged_in.get())
               >
                 "Help"
@@ -42,7 +42,7 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
           </>
         },
         view! {
-          <div class="tw:flex tw:flex-col tw:gap-4">
+          <div class="flex flex-col gap-4">
             <Collapse collapsed=logged_in>
               <p>
                 "Run SQL queries to transform your data into insights.
@@ -77,21 +77,21 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
                 Here is the list of fields that are available for all items:"
               </p>
               <ul>
-                <li class="tw:list-disc tw:list-inside">"type: string - The type of item"</li>
-                <li class="tw:list-disc tw:list-inside">"name: string - The name of the item"</li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">"type: string - The type of item"</li>
+                <li class="list-disc list-inside">"name: string - The name of the item"</li>
+                <li class="list-disc list-inside">
                   "rating: number - The rating that you gave the item"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "user_score: number - Score computed from tournaments and matches"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "user_wins: number - Tournament and match wins"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "user_losses: number - Tournament and match losses"
                 </li>
-                <li class="tw:list-disc tw:list-inside">"hidden: boolean - The item was hidden"</li>
+                <li class="list-disc list-inside">"hidden: boolean - The item was hidden"</li>
               </ul>
               <p>"There are also fields that are specific to a single item type."</p>
               <p>
@@ -99,28 +99,26 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
               </p>
               <p>"Type is set to 'track' for Spotify items"</p>
               <ul>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "album: string - The name of the album that the track appears on"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "artists: array of string - The names of the artists who performed the track"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "duration_ms: number - The track length in milliseconds"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
+                <li class="list-disc list-inside">
                   "popularity - Spotify popularity of the track"
                 </li>
-                <li class="tw:list-disc tw:list-inside">
-                  "track_number - The number of the track"
-                </li>
+                <li class="list-disc list-inside">"track_number - The number of the track"</li>
               </ul>
             </Collapse>
             {move || {
               if split_view.get() {
                 Either::Left(
                   view! {
-                    <div class="tw:flex tw:gap-4">
+                    <div class="flex gap-4">
                       <SearchPane />
                       <SearchPane />
                     </div>
@@ -178,8 +176,8 @@ pub fn SearchPane() -> impl IntoView {
         }
     };
     view! {
-      <div class="tw:flex tw:flex-col tw:gap-4 tw:w-full">
-        <div class="tw:w-fit">
+      <div class="flex flex-col gap-4 w-full">
+        <div class="w-fit">
           <SelectWithCallback on_change=move |ev| {
             set_view
               .set(
@@ -203,8 +201,8 @@ pub fn SearchPane() -> impl IntoView {
           </SelectWithCallback>
         </div>
         <form on:keydown=onkeydown>
-          <div class="tw:flex tw:gap-2">
-            <div class="tw:flex-1">
+          <div class="flex gap-2">
+            <div class="flex-1">
               <Input
                 input_ref=search_ref
                 default=default_search

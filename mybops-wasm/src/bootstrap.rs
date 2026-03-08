@@ -25,7 +25,7 @@ pub fn Accordion(
         }
     };
     let body_class = move || {
-        if collapsed() { "tw:hidden" } else { "tw:block" }
+        if collapsed() { "hidden" } else { "block" }
     };
     let onclick = if let Some(on_toggle) = on_toggle {
         on_toggle
@@ -33,12 +33,12 @@ pub fn Accordion(
         Callback::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
     };
     view! {
-      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+      <div class="bg-white rounded-sm border border-gray-200">
         <h2
-          class="tw:px-5 tw:py-4 tw:m-0! tw:text-base! tw:border-gray-200"
-          class=("tw:border-b", move || !collapsed())
+          class="px-5 py-4 m-0 text-base border-gray-200"
+          class=("border-b", move || !collapsed())
         >
-          <button class="tw:flex tw:justify-between tw:w-full" on:click=move |ev| onclick.run(ev)>
+          <button class="flex justify-between w-full" on:click=move |ev| onclick.run(ev)>
             {header}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -46,7 +46,7 @@ pub fn Accordion(
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="tw:size-6"
+              class="size-6"
             >
               <path
                 stroke-linecap="round"
@@ -116,7 +116,7 @@ impl Toast {
 #[component]
 pub fn Toasts(toasts: ReadSignal<HashMap<&'static str, ToastState>>) -> impl IntoView {
     view! {
-      <div class="tw:fixed tw:right-0 tw:bottom-0 tw:p-3 tw:w-full tw:max-w-md">
+      <div class="fixed right-0 bottom-0 p-3 w-full max-w-md">
         <For
           each=move || toasts.read().clone()
           key=|(k, _)| *k
@@ -132,14 +132,8 @@ fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
     move || {
         let result = result.get()?;
         let (alert_class, body) = match result {
-            Ok(msg) => (
-                "tw:flex tw:justify-between tw:p-4 tw:bg-emerald-100 alert-success",
-                msg,
-            ),
-            Err(msg) => (
-                "tw:flex tw:justify-between tw:p-4 tw:bg-red-100 alert-danger",
-                msg,
-            ),
+            Ok(msg) => ("flex justify-between p-4 bg-emerald-100 alert-success", msg),
+            Err(msg) => ("flex justify-between p-4 bg-red-100 alert-danger", msg),
         };
         Some(view! {
           <div class=alert_class>
@@ -149,7 +143,7 @@ fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="3"
-                class="tw:size-4 tw:stroke-gray-500"
+                class="size-4 stroke-gray-500"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M0 24 24 0M0 0l24 24" />
               </svg>
@@ -162,10 +156,8 @@ fn Alert(result: RwSignal<Option<Result<String, String>>>) -> impl IntoView {
 #[component]
 pub fn Collapse(children: Children, #[prop(into)] collapsed: Signal<bool>) -> impl IntoView {
     view! {
-      <div class=move || if collapsed.get() { "tw:hidden" } else { "tw:block" }>
-        <div class="tw:p-4 tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
-          {children()}
-        </div>
+      <div class=move || if collapsed.get() { "hidden" } else { "block" }>
+        <div class="p-4 bg-white rounded-sm border border-gray-200">{children()}</div>
       </div>
     }
 }
@@ -186,11 +178,11 @@ pub fn Dropdown(children: Children, id: String, direction: Direction) -> impl In
       <div
         id=id
         popover=true
-        class="tw:left-[anchor(left)]"
-        class=(["tw:inset-auto", "tw:bottom-[anchor(top)]"], matches!(direction, Direction::Up))
-        class=("tw:top-[anchor(bottom)]", matches!(direction, Direction::Down))
+        class="left-[anchor(left)]"
+        class=(["inset-auto", "bottom-[anchor(top)]"], matches!(direction, Direction::Up))
+        class=("top-[anchor(bottom)]", matches!(direction, Direction::Down))
       >
-        <div class="tw:flex tw:flex-col tw:gap-4 tw:p-4 tw:min-w-40">{children()}</div>
+        <div class="flex flex-col gap-4 p-4 min-w-40">{children()}</div>
       </div>
     }
 }
@@ -203,11 +195,11 @@ pub fn Modal(
 ) -> impl IntoView {
     view! {
       <dialog
-        class="tw:fixed tw:top-1/3 tw:left-1/2 tw:-translate-1/2 tw:w-full tw:max-w-md"
+        class="fixed top-1/3 left-1/2 -translate-1/2 w-full max-w-md"
         closedby="any"
         node_ref=modal_ref
       >
-        <div class="tw:flex tw:justify-between tw:p-4">
+        <div class="flex justify-between p-4">
           <h1>{header}</h1>
           <form method="dialog">
             <button>
@@ -217,14 +209,14 @@ pub fn Modal(
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="tw:size-8"
+                class="size-8"
               >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
             </button>
           </form>
         </div>
-        <div class="tw:flex tw:flex-col tw:p-4">{children()}</div>
+        <div class="flex flex-col p-4">{children()}</div>
       </dialog>
     }
 }

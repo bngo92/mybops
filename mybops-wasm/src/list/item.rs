@@ -264,7 +264,7 @@ pub fn ListItems(
         }
         modal_ref=modal_ref
       >
-        <div class="tw:relative">
+        <div class="relative">
           {move || {
             let i = modal.get();
             items
@@ -279,7 +279,7 @@ pub fn ListItems(
               })
           }}
           <button
-            class="tw:absolute tw:flex tw:justify-center tw:items-center tw:w-[15%] tw:text-gray-300"
+            class="absolute flex justify-center items-center w-[15%] text-gray-300"
             type="button"
             on:click=modal_back
             style="top: 56px; bottom: auto; height: 137px"
@@ -290,7 +290,7 @@ pub fn ListItems(
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="tw:size-8"
+              class="size-8"
             >
               <path
                 stroke-linecap="round"
@@ -300,7 +300,7 @@ pub fn ListItems(
             </svg>
           </button>
           <button
-            class="tw:absolute tw:flex tw:right-0 tw:justify-center tw:items-center tw:w-[15%] tw:text-gray-300"
+            class="absolute flex right-0 justify-center items-center w-[15%] text-gray-300"
             type="button"
             on:click=modal_forward
             style="top: 56px; bottom: auto; height: 137px"
@@ -311,7 +311,7 @@ pub fn ListItems(
               viewBox="0 0 24 24"
               stroke-width="1.5"
               stroke="currentColor"
-              class="tw:size-8"
+              class="size-8"
             >
               <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
@@ -413,10 +413,10 @@ pub fn ListItems(
                                 rating=rating
                                 onchange=move |rating| update_rating((i, rating))
                               />
-                            </div> <div class="tw:flex tw:justify-center tw:items-center">
+                            </div> <div class="flex justify-center items-center">
                               <input
                                 node_ref=*hidden_ref
-                                class="tw:my-1! tw:size-4"
+                                class="my-1 size-4"
                                 type="checkbox"
                                 checked=hidden
                                 disabled=disabled
@@ -478,8 +478,8 @@ pub fn ListItems(
         }
     };
     view! {
-      <div class="tw:flex tw:flex-col tw:gap-4">
-        <div class="tw:flex tw:flex-row-reverse tw:flex-wrap tw:gap-4 tw:justify-end">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-row-reverse flex-wrap gap-4 justify-end">
           {modal_html}
           {move || {
             list
@@ -498,7 +498,7 @@ pub fn ListItems(
                 }
               })
           }} <form style="flex-basis: 750px">
-            <div class="tw:grid tw:gap-x-4" style=style>
+            <div class="grid gap-x-4" style=style>
               {move || {
                 if let ItemMode::Update = mode.get() {
                   Some(
@@ -519,7 +519,7 @@ pub fn ListItems(
                   None
                 }
               }}
-              <div class="tw:grid tw:overflow-y-auto tw:gap-y-2 tw:items-baseline" style=grid>
+              <div class="grid overflow-y-auto gap-y-2 items-baseline" style=grid>
                 {html}
               </div>
             </div>
@@ -534,7 +534,7 @@ pub fn ListItems(
             </Button>
           </form>
         </div>
-        <hr class="tw:text-gray-300" />
+        <hr class="text-gray-300" />
         <h4>"Data Sources"</h4>
         {source_html}
         {move || {

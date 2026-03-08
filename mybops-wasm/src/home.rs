@@ -33,11 +33,11 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
         Some(crate::nav_content(
             view! {
               <>
-                <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+                <a href="#" class="text-lg font-medium text-black">
                   {move || if disabled { "Demo" } else { "Home" }}
                 </a>
-                <div class="tw:flex tw:gap-4 tw:items-baseline">
-                  <span class="tw:text-black tw:text-nowrap">"Sort Mode:"</span>
+                <div class="flex gap-4 items-baseline">
+                  <span class="text-black text-nowrap">"Sort Mode:"</span>
                   <SelectWithRef node_ref=select_ref>
                     <option>"Tournament"</option>
                     <option selected=true>"Random Tournament"</option>
@@ -45,7 +45,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                     <option>"Random Rounds"</option>
                   </SelectWithRef>
                   <Button
-                    class="tw:text-white tw:bg-purple-500/80"
+                    class="text-white bg-purple-500/80"
                     on:click=move |_| set_help.set(!help.get())
                   >
                     "Help"
@@ -54,7 +54,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
               </>
             },
             view! {
-              <div class="tw:flex tw:flex-col tw:gap-4">
+              <div class="flex flex-col gap-4">
                 <Collapse collapsed=help>
                   <p>
                     "mybops is an app that helps you filter your data and remove flops from your life.
@@ -69,19 +69,19 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                     " button below the list widget. Here is the full list of sort modes:"
                   </p>
                   <ul>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       <strong>"Tournament"</strong>
                       " - Sort by choosing between items that are organized using a seeded tournament."
                     </li>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       <strong>"Random Tournament"</strong>
                       " - Sort by choosing between items that are organized using a randomly generated tournament."
                     </li>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       <strong>"Random Matches"</strong>
                       " - Sort by choosing between randomly selected items."
                     </li>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       <strong>"Random Rounds"</strong>
                       " - This mode is similar to Random Matches except every item will be selected before an item is repeated."
                     </li>
@@ -92,19 +92,19 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                   </p>
                   <p>"You can also:"</p>
                   <ul>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       "View items in the list by clicking on the widget to expand it."
                     </li>
-                    <li class="tw:list-disc tw:list-inside">
+                    <li class="list-disc list-inside">
                       "Search for data about your ratings and rankings by going to the "
                       <a href="/search">"Search"</a>" page."
                     </li>
                   </ul>
                 </Collapse>
-                <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{column}</div>
+                <div class="grid md:grid-cols-2 gap-4">{column}</div>
                 <div>
                   <Button
-                    class="tw:text-white tw:bg-blue-500 tw:disabled:bg-blue-500/65"
+                    class="text-white bg-blue-500 disabled:bg-blue-500/65"
                     on:click=move |_| {
                       create.dispatch(());
                     }
@@ -175,7 +175,7 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
     // TODO: support actions on views
     let disabled = matches!(list.mode, ListMode::View(_));
     view! {
-      <div class="tw:flex tw:flex-col tw:gap-4">
+      <div class="flex flex-col gap-4">
         <Accordion
           header=list.name.clone()
           collapsed=move || Some(collapsed.get())
@@ -191,7 +191,7 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
             }
           }}
         </Accordion>
-        <div class="tw:flex tw:gap-4">
+        <div class="flex gap-4">
           <Button
             style="primary"
             on:click=move |_| use_navigate()(&format!("/lists/{}/items", id), Default::default())

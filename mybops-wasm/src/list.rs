@@ -23,7 +23,7 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
             .iter()
             .map(|l| {
                 view! {
-                  <div class="tw:px-4 tw:py-2 tw:rounded-sm tw:border tw:border-gray-300">
+                  <div class="px-4 py-2 rounded-sm border border-gray-300">
                     <a href=format!("/lists/{}", l.id)>{l.name.clone()}</a>
                   </div>
                 }
@@ -32,18 +32,18 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
     };
     crate::nav_content(
         view! {
-          <a href="#" class="tw:text-lg tw:font-medium tw:text-black! tw:no-underline!">
+          <a href="#" class="text-lg font-medium text-black">
             "All Lists"
           </a>
         }
         .into_any(),
         (move || {
             view! {
-              <div class="tw:flex tw:flex-col tw:gap-4">
-                <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{list_html()}</div>
+              <div class="flex flex-col gap-4">
+                <div class="grid md:grid-cols-2 gap-4">{list_html()}</div>
                 <div>
                   <Button
-                    class="tw:text-white tw:bg-blue-500 tw:disabled:bg-blue-500/65"
+                    class="text-white bg-blue-500 disabled:bg-blue-500/65"
                     on:click=move |_| {
                       create.dispatch(());
                     }

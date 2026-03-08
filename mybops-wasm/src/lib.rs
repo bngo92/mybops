@@ -73,10 +73,8 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
 
 fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
-      <nav class="tw:flex tw:gap-4 tw:justify-between tw:items-baseline tw:p-3 tw:bg-primary">
-        {nav}
-      </nav>
-      <div class="tw:flex-1 tw:p-3 tw:overflow-y-auto tw:bg-pink-50/10">{content}</div>
+      <nav class="flex gap-4 justify-between items-baseline p-3 bg-primary">{nav}</nav>
+      <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
     }
 }
 
@@ -86,16 +84,13 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
 
     view! {
       <>
-        <nav class="tw:flex tw:flex-col tw:lg:flex-row tw:gap-8 tw:items-baseline tw:p-3 tw:bg-primary">
-          <div class="tw:flex tw:justify-between tw:w-full tw:lg:w-auto">
-            <a
-              href="#"
-              class="tw:w-full tw:lg:w-auto tw:text-lg tw:font-medium tw:text-black! tw:no-underline!"
-            >
+        <nav class="flex flex-col lg:flex-row gap-8 items-baseline p-3 bg-primary">
+          <div class="flex justify-between w-full lg:w-auto">
+            <a href="#" class="w-full lg:w-auto text-lg font-medium text-black">
               {heading}
             </a>
             <button
-              class="tw:lg:hidden tw:flex-1 tw:s-fit tw:text-black"
+              class="lg:hidden flex-1 s-fit text-black"
               type="button"
               on:click=move |_| set_collapse.set(!collapse.get())
             >
@@ -109,7 +104,7 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
                         viewBox="0 0 24 24"
                         stroke-width="2"
                         stroke="currentColor"
-                        class="tw:size-4"
+                        class="size-4"
                       >
                         <path
                           stroke-linecap="round"
@@ -128,7 +123,7 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
                         viewBox="0 0 24 24"
                         stroke-width="2"
                         stroke="currentColor"
-                        class="tw:size-4"
+                        class="size-4"
                       >
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                       </svg>
@@ -138,11 +133,11 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
               }}
             </button>
           </div>
-          <div class="tw:flex-1" class=(["tw:hidden", "tw:lg:block"], collapse)>
+          <div class="flex-1" class=(["hidden", "lg:block"], collapse)>
             {nav}
           </div>
         </nav>
-        <div class="tw:flex-1 tw:p-3 tw:overflow-y-auto tw:bg-pink-50/10">{content}</div>
+        <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
       </>
     }
 }
