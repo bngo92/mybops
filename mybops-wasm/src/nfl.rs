@@ -527,7 +527,7 @@ pub fn Nfl() -> impl IntoView {
                     <option>"Previous Division Standings"</option>
                   </SelectWithCallback>
                 </form>
-                <Button class="tw:text-white tw:bg-primary" on:click=onclick>
+                <Button style="primary" on:click=onclick>
                   {move || if selected { "Clear" } else { "Select" }}
                 </Button>
                 {html}

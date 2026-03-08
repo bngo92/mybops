@@ -122,56 +122,66 @@ fn AppImpl() -> impl IntoView {
             class=("tw:invisible", move || !sidebar.get())
             style="width: 200px;"
           >
-            <div class="tw:flex tw:flex-col tw:h-full">
-              <div class="tw:flex tw:gap-4 tw:items-end" data-bs-theme="dark">
-                <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
-                  "mybops"
-                </a>
-                <button type="button" class="tw:md:hidden" on:click=move |_| set_sidebar.set(false)>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="tw:size-8"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <hr />
-              <div class="tw:flex tw:flex-col tw:flex-1 tw:gap-4">
-                <a class=search href="/lists">
-                  "Lists"
-                </a>
-                <a class=search href="/search">
-                  "Query"
-                </a>
-                <button
-                  popovertarget="integrations-dropdown"
-                  class="tw:flex tw:gap-1 tw:items-baseline"
-                >
-                  "Integrations"
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    class="tw:size-2"
-                  >
-                    <polygon points="0,0 20,0 10,10" />
-                  </svg>
-                </button>
-                <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
-                  <a class="tw:text-black! tw:no-underline!" href="/integrations/spotify">
-                    "Spotify"
+            <div class="tw:flex tw:flex-col tw:gap-4 tw:h-full">
+              <div class="tw:flex tw:flex-col tw:gap-4 tw:h-full">
+                <div class="tw:flex tw:gap-4 tw:items-end">
+                  <a class="tw:text-xl tw:text-white! tw:no-underline!" href="/">
+                    "mybops"
                   </a>
-                </Dropdown>
-                <a class=search href="/docs">
-                  "Docs"
-                </a>
+                  <button
+                    type="button"
+                    class="tw:md:hidden"
+                    on:click=move |_| set_sidebar.set(false)
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="tw:size-8"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 18 18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <hr class="tw:text-gray-600" />
+                <div class="tw:flex tw:flex-col tw:flex-1 tw:gap-4">
+                  <a class=search href="/lists">
+                    "Lists"
+                  </a>
+                  <a class=search href="/search">
+                    "Query"
+                  </a>
+                  <button
+                    popovertarget="integrations-dropdown"
+                    class="tw:flex tw:gap-1 tw:items-baseline"
+                  >
+                    "Integrations"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="tw:size-2"
+                    >
+                      <polygon points="0,0 20,0 10,10" />
+                    </svg>
+                  </button>
+                  <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
+                    <a class="tw:text-black! tw:no-underline!" href="/integrations/spotify">
+                      "Spotify"
+                    </a>
+                  </Dropdown>
+                  <a class=search href="/docs">
+                    "Docs"
+                  </a>
+                </div>
               </div>
-              <hr />
+              <hr class="tw:text-gray-600" />
               <div>
                 {move || {
                   if let Some(user) = user.get().flatten() {

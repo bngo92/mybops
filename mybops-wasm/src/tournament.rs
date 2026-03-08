@@ -427,7 +427,7 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
           >
             {toggle}
           </Button>
-          <Button class="tw:text-white tw:bg-red-500" on:click=reset>
+          <Button style="danger" on:click=reset>
             "Reset"
           </Button>
         </div>
@@ -598,7 +598,8 @@ fn tournament_bracket_view(
                     {offsets[item.depth].clone()}
                     <div style=col_width.clone()>
                       <Button
-                        class="tw:w-full tw:text-white tw:bg-primary tw:truncate"
+                        style="primary"
+                        class="tw:w-full tw:truncate"
                         prop:style="height: 38px"
                         disabled=disabled
                         on:click=move |_| on_click_select(i)

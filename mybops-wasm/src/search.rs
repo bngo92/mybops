@@ -77,15 +77,21 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
                 Here is the list of fields that are available for all items:"
               </p>
               <ul>
-                <li class="tw:list-disc">"type: string - The type of item"</li>
-                <li class="tw:list-disc">"name: string - The name of the item"</li>
-                <li class="tw:list-disc">"rating: number - The rating that you gave the item"</li>
-                <li class="tw:list-disc">
+                <li class="tw:list-disc tw:list-inside">"type: string - The type of item"</li>
+                <li class="tw:list-disc tw:list-inside">"name: string - The name of the item"</li>
+                <li class="tw:list-disc tw:list-inside">
+                  "rating: number - The rating that you gave the item"
+                </li>
+                <li class="tw:list-disc tw:list-inside">
                   "user_score: number - Score computed from tournaments and matches"
                 </li>
-                <li class="tw:list-disc">"user_wins: number - Tournament and match wins"</li>
-                <li class="tw:list-disc">"user_losses: number - Tournament and match losses"</li>
-                <li class="tw:list-disc">"hidden: boolean - The item was hidden"</li>
+                <li class="tw:list-disc tw:list-inside">
+                  "user_wins: number - Tournament and match wins"
+                </li>
+                <li class="tw:list-disc tw:list-inside">
+                  "user_losses: number - Tournament and match losses"
+                </li>
+                <li class="tw:list-disc tw:list-inside">"hidden: boolean - The item was hidden"</li>
               </ul>
               <p>"There are also fields that are specific to a single item type."</p>
               <p>
@@ -93,17 +99,21 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
               </p>
               <p>"Type is set to 'track' for Spotify items"</p>
               <ul>
-                <li class="tw:list-disc">
+                <li class="tw:list-disc tw:list-inside">
                   "album: string - The name of the album that the track appears on"
                 </li>
-                <li class="tw:list-disc">
+                <li class="tw:list-disc tw:list-inside">
                   "artists: array of string - The names of the artists who performed the track"
                 </li>
-                <li class="tw:list-disc">
+                <li class="tw:list-disc tw:list-inside">
                   "duration_ms: number - The track length in milliseconds"
                 </li>
-                <li class="tw:list-disc">"popularity - Spotify popularity of the track"</li>
-                <li class="tw:list-disc">"track_number - The number of the track"</li>
+                <li class="tw:list-disc tw:list-inside">
+                  "popularity - Spotify popularity of the track"
+                </li>
+                <li class="tw:list-disc tw:list-inside">
+                  "track_number - The number of the track"
+                </li>
               </ul>
             </Collapse>
             {move || {
@@ -207,7 +217,7 @@ pub fn SearchPane() -> impl IntoView {
               />
             </div>
             <Button
-              class="tw:text-white tw:bg-primary"
+              style="primary"
               on:click=move |_| {
                 create.dispatch(());
               }

@@ -43,7 +43,7 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
                 <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{list_html()}</div>
                 <div>
                   <Button
-                    class="tw:text-white tw:bg-blue-500"
+                    class="tw:text-white tw:bg-blue-500 tw:disabled:bg-blue-500/65"
                     on:click=move |_| {
                       create.dispatch(());
                     }

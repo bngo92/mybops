@@ -10,8 +10,9 @@ use web_sys::{Event, HtmlSelectElement, MouseEvent};
 #[component]
 pub fn Button(
     children: Children,
+    #[prop(default = "")] style: &'static str,
     #[prop(default = "button")] r#type: &'static str,
-    class: &'static str,
+    #[prop(default = "")] class: &'static str,
     #[prop(optional)]
     #[prop(into)]
     disabled: Signal<bool>,
@@ -20,6 +21,8 @@ pub fn Button(
       <button
         type=r#type
         class=class
+        class=(["tw:bg-primary", "tw:disabled:bg-primary/65", "tw:text-white"], style == "primary")
+        class=(["tw:bg-red-500", "tw:disabled:bg-red-500/65", "tw:text-white"], style == "danger")
         class=(["tw:rounded-sm!"], true)
         class=(["tw:px-4"], true)
         class=(["tw:py-2"], true)
@@ -133,7 +136,7 @@ pub fn Input(
           }}
         </div>
         <div>
-          <Button class="tw:text-white tw:bg-primary" {..} on:click=onclick disabled=disabled>
+          <Button style="primary" {..} on:click=onclick disabled=disabled>
             "Search"
           </Button>
         </div>

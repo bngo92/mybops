@@ -65,37 +65,37 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                     "The data is organized into lists of items and your lists are displayed here on the home page using user-defined widgets.
                     The fastest way to rank your items is with a randomly generated tournament.
                     You can start a tournament for a list by clicking the "
-                    <Button class="tw:text-white tw:bg-primary">"Rank"</Button>
+                    <Button style="primary">"Rank"</Button>
                     " button below the list widget. Here is the full list of sort modes:"
                   </p>
                   <ul>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       <strong>"Tournament"</strong>
                       " - Sort by choosing between items that are organized using a seeded tournament."
                     </li>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       <strong>"Random Tournament"</strong>
                       " - Sort by choosing between items that are organized using a randomly generated tournament."
                     </li>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       <strong>"Random Matches"</strong>
                       " - Sort by choosing between randomly selected items."
                     </li>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       <strong>"Random Rounds"</strong>
                       " - This mode is similar to Random Matches except every item will be selected before an item is repeated."
                     </li>
                   </ul>
                   <p>
                     "To rate items, go to the item rating page for the list by clicking on the "
-                    <Button class="tw:text-white tw:bg-primary">"Rate"</Button>" button."
+                    <Button style="primary">"Rate"</Button>" button."
                   </p>
                   <p>"You can also:"</p>
                   <ul>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       "View items in the list by clicking on the widget to expand it."
                     </li>
-                    <li class="tw:list-disc">
+                    <li class="tw:list-disc tw:list-inside">
                       "Search for data about your ratings and rankings by going to the "
                       <a href="/search">"Search"</a>" page."
                     </li>
@@ -104,7 +104,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                 <div class="tw:grid tw:md:grid-cols-2 tw:gap-4">{column}</div>
                 <div>
                   <Button
-                    class="tw:text-white tw:bg-blue-500"
+                    class="tw:text-white tw:bg-blue-500 tw:disabled:bg-blue-500/65"
                     on:click=move |_| {
                       create.dispatch(());
                     }
@@ -193,13 +193,13 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
         </Accordion>
         <div class="tw:flex tw:gap-4">
           <Button
-            class="tw:text-white tw:bg-primary"
+            style="primary"
             on:click=move |_| use_navigate()(&format!("/lists/{}/items", id), Default::default())
             disabled=disabled
           >
             "Rate"
           </Button>
-          <Button class="tw:text-white tw:bg-primary" on:click=compare disabled=disabled>
+          <Button style="primary" on:click=compare disabled=disabled>
             "Rank"
           </Button>
         </div>

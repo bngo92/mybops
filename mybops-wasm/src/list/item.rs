@@ -452,7 +452,7 @@ pub fn ListItems(
                       </a>
                     </label>
                     <Button
-                      class="tw:text-white tw:bg-red-500"
+                      style="danger"
                       on:click=move |_| {
                         delete.dispatch((i, item.id.clone()));
                       }
@@ -478,7 +478,7 @@ pub fn ListItems(
         }
     };
     view! {
-      <div>
+      <div class="tw:flex tw:flex-col tw:gap-4">
         <div class="tw:flex tw:flex-row-reverse tw:flex-wrap tw:gap-4 tw:justify-end">
           {modal_html}
           {move || {
@@ -524,7 +524,7 @@ pub fn ListItems(
               </div>
             </div>
             <Button
-              class="tw:text-white tw:bg-primary"
+              style="primary"
               on:click=move |_| {
                 save.dispatch(());
               }
@@ -534,7 +534,7 @@ pub fn ListItems(
             </Button>
           </form>
         </div>
-        <hr />
+        <hr class="tw:text-gray-300" />
         <h4>"Data Sources"</h4>
         {source_html}
         {move || {
@@ -543,15 +543,17 @@ pub fn ListItems(
           } else {
             Some(
               view! {
-                <Button
-                  class="tw:text-white tw:bg-primary"
-                  on:click=move |_| {
-                    push.dispatch(());
-                  }
-                  disabled=move || !push_available()
-                >
-                  "Push"
-                </Button>
+                <div>
+                  <Button
+                    style="primary"
+                    on:click=move |_| {
+                      push.dispatch(());
+                    }
+                    disabled=move || !push_available()
+                  >
+                    "Push"
+                  </Button>
+                </div>
               },
             )
           }

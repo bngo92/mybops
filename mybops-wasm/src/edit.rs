@@ -176,7 +176,7 @@ pub fn Edit(
                     <option selected=selected[3]>"List Items"</option>
                   </SelectWithRef>
                   <input class=INPUT_STYLE node_ref=*id value=value />
-                  <Button class="tw:text-white tw:bg-red-500" on:click=onclick>
+                  <Button style="danger" on:click=onclick>
                     "Delete"
                   </Button>
                 }
@@ -299,9 +299,10 @@ pub fn Edit(
             </Button>
           </div>
         </div>
-        <hr />
+        <hr class="tw:text-gray-300" />
         <Button
-          class="tw:text-white tw:bg-primary tw:mb-3!"
+          style="primary"
+          class="tw:mb-3!"
           on:click=move |_| {
             save.dispatch(());
           }

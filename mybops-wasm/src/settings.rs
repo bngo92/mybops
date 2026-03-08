@@ -29,7 +29,7 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
                 } else {
                   view! {
                     <Button
-                      class="tw:text-white tw:bg-primary"
+                      style="primary"
                       on:click=move |_| {
                         let navigate = use_navigate();
                         navigate(
@@ -56,7 +56,7 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
               } else {
                 view! {
                   <Button
-                    class="tw:text-white tw:bg-primary"
+                    style="primary"
                     on:click=move |_| {
                       let navigate = use_navigate();
                       navigate(

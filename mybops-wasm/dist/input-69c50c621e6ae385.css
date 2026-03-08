@@ -19,6 +19,7 @@
     --tw-color-gray-200: oklch(92.8% 0.006 264.531);
     --tw-color-gray-300: oklch(87.2% 0.01 258.338);
     --tw-color-gray-500: oklch(55.1% 0.027 264.364);
+    --tw-color-gray-600: oklch(44.6% 0.03 256.802);
     --tw-color-gray-700: oklch(37.3% 0.034 259.733);
     --tw-color-mist-800: oklch(27.5% 0.011 216.9);
     --tw-color-black: #000;
@@ -34,6 +35,8 @@
     --tw-text-lg--line-height: calc(1.75 / 1.125);
     --tw-text-xl: 1.25rem;
     --tw-text-xl--line-height: calc(1.75 / 1.25);
+    --tw-text-2xl: 1.5rem;
+    --tw-text-2xl--line-height: calc(2 / 1.5);
     --tw-font-weight-medium: 500;
     --tw-radius-sm: 0.25rem;
     --tw-default-font-family: var(--tw-font-sans);
@@ -238,8 +241,14 @@
   .tw\:my-1\! {
     margin-block: calc(var(--tw-spacing) * 1) !important;
   }
+  .tw\:mb-2 {
+    margin-bottom: calc(var(--tw-spacing) * 2);
+  }
   .tw\:mb-3\! {
     margin-bottom: calc(var(--tw-spacing) * 3) !important;
+  }
+  .tw\:mb-4 {
+    margin-bottom: calc(var(--tw-spacing) * 4);
   }
   .tw\:mb-px {
     margin-bottom: 1px;
@@ -332,6 +341,9 @@
     --tw-translate-x: calc(calc(1 / 2 * 100%) * -1);
     --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .tw\:list-inside {
+    list-style-position: inside;
   }
   .tw\:list-disc {
     list-style-type: disc;
@@ -520,6 +532,10 @@
   .tw\:text-center {
     text-align: center;
   }
+  .tw\:text-2xl {
+    font-size: var(--tw-text-2xl);
+    line-height: var(--tw-leading, var(--tw-text-2xl--line-height));
+  }
   .tw\:text-base\! {
     font-size: var(--tw-text-base) !important;
     line-height: var(--tw-leading, var(--tw-text-base--line-height)) !important;
@@ -552,6 +568,9 @@
   .tw\:text-gray-300 {
     color: var(--tw-color-gray-300);
   }
+  .tw\:text-gray-600 {
+    color: var(--tw-color-gray-600);
+  }
   .tw\:text-gray-700\! {
     color: var(--tw-color-gray-700) !important;
   }
@@ -566,6 +585,30 @@
   }
   .tw\:no-underline\! {
     text-decoration-line: none !important;
+  }
+  .tw\:disabled\:bg-blue-500\/65 {
+    &:disabled {
+      background-color: var(--tw-color-blue-500);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--tw-color-blue-500) 65%, transparent);
+      }
+    }
+  }
+  .tw\:disabled\:bg-primary\/65 {
+    &:disabled {
+      background-color: var(--tw-color-primary);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--tw-color-primary) 65%, transparent);
+      }
+    }
+  }
+  .tw\:disabled\:bg-red-500\/65 {
+    &:disabled {
+      background-color: var(--tw-color-red-500);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--tw-color-red-500) 65%, transparent);
+      }
+    }
   }
   .tw\:md\:visible {
     @media (width >= 48rem) {
