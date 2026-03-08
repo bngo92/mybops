@@ -1,5 +1,5 @@
 use crate::{
-    base::Button,
+    base::{Button, INPUT_STYLE, SelectWithCallback},
     bootstrap::{Modal, Toast},
 };
 use arrow::{array::AsArray, datatypes::UInt64Type};
@@ -264,37 +264,57 @@ pub fn ListItems(
         }
         modal_ref=modal_ref
       >
-        <div class="carousel slide">
-          <div class="carousel-item active">
-            {move || {
-              let i = modal.get();
-              items
-                .read()[i]
-                .item
-                .iframe
-                .clone()
-                .map(|iframe| {
-                  view! {
-                    <iframe width="100%" height="380" prop:frameborder="0" src=iframe></iframe>
-                  }
-                })
-            }}
-          </div>
+        <div class="tw:relative">
+          {move || {
+            let i = modal.get();
+            items
+              .read()[i]
+              .item
+              .iframe
+              .clone()
+              .map(|iframe| {
+                view! {
+                  <iframe width="100%" height="380" prop:frameborder="0" src=iframe></iframe>
+                }
+              })
+          }}
           <button
-            class="carousel-control-prev"
+            class="tw:absolute tw:flex tw:justify-center tw:items-center tw:w-[15%] tw:text-gray-300"
             type="button"
             on:click=modal_back
             style="top: 56px; bottom: auto; height: 137px"
           >
-            <span class="carousel-control-prev-icon"></span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="tw:size-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 19.5 8.25 12l7.5-7.5"
+              />
+            </svg>
           </button>
           <button
-            class="carousel-control-next"
+            class="tw:absolute tw:flex tw:right-0 tw:justify-center tw:items-center tw:w-[15%] tw:text-gray-300"
             type="button"
             on:click=modal_forward
             style="top: 56px; bottom: auto; height: 137px"
           >
-            <span class="carousel-control-next-icon"></span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="tw:size-8"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
           </button>
         </div>
         {move || {
@@ -304,11 +324,7 @@ pub fn ListItems(
             .read()
             .as_ref()
             .map(|state| {
-              view! {
-                <div class="col-2">
-                  <Rating rating=state[i].rating onchange=onchange />
-                </div>
-              }
+              view! { <Rating rating=state[i].rating onchange=onchange /> }
             })
         }}
       </Modal>
@@ -329,19 +345,11 @@ pub fn ListItems(
                 _ => None,
             };
             if let SourceType::ListItems(id) = &source.source_type {
-                EitherOf3::A(view! {
-                  <div class="mb-2">
-                    <a href=format!("/lists/{}", id)>{source.name.clone()}</a>
-                  </div>
-                })
+                EitherOf3::A(view! { <a href=format!("/lists/{}", id)>{source.name.clone()}</a> })
             } else if let Some(href) = raw_id {
-                EitherOf3::B(view! {
-                  <div class="mb-2">
-                    <a href=href>{source.name.clone()}</a>
-                  </div>
-                })
+                EitherOf3::B(view! { <a href=href>{source.name.clone()}</a> })
             } else {
-                EitherOf3::C(view! { <p class="mb-2">{source.name.clone()}</p> })
+                EitherOf3::C(view! { <p>{source.name.clone()}</p> })
             }
         })
         .collect_view();
@@ -363,7 +371,7 @@ pub fn ListItems(
             .enumerate()
             .map(|(i, ListItem { item, .. })| {
                 view! {
-                  <label class="col-form-label">
+                  <label>
                     <a href="#" on:click=move |_| open(i)>
                       {item.name.clone()}
                     </a>
@@ -386,7 +394,7 @@ pub fn ListItems(
                     },
                 )| {
                     let label = view! {
-                      <label class="col-form-label">
+                      <label>
                         <a href="#" on:click=move |_| open(i)>
                           {item.name.clone()}
                         </a>
@@ -405,10 +413,10 @@ pub fn ListItems(
                                 rating=rating
                                 onchange=move |rating| update_rating((i, rating))
                               />
-                            </div> <div class="d-flex justify-content-center">
+                            </div> <div class="tw:flex tw:justify-center tw:items-center">
                               <input
                                 node_ref=*hidden_ref
-                                class="form-check-input mt-2"
+                                class="tw:my-1! tw:size-4"
                                 type="checkbox"
                                 checked=hidden
                                 disabled=disabled
@@ -416,7 +424,7 @@ pub fn ListItems(
                             </div> <div>
                               <input
                                 node_ref=*note_ref
-                                class="form-control"
+                                class=INPUT_STYLE
                                 value=Some(note.clone())
                                 disabled=disabled
                               />
@@ -438,7 +446,7 @@ pub fn ListItems(
             .map(|(i, ListItem { item, .. })| {
                 view! {
                   <>
-                    <label class="col-form-label">
+                    <label>
                       <a href="#" on:click=move |_| open(i)>
                         {item.name.clone()}
                       </a>
@@ -471,7 +479,7 @@ pub fn ListItems(
     };
     view! {
       <div>
-        <div class="d-flex flex-row-reverse flex-wrap justify-content-end row-gap-3 column-gap-5">
+        <div class="tw:flex tw:flex-row-reverse tw:flex-wrap tw:gap-4 tw:justify-end">
           {modal_html}
           {move || {
             list
@@ -490,7 +498,7 @@ pub fn ListItems(
                 }
               })
           }} <form style="flex-basis: 750px">
-            <div class="d-grid row-gap-1 column-gap-3 mb-3" style=style>
+            <div class="tw:grid tw:gap-x-4" style=style>
               {move || {
                 if let ItemMode::Update = mode.get() {
                   Some(
@@ -511,7 +519,7 @@ pub fn ListItems(
                   None
                 }
               }}
-              <div class="d-grid row-gap-1 overflow-y-auto" style=grid>
+              <div class="tw:grid tw:overflow-y-auto tw:gap-y-2 tw:items-baseline" style=grid>
                 {html}
               </div>
             </div>
@@ -559,12 +567,9 @@ fn Rating(
 ) -> impl IntoView {
     let rating = rating.get();
     view! {
-      <select
-        on:change:target=move |ev| {
-          onchange(ev.target().value().parse().ok());
-        }
-        class="form-select"
-      >
+      <SelectWithCallback on_change=move |ev| {
+        onchange(ev.target().value().parse().ok());
+      }>
         <option selected=move || rating.is_none()></option>
         <option selected=move || rating == Some(0)>"0"</option>
         <option selected=move || rating == Some(1)>"1"</option>
@@ -577,6 +582,6 @@ fn Rating(
         <option selected=move || rating == Some(8)>"8"</option>
         <option selected=move || rating == Some(9)>"9"</option>
         <option selected=move || rating == Some(10)>"10"</option>
-      </select>
+      </SelectWithCallback>
     }
 }

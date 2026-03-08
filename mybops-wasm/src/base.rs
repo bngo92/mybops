@@ -161,7 +161,7 @@ pub fn SelectWithCallback(
     children: Children,
 ) -> impl IntoView {
     view! {
-      <div class="tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
+      <div class="tw:size-fit tw:bg-white tw:rounded-sm tw:border tw:border-gray-200">
         <select
           on:change:target=on_change
           class="tw:px-4 tw:py-2 tw:size-full tw:border-e-[calc(var(--tw-spacing)*2)] tw:border-transparent"
