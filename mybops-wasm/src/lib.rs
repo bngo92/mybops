@@ -86,16 +86,16 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
 
     view! {
       <>
-        <nav class="tw:flex tw:flex-col tw:md:flex-row tw:gap-8 tw:items-baseline tw:p-3 tw:bg-primary">
-          <div class="tw:flex tw:justify-between tw:w-full tw:md:w-auto">
+        <nav class="tw:flex tw:flex-col tw:lg:flex-row tw:gap-8 tw:items-baseline tw:p-3 tw:bg-primary">
+          <div class="tw:flex tw:justify-between tw:w-full tw:lg:w-auto">
             <a
               href="#"
-              class="tw:w-full tw:md:w-auto tw:text-lg tw:font-medium tw:text-black! tw:no-underline!"
+              class="tw:w-full tw:lg:w-auto tw:text-lg tw:font-medium tw:text-black! tw:no-underline!"
             >
               {heading}
             </a>
             <button
-              class="tw:md:hidden tw:flex-1 tw:s-fit tw:text-black"
+              class="tw:lg:hidden tw:flex-1 tw:s-fit tw:text-black"
               type="button"
               on:click=move |_| set_collapse.set(!collapse.get())
             >
@@ -138,7 +138,9 @@ fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl 
               }}
             </button>
           </div>
-          <div class=(["tw:hidden", "tw:md:block"], collapse)>{nav}</div>
+          <div class="tw:flex-1" class=(["tw:hidden", "tw:lg:block"], collapse)>
+            {nav}
+          </div>
         </nav>
         <div class="tw:flex-1 tw:p-3 tw:overflow-y-auto tw:bg-pink-50/10">{content}</div>
       </>
