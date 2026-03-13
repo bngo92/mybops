@@ -88,73 +88,64 @@ fn AppImpl() -> impl IntoView {
     let origin = location().origin().unwrap();
     let modal_ref = NodeRef::<Dialog>::new();
     view! {
-      <div>
-        <nav class="md:hidden bg-mist-800">
-          <div class="flex gap-4 p-3">
-            <button
-              type="button"
-              style="background-color: transparent; color: rgba(255,255,255,0.85)"
-              on:click=move |_| set_sidebar.set(true)
-            >
+      <div class="flex h-dvh">
+        <nav
+          class="flex fixed md:static md:visible flex-col gap-4 p-4 h-full text-white bg-mist-800"
+          class=("invisible", move || !sidebar.get())
+          style="width: 200px;"
+        >
+          <div class="flex gap-4">
+            <a class="text-xl" href="/">
+              "mybops"
+            </a>
+            <button type="button" class="md:hidden" on:click=move |_| set_sidebar.set(false)>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="size-6"
+                class="size-7"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
             </button>
-            <a class="text-xl text-white" href="/">
-              "mybops"
+          </div>
+          <hr class="text-gray-600" />
+          <div class="flex flex-col flex-1 gap-4">
+            <a class=search href="/lists">
+              "Lists"
+            </a>
+            <a class=search href="/search">
+              "Query"
+            </a>
+            <button popovertarget="integrations-dropdown" class="flex gap-1 items-baseline">
+              "Integrations"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="size-2"
+              >
+                <polygon points="0,0 20,0 10,10" />
+              </svg>
+            </button>
+            <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
+              <a class="text-black" href="/integrations/spotify">
+                "Spotify"
+              </a>
+            </Dropdown>
+            <a class=search href="/docs">
+              "Docs"
             </a>
           </div>
-        </nav>
-        <div class="flex w-screen h-dvh">
-          <div
-            class="fixed md:static top-0 md:visible p-4 h-full text-white bg-mist-800"
-            class=("invisible", move || !sidebar.get())
-            style="width: 200px;"
-          >
-            <div class="flex flex-col gap-4 h-full">
-              <div class="flex flex-col gap-4 h-full">
-                <div class="flex gap-4 items-end">
-                  <a class="text-xl text-white" href="/">
-                    "mybops"
-                  </a>
-                  <button type="button" class="md:hidden" on:click=move |_| set_sidebar.set(false)>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                      class="size-8"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M6 18 18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <hr class="text-gray-600" />
-                <div class="flex flex-col flex-1 gap-4">
-                  <a class=search href="/lists">
-                    "Lists"
-                  </a>
-                  <a class=search href="/search">
-                    "Query"
-                  </a>
-                  <button popovertarget="integrations-dropdown" class="flex gap-1 items-baseline">
-                    "Integrations"
+          <hr class="text-gray-600" />
+          {move || {
+            if let Some(user) = user.get().flatten() {
+              Either::Left(
+                view! {
+                  <button popovertarget="login-dropdown" class="flex gap-1 items-baseline">
+                    {user.user_id}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -164,175 +155,166 @@ fn AppImpl() -> impl IntoView {
                       <polygon points="0,0 20,0 10,10" />
                     </svg>
                   </button>
-                  <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
-                    <a class="text-black" href="/integrations/spotify">
-                      "Spotify"
+                  <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
+                    <a class="text-black" href="/settings">
+                      "Settings"
+                    </a>
+                    <a class="text-black" href="/api/logout" rel="external">
+                      "Log out"
                     </a>
                   </Dropdown>
-                  <a class=search href="/docs">
-                    "Docs"
+                },
+              )
+            } else {
+              Either::Right(
+                view! {
+                  <a
+                    class=search
+                    href="#"
+                    on:click=move |_| modal_ref.get().unwrap().show_modal().unwrap()
+                  >
+                    "Log in"
                   </a>
-                </div>
-              </div>
-              <hr class="text-gray-600" />
-              <div>
-                {move || {
-                  if let Some(user) = user.get().flatten() {
-                    Either::Left(
-                      view! {
-                        <button
-                          popovertarget="login-dropdown"
-                          class="flex gap-1 items-baseline px-4 py-2"
-                        >
-                          {user.user_id}
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            class="size-2"
-                          >
-                            <polygon points="0,0 20,0 10,10" />
-                          </svg>
-                        </button>
-                        <Dropdown id="login-dropdown".to_owned() direction=Direction::Up>
-                          <a class="text-black" href="/settings">
-                            "Settings"
-                          </a>
-                          <a class="text-black" href="/api/logout" rel="external">
-                            "Log out"
-                          </a>
-                        </Dropdown>
-                      },
-                    )
-                  } else {
-                    Either::Right(
-                      view! {
-                        <a
-                          class=search
-                          href="#"
-                          on:click=move |_| modal_ref.get().unwrap().show_modal().unwrap()
-                        >
-                          "Log in"
-                        </a>
-                      },
-                    )
-                  }
-                }}
-              </div>
-            </div>
-          </div>
-          <div class="flex flex-col flex-1 h-full">
-            <Routes fallback=crate::not_found>
-              <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
-              <Route path=path!("/docs") view=docs::docs />
-              <ParentRoute path=path!("/lists") view=Outlet>
-                <Route
-                  path=path!("")
-                  view=move || {
-                    view! { <list::Lists logged_in=logged_in /> }
-                  }
-                />
-                <Route
-                  path=path!(":id")
-                  view=move || {
-                    view! {
-                      <ListComponent view=ListsRoute::View user=move || user.get().flatten() />
-                    }
-                  }
-                />
-                <Route
-                  path=path!(":id/items")
-                  view=move || {
-                    view! {
-                      <ListComponent view=ListsRoute::List user=move || user.get().flatten() />
-                    }
-                  }
-                />
-                <Route
-                  path=path!(":id/edit")
-                  view=move || {
-                    view! {
-                      <ListComponent view=ListsRoute::Edit user=move || user.get().flatten() />
-                    }
-                  }
-                />
-                <Route
-                  path=path!(":id/match")
-                  view=move || {
-                    view! {
-                      <ListComponent view=ListsRoute::Match user=move || user.get().flatten() />
-                    }
-                  }
-                />
-                <Route
-                  path=path!(":id/tournament")
-                  view=move || {
-                    view! {
-                      <ListComponent
-                        view=ListsRoute::Tournament
-                        user=move || user.get().flatten()
-                      />
-                    }
-                  }
-                />
-              </ParentRoute>
-              <Route path=path!("/search") view=move || view! { <Search logged_in=logged_in /> } />
-              <Route
-                path=path!("/settings")
-                view=move || {
-                  if user.read().as_ref().flatten().is_some() {
-                    view! { <Settings user=move || user.get().flatten().unwrap() /> }.into_any()
-                  } else {
-                    crate::not_found().into_any()
-                  }
-                }
-              />
-              <Route
-                path=path!("/integrations/spotify")
-                view=move || view! { <SpotifyIntegration logged_in=logged_in /> }
-              />
-              <Route path=path!("/nfl") view=Nfl />
-            </Routes>
-          </div>
-          <Modal header="Log in".to_owned() modal_ref=modal_ref>
-            <div class="flex flex-col gap-4">
-              <Button
-                class="text-white bg-primary"
-                on:click={
-                  let origin = origin.clone();
-                  move |_| {
-                    let navigate = use_navigate();
-                    navigate(
-                      &format!(
-                        "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
-                        origin.as_str(),
-                      ),
-                      Default::default(),
-                    )
-                  }
-                }
+                },
+              )
+            }
+          }}
+        </nav>
+        <div class="flex flex-col flex-1">
+          <nav class="md:hidden bg-mist-800">
+            <div class="flex gap-4 p-3">
+              <button
+                type="button"
+                style="background-color: transparent; color: rgba(255,255,255,0.85)"
+                on:click=move |_| set_sidebar.set(true)
               >
-                "Log in with Spotify"
-              </Button>
-              <Button
-                class="text-white bg-primary"
-                on:click=move |_| {
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                  />
+                </svg>
+              </button>
+              <a class="text-xl text-white" href="/">
+                "mybops"
+              </a>
+            </div>
+          </nav>
+          <Routes fallback=crate::not_found>
+            <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
+            <Route path=path!("/docs") view=docs::docs />
+            <ParentRoute path=path!("/lists") view=Outlet>
+              <Route
+                path=path!("")
+                view=move || {
+                  view! { <list::Lists logged_in=logged_in /> }
+                }
+              />
+              <Route
+                path=path!(":id")
+                view=move || {
+                  view! {
+                    <ListComponent view=ListsRoute::View user=move || user.get().flatten() />
+                  }
+                }
+              />
+              <Route
+                path=path!(":id/items")
+                view=move || {
+                  view! {
+                    <ListComponent view=ListsRoute::List user=move || user.get().flatten() />
+                  }
+                }
+              />
+              <Route
+                path=path!(":id/edit")
+                view=move || {
+                  view! {
+                    <ListComponent view=ListsRoute::Edit user=move || user.get().flatten() />
+                  }
+                }
+              />
+              <Route
+                path=path!(":id/match")
+                view=move || {
+                  view! {
+                    <ListComponent view=ListsRoute::Match user=move || user.get().flatten() />
+                  }
+                }
+              />
+              <Route
+                path=path!(":id/tournament")
+                view=move || {
+                  view! {
+                    <ListComponent view=ListsRoute::Tournament user=move || user.get().flatten() />
+                  }
+                }
+              />
+            </ParentRoute>
+            <Route path=path!("/search") view=move || view! { <Search logged_in=logged_in /> } />
+            <Route
+              path=path!("/settings")
+              view=move || {
+                if user.read().as_ref().flatten().is_some() {
+                  view! { <Settings user=move || user.get().flatten().unwrap() /> }.into_any()
+                } else {
+                  crate::not_found().into_any()
+                }
+              }
+            />
+            <Route
+              path=path!("/integrations/spotify")
+              view=move || view! { <SpotifyIntegration logged_in=logged_in /> }
+            />
+            <Route path=path!("/nfl") view=Nfl />
+          </Routes>
+        </div>
+        <Modal header="Log in".to_owned() modal_ref=modal_ref>
+          <div class="flex flex-col gap-4">
+            <Button
+              class="text-white bg-primary"
+              on:click={
+                let origin = origin.clone();
+                move |_| {
                   let navigate = use_navigate();
                   navigate(
                     &format!(
-                      "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                      "https://accounts.spotify.com/authorize?client_id=ee3d1b4f8d80477ea48743a511ef3018&redirect_uri={}/api/login&response_type=code&scope=playlist-modify-public playlist-modify-private user-read-recently-played playlist-read-private",
                       origin.as_str(),
                     ),
                     Default::default(),
                   )
                 }
-              >
-                "Log in with Google"
-              </Button>
-            </div>
-          </Modal>
-          <Toasts toasts=toasts />
-        </div>
+              }
+            >
+              "Log in with Spotify"
+            </Button>
+            <Button
+              class="text-white bg-primary"
+              on:click=move |_| {
+                let navigate = use_navigate();
+                navigate(
+                  &format!(
+                    "https://accounts.google.com/o/oauth2/v2/auth?client_id=1038220726403-n55jha2cvprd8kdb4akdfvo0uiok4p5u.apps.googleusercontent.com&redirect_uri={}/api/login/google&response_type=code&scope=email",
+                    origin.as_str(),
+                  ),
+                  Default::default(),
+                )
+              }
+            >
+              "Log in with Google"
+            </Button>
+          </div>
+        </Modal>
+        <Toasts toasts=toasts />
       </div>
     }
 }
