@@ -62,6 +62,7 @@ fn AppImpl() -> impl IntoView {
         user
     });
     let (sidebar, set_sidebar) = signal(false);
+    let (integrations, set_integrations) = signal(false);
     let (toasts, set_toasts) = signal(HashMap::new());
     provide_context(set_toasts);
 
@@ -119,7 +120,10 @@ fn AppImpl() -> impl IntoView {
             <a class=search href="/search">
               "Query"
             </a>
-            <button popovertarget="integrations-dropdown" class="flex gap-1 items-baseline">
+            <button
+              class="flex gap-1 items-baseline"
+              on:click=move |_| set_integrations.set(!integrations.get())
+            >
               "Integrations"
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -130,11 +134,12 @@ fn AppImpl() -> impl IntoView {
                 <polygon points="0,0 20,0 10,10" />
               </svg>
             </button>
-            <Dropdown id="integrations-dropdown".to_owned() direction=Direction::Down>
-              <a class="text-black" href="/integrations/spotify">
-                "Spotify"
-              </a>
-            </Dropdown>
+            <a
+              class=("hidden", move || !integrations.get())
+              href="/integrations/spotify"
+            >
+              "Spotify"
+            </a>
             <a class=search href="/docs">
               "Docs"
             </a>
