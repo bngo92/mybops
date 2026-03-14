@@ -91,9 +91,8 @@ fn AppImpl() -> impl IntoView {
     view! {
       <div class="flex h-dvh">
         <nav
-          class="flex fixed md:static md:visible flex-col gap-4 p-4 h-full text-white bg-mist-800"
+          class="flex fixed md:static md:visible flex-col gap-4 p-4 w-52 h-full text-white bg-mist-800"
           class=("invisible", move || !sidebar.get())
-          style="width: 200px;"
         >
           <div class="flex gap-4">
             <a class="text-xl" href="/">

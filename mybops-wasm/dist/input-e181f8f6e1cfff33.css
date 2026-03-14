@@ -331,6 +331,9 @@
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
+  .w-52 {
+    width: calc(var(--spacing) * 52);
+  }
   .w-\[15\%\] {
     width: 15%;
   }
