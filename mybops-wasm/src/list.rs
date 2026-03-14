@@ -32,7 +32,7 @@ pub fn Lists(#[prop(into)] logged_in: Signal<bool>) -> impl IntoView {
     };
     crate::nav_content(
         view! {
-          <a href="#" class="text-lg font-medium text-black">
+          <a href="#" class="font-medium">
             "All Lists"
           </a>
         }

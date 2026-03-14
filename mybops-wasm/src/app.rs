@@ -463,7 +463,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                 Some(view! {
                   <button
                     popovertarget="list-dropdown"
-                    class="flex gap-1 items-baseline text-black"
+                    class="flex gap-1 items-baseline font-medium"
                   >
                     {toggle}
                     <svg
@@ -505,15 +505,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             Some(ListState::NotFound) => unreachable!(),
             Some(ListState::Success(list)) => *list.clone(),
         };
-        let mut tabs = ["text-black"; 3];
-        let active = "text-black";
         let view = view();
-        match view {
-            ListPage::View => tabs[0] = active,
-            ListPage::List => tabs[1] = active,
-            ListPage::Edit => tabs[2] = active,
-            _ => {}
-        }
         let component = if crate::user_list(&list, &user.read()) {
             match view {
                 ListPage::View => view! { <ListView list=list_signal /> }.into_any(),
@@ -548,23 +540,17 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
         Some(view! {
           <Content
             heading=list.name.clone()
+            heading_href=format!("/lists/{}", list.id)
             nav=view! {
-              <div class="flex flex-col lg:flex-row gap-6 justify-between items-baseline text-sm font-medium">
-                <div class="flex gap-8 flex-col lg:flex-row items-baseline">
-                  <a class=tabs[0] href=format!("/lists/{}", list.id)>
-                    "View"
-                  </a>
-                  <a class=tabs[1] href=format!("/lists/{}/items", list.id)>
-                    "Items"
-                  </a>
+              <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-between">
+                <div class="flex gap-6 lg:gap-8 flex-col lg:flex-row lg:items-center font-medium">
+                  <a href=format!("/lists/{}/items", list.id)>"Items"</a>
                   {move || {
                     if user {
                       Some(
                         view! {
                           {dropdown_html.clone()}
-                          <a class=tabs[2] href=format!("/lists/{}/edit", list_signal().id)>
-                            "Settings"
-                          </a>
+                          <a href=format!("/lists/{}/edit", list_signal().id)>"Settings"</a>
                         },
                       )
                     } else {
@@ -577,7 +563,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                     Some(
                       view! {
                         <div class="flex gap-4 items-baseline">
-                          <span class="text-black text-nowrap">"Item Mode:"</span>
+                          <span class="text-nowrap">"Item Mode:"</span>
                           <SelectWithCallback on_change=move |ev| {
                             set_mode
                               .set(

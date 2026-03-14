@@ -3,7 +3,7 @@ use leptos::prelude::*;
 pub fn docs() -> impl IntoView {
     crate::nav_content(
         view! {
-          <a href="#" class="text-xl text-black">
+          <a href="#" class="font-medium">
             "Docs"
           </a>
         },

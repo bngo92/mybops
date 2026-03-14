@@ -22,7 +22,7 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
     crate::nav_content(
         view! {
           <>
-            <a href="#" class="text-lg font-medium text-black">
+            <a href="#" class="font-medium">
               "Query"
             </a>
             <div class="flex gap-4">

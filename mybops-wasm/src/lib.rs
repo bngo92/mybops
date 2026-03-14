@@ -73,72 +73,75 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
 
 fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
-      <nav class="flex gap-4 justify-between items-baseline p-3 bg-primary">{nav}</nav>
-      <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
+      <nav class="flex gap-4 justify-between items-center p-3 bg-primary">{nav}</nav>
+      <div class="p-3 overflow-y-auto bg-pink-50/10">{content}</div>
     }
 }
 
 #[component]
-fn Content(heading: String, nav: impl IntoView, content: impl IntoView) -> impl IntoView {
+fn Content(
+    heading: String,
+    heading_href: String,
+    nav: impl IntoView,
+    content: impl IntoView,
+) -> impl IntoView {
     let (collapse, set_collapse) = signal(true);
 
     view! {
-      <>
-        <nav class="flex flex-col lg:flex-row gap-8 items-baseline p-3 bg-primary">
-          <div class="flex justify-between w-full lg:w-auto">
-            <a href="#" class="w-full lg:w-auto text-lg font-medium text-black">
-              {heading}
-            </a>
-            <button
-              class="lg:hidden flex-1 s-fit text-black"
-              type="button"
-              on:click=move |_| set_collapse.set(!collapse.get())
-            >
-              {move || {
-                if collapse.get() {
-                  Either::Left(
-                    view! {
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="2"
-                        stroke="currentColor"
-                        class="size-4"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M12 4.5v15m7.5-7.5h-15"
-                        />
-                      </svg>
-                    },
-                  )
-                } else {
-                  Either::Right(
-                    view! {
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="2"
-                        stroke="currentColor"
-                        class="size-4"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
-                      </svg>
-                    },
-                  )
-                }
-              }}
-            </button>
-          </div>
-          <div class="flex-1" class=(["hidden", "lg:block"], collapse)>
-            {nav}
-          </div>
-        </nav>
-        <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
-      </>
+      <nav class="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center lg:items-center p-3 bg-primary">
+        <div class="flex justify-between w-full lg:w-auto">
+          <a href=heading_href class="w-full lg:w-auto font-medium">
+            {heading}
+          </a>
+          <button
+            class="lg:hidden flex-1 s-fit"
+            type="button"
+            on:click=move |_| set_collapse.set(!collapse.get())
+          >
+            {move || {
+              if collapse.get() {
+                Either::Left(
+                  view! {
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                      class="size-4"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    </svg>
+                  },
+                )
+              } else {
+                Either::Right(
+                  view! {
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                      class="size-4"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                    </svg>
+                  },
+                )
+              }
+            }}
+          </button>
+        </div>
+        <div class="flex-1" class=(["hidden", "lg:block"], collapse)>
+          {nav}
+        </div>
+      </nav>
+      <div class="p-3 overflow-y-auto bg-pink-50/10">{content}</div>
     }
 }
 

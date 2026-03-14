@@ -1097,7 +1097,7 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 1940, function: Function { arguments: [NamedExternref("PointerEvent")], shim_idx: 1941, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 1294, function: Function { arguments: [NamedExternref("PointerEvent")], shim_idx: 1295, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__hb15074ad316ee100, wasm_bindgen__convert__closures_____invoke__h78d6b4b6bec8d4ad);
             return ret;
         },

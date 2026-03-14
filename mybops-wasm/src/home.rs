@@ -33,11 +33,11 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
         Some(crate::nav_content(
             view! {
               <>
-                <a href="#" class="text-lg font-medium text-black">
+                <a href="#" class="font-medium">
                   {move || if disabled { "Demo" } else { "Home" }}
                 </a>
                 <div class="flex gap-4 items-baseline">
-                  <span class="text-black text-nowrap">"Sort Mode:"</span>
+                  <span class="text-nowrap">"Sort Mode:"</span>
                   <SelectWithRef node_ref=select_ref>
                     <option>"Tournament"</option>
                     <option selected=true>"Random Tournament"</option>

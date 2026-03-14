@@ -102,7 +102,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
     };
     crate::nav_content(
         view! {
-          <a href="#" class="text-lg font-medium text-black">
+          <a href="#" class="font-medium">
             "Spotify"
           </a>
         },

@@ -515,7 +515,7 @@ pub fn Nfl() -> impl IntoView {
         };
         Some(crate::nav_content(
             view! {
-              <a href="#" class="text-lg font-medium text-black">
+              <a href="#" class="font-medium">
                 "NFL"
               </a>
             },

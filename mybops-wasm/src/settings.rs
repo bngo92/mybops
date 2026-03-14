@@ -11,7 +11,7 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
     // Should we link to Google profile?
     crate::nav_content(
         view! {
-          <a href="#" class="text-lg font-medium text-black">
+          <a href="#" class="font-medium">
             "Settings"
           </a>
         },
