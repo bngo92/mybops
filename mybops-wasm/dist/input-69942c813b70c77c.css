@@ -40,6 +40,7 @@
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
     --color-primary: #2fb380;
+    --nav: 40px;
   }
 }
 @layer base {
@@ -314,6 +315,12 @@
   .size-full {
     width: 100%;
     height: 100%;
+  }
+  .h-\(--nav\) {
+    height: var(--nav);
+  }
+  .h-16 {
+    height: calc(var(--spacing) * 16);
   }
   .h-dvh {
     height: 100dvh;

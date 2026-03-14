@@ -134,10 +134,7 @@ fn AppImpl() -> impl IntoView {
                 <polygon points="0,0 20,0 10,10" />
               </svg>
             </button>
-            <a
-              class=("hidden", move || !integrations.get())
-              href="/integrations/spotify"
-            >
+            <a class=("hidden", move || !integrations.get()) href="/integrations/spotify">
               "Spotify"
             </a>
             <a class=search href="/docs">
@@ -461,20 +458,22 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                 None
             } else {
                 Some(view! {
-                  <button
-                    popovertarget="list-dropdown"
-                    class="flex gap-1 items-baseline font-medium"
-                  >
-                    {toggle}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="size-2"
+                  <div class="flex items-center h-(--nav)">
+                    <button
+                      popovertarget="list-dropdown"
+                      class="flex gap-1 items-baseline font-medium"
                     >
-                      <polygon points="0,0 20,0 10,10" />
-                    </svg>
-                  </button>
+                      {toggle}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        class="size-2"
+                      >
+                        <polygon points="0,0 20,0 10,10" />
+                      </svg>
+                    </button>
+                  </div>
                   <Dropdown id="list-dropdown".to_owned() direction=Direction::Down>
                     <a class="text-black" href=format!("/lists/{}/tournament", list.id)>
                       "Tournament"
@@ -544,13 +543,17 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             nav=view! {
               <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-between">
                 <div class="flex gap-6 lg:gap-8 flex-col lg:flex-row lg:items-center font-medium">
-                  <a href=format!("/lists/{}/items", list.id)>"Items"</a>
+                  <div class="flex items-center h-(--nav)">
+                    <a href=format!("/lists/{}/items", list.id)>"Items"</a>
+                  </div>
                   {move || {
                     if user {
                       Some(
                         view! {
                           {dropdown_html.clone()}
-                          <a href=format!("/lists/{}/edit", list_signal().id)>"Settings"</a>
+                          <div class="flex items-center h-(--nav)">
+                            <a href=format!("/lists/{}/edit", list_signal().id)>"Settings"</a>
+                          </div>
                         },
                       )
                     } else {
@@ -562,7 +565,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                   if matches!(view, ListPage::List) && !matches!(list.mode, ListMode::View(_)) {
                     Some(
                       view! {
-                        <div class="flex gap-4 items-baseline">
+                        <div class="flex gap-4 items-center h-(--nav)">
                           <span class="text-nowrap">"Item Mode:"</span>
                           <SelectWithCallback on_change=move |ev| {
                             set_mode
