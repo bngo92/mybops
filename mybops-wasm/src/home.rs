@@ -18,42 +18,38 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
         navigator(&format!("/lists/{}/edit", list.id), Default::default());
     });
 
-    move || {
-        let Some(lists) = &*lists.read() else {
-            return None;
-        };
-        let disabled = !logged_in.get();
-        let (help, set_help) = signal(logged_in.get());
-        let column = lists
-            .iter()
-            .map(|l| {
-                view! { <Widget list=l.clone() select_ref=select_ref /> }
-            })
-            .collect_view();
-        Some(crate::nav_content(
-            view! {
-              <>
-                <a href="#" class="font-medium">
-                  {move || if disabled { "Demo" } else { "Home" }}
-                </a>
-                <div class="flex gap-4 items-baseline">
-                  <span class="text-nowrap">"Sort Mode:"</span>
-                  <SelectWithRef node_ref=select_ref>
-                    <option>"Tournament"</option>
-                    <option selected=true>"Random Tournament"</option>
-                    <option>"Random Matches"</option>
-                    <option>"Random Rounds"</option>
-                  </SelectWithRef>
-                  <Button
-                    class="text-white bg-purple-500/80"
-                    on:click=move |_| set_help.set(!help.get())
-                  >
-                    "Help"
-                  </Button>
-                </div>
-              </>
-            },
-            view! {
+    let (help, set_help) = signal(logged_in.get());
+
+    crate::nav_content(
+        view! {
+          <a href="#" class="font-medium">
+            {move || if logged_in.get() { "Home" } else { "Demo" }}
+          </a>
+          <div class="flex gap-4 items-baseline">
+            <span class="text-nowrap">"Sort Mode:"</span>
+            <SelectWithRef node_ref=select_ref>
+              <option>"Tournament"</option>
+              <option selected=true>"Random Tournament"</option>
+              <option>"Random Matches"</option>
+              <option>"Random Rounds"</option>
+            </SelectWithRef>
+            <Button class="text-white bg-purple-500/80" on:click=move |_| set_help.set(!help.get())>
+              "Help"
+            </Button>
+          </div>
+        },
+        move || {
+            let Some(lists) = &*lists.read() else {
+                return None;
+            };
+            let disabled = !logged_in.get();
+            let column = lists
+                .iter()
+                .map(|l| {
+                    view! { <Widget list=l.clone() select_ref=select_ref /> }
+                })
+                .collect_view();
+            Some(view! {
               <div class="flex flex-col gap-4">
                 <Collapse collapsed=help>
                   <p>
@@ -114,9 +110,9 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                   </Button>
                 </div>
               </div>
-            },
-        ))
-    }
+            })
+        },
+    )
 }
 
 async fn fetch_lists() -> Vec<List> {
