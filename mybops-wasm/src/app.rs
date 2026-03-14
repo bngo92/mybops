@@ -541,8 +541,8 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             heading=list.name.clone()
             heading_href=format!("/lists/{}", list.id)
             nav=view! {
-              <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-between">
-                <div class="flex gap-6 lg:gap-8 flex-col lg:flex-row lg:items-center font-medium">
+              <div class="flex flex-col lg:flex-row gap-x-8 gap-y-6 justify-between">
+                <div class="flex gap-x-8 gap-y-6 flex-col lg:flex-row lg:items-center font-medium">
                   <div class="flex items-center h-(--nav)">
                     <a href=format!("/lists/{}/items", list.id)>"Items"</a>
                   </div>
