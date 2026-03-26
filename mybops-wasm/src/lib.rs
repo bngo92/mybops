@@ -13,6 +13,7 @@ use web_sys::{Request, RequestInit, RequestMode, Response, Window};
 mod app;
 mod base;
 mod bootstrap;
+mod color;
 mod dataframe;
 mod docs;
 mod edit;

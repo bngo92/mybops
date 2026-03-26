@@ -4,6 +4,7 @@ use crate::{
     Content, ListsRoute,
     base::{Button, Input, SelectWithCallback},
     bootstrap::{Direction, Dropdown, Modal, Toasts},
+    color::Color,
     docs,
     edit::Edit,
     home::Home,
@@ -276,6 +277,7 @@ fn AppImpl() -> impl IntoView {
               view=move || view! { <SpotifyIntegration logged_in=logged_in /> }
             />
             <Route path=path!("/nfl") view=Nfl />
+            <Route path=path!("/color") view=Color />
           </Routes>
         </div>
         <Modal header="Log in".to_owned() modal_ref=modal_ref>
