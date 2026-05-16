@@ -467,9 +467,9 @@ pub fn Nfl() -> impl IntoView {
                         continue;
                     }
                     let class = match score1.cmp(&score2) {
-                        Ordering::Less => "text-danger",
-                        Ordering::Equal => "text-warning",
-                        Ordering::Greater => "text-success",
+                        Ordering::Less => "text-red-600",
+                        Ordering::Equal => "text-yellow-600",
+                        Ordering::Greater => "text-green-700",
                     };
                     let score = if common_game {
                         view! {

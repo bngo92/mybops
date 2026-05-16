@@ -92,7 +92,7 @@ fn AppImpl() -> impl IntoView {
     view! {
       <div class="flex h-dvh">
         <nav
-          class="flex fixed md:static md:visible flex-col gap-4 p-4 w-52 h-full text-white bg-mist-800"
+          class="flex fixed md:static md:visible flex-col flex-none gap-4 p-4 w-52 h-full text-white bg-mist-800"
           class=("invisible", move || !sidebar.get())
         >
           <div class="flex gap-4">
