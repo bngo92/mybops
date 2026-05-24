@@ -543,7 +543,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
             heading_href=format!("/lists/{}", list.id)
             nav=view! {
               <div class="flex flex-col lg:flex-row gap-x-8 gap-y-6 justify-between">
-                <div class="flex gap-x-8 gap-y-6 flex-col lg:flex-row lg:items-center font-medium">
+                <div class="flex gap-x-8 gap-y-6 flex-col lg:flex-row lg:items-center font-medium text-white">
                   <div class="flex items-center h-(--nav)">
                     <a href=format!("/lists/{}/items", list.id)>"Items"</a>
                   </div>
@@ -567,7 +567,7 @@ pub fn ListComponent(view: ListsRoute, #[prop(into)] user: Signal<Option<User>>)
                     Some(
                       view! {
                         <div class="flex gap-4 items-center h-(--nav)">
-                          <span class="text-nowrap">"Item Mode:"</span>
+                          <span class="text-white text-nowrap">"Item Mode:"</span>
                           <SelectWithCallback on_change=move |ev| {
                             set_mode
                               .set(

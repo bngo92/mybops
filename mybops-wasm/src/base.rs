@@ -143,7 +143,7 @@ pub fn SelectWithRef(node_ref: NodeRef<Select>, children: Children) -> impl Into
       <div class="bg-white rounded-sm border border-gray-200">
         <select
           node_ref=node_ref
-          class="px-4 py-2 size-full border-e-[calc(var(--spacing)*2)] border-transparent"
+          class="px-4 py-2 size-full text-black border-e-[calc(var(--spacing)*2)] border-transparent"
         >
           {children()}
         </select>

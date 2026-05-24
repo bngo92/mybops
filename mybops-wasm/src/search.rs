@@ -27,13 +27,13 @@ pub fn Search(#[prop(into)] logged_in: RwSignal<bool>) -> impl IntoView {
             </a>
             <div class="flex gap-4">
               <Button
-                class="w-32 text-white bg-purple-500/80"
+                class="w-32 text-white bg-fuchsia-800"
                 on:click=move |_| set_split_view.set(!split_view.get())
               >
                 {button_text}
               </Button>
               <Button
-                class="text-white bg-purple-500/80"
+                class="text-white bg-fuchsia-800"
                 on:click=move |_| logged_in.set(!logged_in.get())
               >
                 "Help"

@@ -33,7 +33,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
               <option>"Random Matches"</option>
               <option>"Random Rounds"</option>
             </SelectWithRef>
-            <Button class="text-white bg-purple-500/80" on:click=move |_| set_help.set(!help.get())>
+            <Button class="text-white bg-fuchsia-800" on:click=move |_| set_help.set(!help.get())>
               "Help"
             </Button>
           </div>
