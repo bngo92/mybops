@@ -17,8 +17,8 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
         },
         view! {
           <div>
-            <h1>"Integrations"</h1>
-            <h2>"Spotify"</h2>
+            <h1 class="mb-2 text-2xl font-medium">"Integrations"</h1>
+            <h2 class="text-xl font-medium">"Spotify"</h2>
             {
               let origin = origin.clone();
               move || {
@@ -48,7 +48,7 @@ pub fn Settings(#[prop(into)] user: Signal<User>) -> impl IntoView {
                 }
               }
             }
-            <h2>"Google"</h2>
+            <h2 class="text-xl font-medium">"Google"</h2>
             {move || {
               let origin = origin.clone();
               if let Some(google_email) = user.get().google_email {

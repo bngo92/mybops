@@ -74,7 +74,9 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
 
 fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
-      <nav class="flex gap-4 justify-between items-center p-3 h-14 text-white bg-linear-to-b from-primary to-[#7c3aedf2]">{nav}</nav>
+      <nav class="flex gap-4 justify-between items-center p-3 h-14 text-white bg-linear-to-b from-primary to-[#7c3aedf2]">
+        {nav}
+      </nav>
       <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
     }
 }
@@ -334,7 +336,7 @@ fn user_list(list: &List, user: &Option<User>) -> bool {
 }
 
 fn not_found() -> impl IntoView {
-    view! { <h1>"Not found"</h1> }
+    view! { <h1 class="mb-2 text-2xl font-medium">"Not found"</h1> }
 }
 
 fn window() -> Window {

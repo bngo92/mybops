@@ -377,7 +377,9 @@ pub fn Tournament(state: TournamentFields) -> impl IntoView {
                       winner
                         .map(|winner| {
                           view! {
-                            <h2>{format!("Winner: {}", winner.name)}</h2>
+                            <h2 class="text-xl font-medium">
+                              {format!("Winner: {}", winner.name)}
+                            </h2>
                             // TODO: only show if iframe exists
                             <div class="w-full max-w-3xl">
                               <iframe
@@ -445,7 +447,7 @@ fn match_view(
     let select = if let Some(winner) = winner {
         Either::Left(view! {
           <div>
-            <h2>{format!("Winner: {}", winner.name)}</h2>
+            <h2 class="text-xl font-medium">{format!("Winner: {}", winner.name)}</h2>
             <div class="w-full max-w-3xl">
               <iframe
                 width="100%"

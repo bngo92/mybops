@@ -190,8 +190,8 @@ pub fn Edit(
     };
     view! {
       <div>
-        <h4>"List Settings"</h4>
-        <div class="flex flex-col gap-8">
+        <h2 class="text-xl font-medium">"List Settings"</h2>
+        <div class="flex flex-col gap-4">
           <form class="flex flex-col gap-4 max-w-3xl">
             <FormInput
               id="name"
@@ -290,7 +290,7 @@ pub fn Edit(
             </div>
           </form>
           <div>
-            <h5>"Data Sources"</h5>
+            <h2 class="mb-2 text-lg font-medium">"Data Sources"</h2>
             <div class="grid grid-cols-[10rem_minmax(auto,calc(var(--container-3xl)-10rem-1rem))_min-content] gap-4 mb-3">
               {source_html}
             </div>

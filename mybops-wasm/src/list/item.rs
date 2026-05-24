@@ -535,7 +535,7 @@ pub fn ListItems(
           </form>
         </div>
         <hr class="text-gray-300" />
-        <h4>"Data Sources"</h4>
+        <h2 class="text-lg font-medium">"Data Sources"</h2>
         {source_html}
         {move || {
           if matches!(list.read().mode, ListMode::External) {

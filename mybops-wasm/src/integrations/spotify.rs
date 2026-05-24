@@ -152,7 +152,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                 }
               }}
             </Accordion>
-            <h2>"Import from Spotify link"</h2>
+            <h2 class="text-xl font-medium">"Import from Spotify link"</h2>
             <form>
               <div class="flex gap-2">
                 <div class="basis-3xl">
