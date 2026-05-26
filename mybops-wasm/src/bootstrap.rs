@@ -13,6 +13,7 @@ pub fn Accordion(
     header: String,
     #[prop(optional)] on_toggle: Option<Callback<MouseEvent>>,
     #[prop(into)] collapsed: Signal<Option<bool>>,
+    #[prop(default = true)] px: bool,
 ) -> impl IntoView {
     let initial = collapsed.read().unwrap_or(true);
     let (collapsed_state, set_collapsed_state) = signal(initial);
@@ -24,9 +25,6 @@ pub fn Accordion(
             collapsed_state.get()
         }
     };
-    let body_class = move || {
-        if collapsed() { "hidden" } else { "block" }
-    };
     let onclick = if let Some(on_toggle) = on_toggle {
         on_toggle
     } else {
@@ -35,7 +33,7 @@ pub fn Accordion(
     view! {
       <div class="bg-white rounded-sm border border-gray-200">
         <h2
-          class="px-5 py-4 m-0 text-base border-gray-200"
+          class="px-5 py-3 m-0 text-base bg-accordion border-gray-200"
           class=("border-b", move || !collapsed())
         >
           <button class="flex justify-between w-full" on:click=move |ev| onclick.run(ev)>
@@ -62,7 +60,14 @@ pub fn Accordion(
             </svg>
           </button>
         </h2>
-        <div class=body_class>{children()}</div>
+        <div
+          class="py-3"
+          class=("hidden", move || collapsed())
+          class=("blocked", move || !collapsed())
+          class=("px-5", px)
+        >
+          {children()}
+        </div>
       </div>
     }
 }

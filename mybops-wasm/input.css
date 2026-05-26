@@ -3,5 +3,6 @@
 @theme {
   --color-primary: oklch(54.1% 0.247 293.01);
   --color-help: oklch(48.1% 0.227 293.01);
+  --color-accordion: oklch(99.1% 0.097 353.01);
   --nav: 32px;
 }

@@ -178,6 +178,7 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
           on_toggle=Callback::new(move |_| {
             on_toggle.dispatch(());
           })
+          px=false
         >
           {move || {
             if let Some(query) = query.get() {

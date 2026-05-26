@@ -107,7 +107,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
           </a>
         },
         view! {
-          <div>
+          <div class="flex flex-col gap-6">
             <Accordion header="Recent Tracks".to_owned() collapsed=false>
               {move || {
                 if logged_in.get() {
@@ -152,23 +152,25 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                 }
               }}
             </Accordion>
-            <h2 class="text-xl font-medium">"Import from Spotify link"</h2>
-            <form>
-              <div class="flex gap-2">
-                <div class="basis-3xl">
-                  <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
+            <div>
+              <h2 class="text-xl font-medium">"Import from Spotify link"</h2>
+              <form>
+                <div class="flex gap-2">
+                  <div class="basis-3xl">
+                    <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
+                  </div>
+                  <Button
+                    class="text-white bg-primary"
+                    on:click=move |_| {
+                      import.dispatch(());
+                    }
+                    disabled=logged_in
+                  >
+                    "Import"
+                  </Button>
                 </div>
-                <Button
-                  class="text-white bg-primary"
-                  on:click=move |_| {
-                    import.dispatch(());
-                  }
-                  disabled=logged_in
-                >
-                  "Import"
-                </Button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         },
     )
