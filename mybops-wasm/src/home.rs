@@ -100,7 +100,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
                 <div class="grid md:grid-cols-2 gap-4">{column}</div>
                 <div>
                   <Button
-                    class="text-white bg-blue-500 disabled:bg-blue-500/65"
+                    class="text-primary bg-secondary disabled:bg-secondary"
                     on:click=move |_| {
                       create.dispatch(());
                     }

@@ -46,6 +46,7 @@
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
     --color-primary: oklch(54.1% 0.247 293.01);
+    --color-secondary: oklch(94.1% 0.247 293.01);
     --color-help: oklch(48.1% 0.227 293.01);
     --color-accordion: oklch(99.1% 0.097 353.01);
     --nav: 32px;
@@ -542,6 +543,9 @@
   .bg-red-500 {
     background-color: var(--color-red-500);
   }
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
   .bg-violet-400 {
     background-color: var(--color-violet-400);
   }
@@ -654,6 +658,9 @@
   .text-green-700 {
     color: var(--color-green-700);
   }
+  .text-primary {
+    color: var(--color-primary);
+  }
   .text-red-500 {
     color: var(--color-red-500);
   }
@@ -676,14 +683,6 @@
       }
     }
   }
-  .disabled\:bg-blue-500\/65 {
-    &:disabled {
-      background-color: color-mix(in srgb, oklch(62.3% 0.214 259.815) 65%, transparent);
-      @supports (color: color-mix(in lab, red, red)) {
-        background-color: color-mix(in oklab, var(--color-blue-500) 65%, transparent);
-      }
-    }
-  }
   .disabled\:bg-primary\/65 {
     &:disabled {
       background-color: color-mix(in srgb, oklch(54.1% 0.247 293.01) 65%, transparent);
@@ -698,6 +697,11 @@
       @supports (color: color-mix(in lab, red, red)) {
         background-color: color-mix(in oklab, var(--color-red-500) 65%, transparent);
       }
+    }
+  }
+  .disabled\:bg-secondary {
+    &:disabled {
+      background-color: var(--color-secondary);
     }
   }
   .md\:visible {
