@@ -97,7 +97,7 @@ fn Content(
             {heading}
           </a>
           <button
-            class="lg:hidden flex-1 s-fit"
+            class="lg:hidden flex-1 s-fit text-white"
             type="button"
             on:click=move |_| set_collapse.set(!collapse.get())
           >
