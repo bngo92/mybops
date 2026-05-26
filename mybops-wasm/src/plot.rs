@@ -84,13 +84,13 @@ pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
       <table style=style>
         <thead>
           <tr>
-            <th class="pr-8 border-b border-gray-200">"#"</th>
+            <th class="px-3 border-b border-gray-200">"#"</th>
             {df
               .schema
               .fields
               .iter()
               .map(|f| {
-                view! { <th class="pr-8 border-b border-gray-200">{f.name().clone()}</th> }
+                view! { <th class="pr-8 text-left border-b border-gray-200">{f.name().clone()}</th> }
               })
               .collect_view()}
           </tr>
@@ -103,7 +103,7 @@ pub fn df_table_view(df: &DataFrame, min_width: bool) -> impl IntoView {
 fn df_item_view(df: &DataFrame, i: usize) -> impl IntoView {
     view! {
       <tr>
-        <th>{i + 1}</th>
+        <th class="border-b border-gray-100">{i + 1}</th>
         {df
           .arrays
           .iter()
