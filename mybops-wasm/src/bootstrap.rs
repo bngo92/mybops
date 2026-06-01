@@ -33,7 +33,7 @@ pub fn Accordion(
     view! {
       <div class="bg-white rounded-sm border border-gray-200">
         <h2
-          class="px-5 py-3 m-0 text-base bg-accordion border-gray-200"
+          class="px-5 py-3 m-0 text-base bg-purple-100 border-gray-200"
           class=("border-b", move || !collapsed())
         >
           <button class="flex justify-between w-full" on:click=move |ev| onclick.run(ev)>

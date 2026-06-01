@@ -77,7 +77,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                             .then(|| {
                               view! {
                                 <Button
-                                  class="text-white bg-primary"
+                                  class="text-white bg-violet-600"
                                   on:click={
                                     let url = i.url.clone();
                                     move |_| {
@@ -160,7 +160,7 @@ pub fn SpotifyIntegration(#[prop(into)] logged_in: Signal<bool>) -> impl IntoVie
                     <input node_ref=import_ref type="text" class=INPUT_STYLE value=default_import />
                   </div>
                   <Button
-                    class="text-white bg-primary"
+                    class="text-white bg-violet-600"
                     on:click=move |_| {
                       import.dispatch(());
                     }

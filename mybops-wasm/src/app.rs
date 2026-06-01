@@ -283,7 +283,7 @@ fn AppImpl() -> impl IntoView {
         <Modal header="Log in".to_owned() modal_ref=modal_ref>
           <div class="flex flex-col gap-4">
             <Button
-              class="text-white bg-primary"
+              class="text-white bg-violet-600"
               on:click={
                 let origin = origin.clone();
                 move |_| {
@@ -301,7 +301,7 @@ fn AppImpl() -> impl IntoView {
               "Log in with Spotify"
             </Button>
             <Button
-              class="text-white bg-primary"
+              class="text-white bg-violet-600"
               on:click=move |_| {
                 let navigate = use_navigate();
                 navigate(

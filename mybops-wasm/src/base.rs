@@ -21,7 +21,7 @@ pub fn Button(
       <button
         type=r#type
         class=class
-        class=(["bg-primary", "disabled:bg-primary/65", "text-white"], style == "primary")
+        class=(["bg-violet-600", "disabled:bg-violet-600/65", "text-white"], style == "primary")
         class=(["bg-red-500", "disabled:bg-red-500/65", "text-white"], style == "danger")
         class=(["rounded-sm"], true)
         class=(["px-4"], true)

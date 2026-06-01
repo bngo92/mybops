@@ -74,7 +74,7 @@ pub fn parse_setlist_source(input: String) -> Option<Id> {
 
 fn nav_content(nav: impl IntoView, content: impl IntoView) -> impl IntoView {
     view! {
-      <nav class="flex gap-4 justify-between items-center p-3 h-14 text-white bg-linear-to-b from-primary to-[#7c3aedf2]">
+      <nav class="flex gap-4 justify-between items-center p-3 h-14 text-white bg-linear-to-b from-violet-600 to-violet-600/95">
         {nav}
       </nav>
       <div class="flex-1 p-3 overflow-y-auto bg-pink-50/10">{content}</div>
@@ -91,7 +91,7 @@ fn Content(
     let (collapse, set_collapse) = signal(true);
 
     view! {
-      <nav class="flex flex-col lg:flex-row gap-x-8 gap-y-6 justify-center lg:items-center p-3 bg-linear-to-b from-primary to-[#7c3aedf2]">
+      <nav class="flex flex-col lg:flex-row gap-x-8 gap-y-6 justify-center lg:items-center p-3 bg-linear-to-b from-violet-600 to-violet-600/95">
         <div class="flex justify-between items-center w-full lg:w-auto h-(--nav)">
           <a href=heading_href class="w-full lg:w-auto font-medium text-white">
             {heading}
