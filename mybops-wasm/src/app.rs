@@ -211,7 +211,7 @@ fn AppImpl() -> impl IntoView {
             </div>
           </nav>
           <Routes fallback=crate::not_found>
-            <Route path=path!("/") view=move || view! { <Home logged_in=logged_in /> } />
+            <Route path=path!("/") view=move || view! { <Home logged_in=logged_in.get() /> } />
             <Route path=path!("/docs") view=docs::docs />
             <ParentRoute path=path!("/lists") view=Outlet>
               <Route

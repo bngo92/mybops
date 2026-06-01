@@ -11,32 +11,33 @@ use leptos_use::{UseTimeoutFnReturn, on_click_outside, use_timeout_fn};
 pub fn Accordion(
     children: Children,
     header: String,
-    #[prop(optional)] on_toggle: Option<Callback<MouseEvent>>,
-    #[prop(into)] collapsed: Signal<Option<bool>>,
+    collapsed: bool,
     #[prop(default = true)] px: bool,
 ) -> impl IntoView {
-    let initial = collapsed.read().unwrap_or(true);
-    let (collapsed_state, set_collapsed_state) = signal(initial);
+    let (collapsed, set_collapsed) = signal(collapsed);
+    let onclick = Callback::new(move |_| set_collapsed.set(!collapsed.get()));
+    view! {
+      <RawAccordion header=header on_toggle=onclick collapsed=collapsed px=px>
+        {children()}
+      </RawAccordion>
+    }
+}
 
-    let collapsed = move || {
-        if on_toggle.is_some() {
-            collapsed.read().unwrap_or(true)
-        } else {
-            collapsed_state.get()
-        }
-    };
-    let onclick = if let Some(on_toggle) = on_toggle {
-        on_toggle
-    } else {
-        Callback::new(move |_| set_collapsed_state.set(!collapsed_state.get()))
-    };
+#[component]
+pub fn RawAccordion(
+    children: Children,
+    header: String,
+    on_toggle: Callback<MouseEvent>,
+    #[prop(into)] collapsed: Signal<bool>,
+    #[prop(default = true)] px: bool,
+) -> impl IntoView {
     view! {
       <div class="bg-white rounded-sm border border-gray-200">
         <h2
           class="px-5 py-3 m-0 text-base bg-purple-100 border-gray-200"
-          class=("border-b", move || !collapsed())
+          class=("border-b", move || !collapsed.get())
         >
-          <button class="flex justify-between w-full" on:click=move |ev| onclick.run(ev)>
+          <button class="flex justify-between w-full" on:click=move |ev| on_toggle.run(ev)>
             {header}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +51,7 @@ pub fn Accordion(
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 d=move || {
-                  if collapsed() {
+                  if collapsed.get() {
                     "m19.5 8.25-7.5 7.5-7.5-7.5"
                   } else {
                     "m4.5 15.75 7.5-7.5 7.5 7.5"
@@ -62,8 +63,8 @@ pub fn Accordion(
         </h2>
         <div
           class="py-3"
-          class=("hidden", move || collapsed())
-          class=("blocked", move || !collapsed())
+          class=("hidden", move || collapsed.get())
+          class=("blocked", move || !collapsed.get())
           class=("px-5", px)
         >
           {children()}

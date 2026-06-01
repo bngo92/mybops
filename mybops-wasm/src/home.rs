@@ -1,6 +1,6 @@
 use crate::{
     base::{Button, SelectWithRef},
-    bootstrap::{Accordion, Collapse},
+    bootstrap::{Collapse, RawAccordion},
 };
 use leptos::{either::Either, html::Select, prelude::*};
 use leptos_router::hooks::use_navigate;
@@ -8,7 +8,7 @@ use mybops::{List, ListMode};
 use wasm_bindgen::JsValue;
 
 #[component]
-pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
+pub fn Home(logged_in: bool) -> impl IntoView {
     let select_ref = NodeRef::<Select>::new();
     let lists = LocalResource::new(|| async { fetch_lists().await });
 
@@ -18,12 +18,12 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
         navigator(&format!("/lists/{}/edit", list.id), Default::default());
     });
 
-    let (help, set_help) = signal(logged_in.get());
+    let (help, set_help) = signal(logged_in);
 
     crate::nav_content(
         view! {
           <a href="#" class="font-medium">
-            {move || if logged_in.get() { "Home" } else { "Demo" }}
+            {move || if logged_in { "Home" } else { "Demo" }}
           </a>
           <div class="flex gap-4 items-baseline">
             <span class="text-nowrap">"Sort Mode:"</span>
@@ -42,7 +42,7 @@ pub fn Home(logged_in: RwSignal<bool>) -> impl IntoView {
             let Some(lists) = &*lists.read() else {
                 return None;
             };
-            let disabled = !logged_in.get();
+            let disabled = !logged_in;
             let column = lists
                 .iter()
                 .map(|l| {
@@ -172,9 +172,9 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
     let disabled = matches!(list.mode, ListMode::View(_));
     view! {
       <div class="flex flex-col gap-4">
-        <Accordion
+        <RawAccordion
           header=list.name.clone()
-          collapsed=move || Some(collapsed.get())
+          collapsed=collapsed
           on_toggle=Callback::new(move |_| {
             on_toggle.dispatch(());
           })
@@ -187,7 +187,7 @@ fn Widget(list: List, select_ref: NodeRef<Select>) -> impl IntoView {
               Either::Right(view! { <div></div> })
             }
           }}
-        </Accordion>
+        </RawAccordion>
         <div class="flex gap-4">
           <Button
             style="primary"
