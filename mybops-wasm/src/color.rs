@@ -743,7 +743,7 @@ Rose
               <option>"Tailwind"</option>
             </SelectWithCallback>
           </div>
-          <ColorTable colors=colors pin=pin set_pin=set_pin/>
+          <ColorTable colors=colors pin=pin set_pin=set_pin />
         },
     )
 }
@@ -858,38 +858,38 @@ fn ColorTable(
             .collect_view()
     };
     view! {
-          <table>
-            <thead>
-              <th>
-                <button class="w-full text-left" on:click=move |_| set_sort(Sort::Name)>
-                  Name
-                </button>
-              </th>
-              <th>
-                <button class="px-2 w-full text-left" on:click=move |_| set_sort(Sort::Hex)>
-                  Hex
-                </button>
-              </th>
-              <th class="px-1">Color</th>
-              <th>
-                <button class="w-full" on:click=move |_| set_sort(Sort::L)>
-                  L
-                </button>
-              </th>
-              <th>
-                <button class="w-full" on:click=move |_| set_sort(Sort::C)>
-                  C
-                </button>
-              </th>
-              <th>
-                <button class="w-full" on:click=move |_| set_sort(Sort::H)>
-                  h
-                </button>
-              </th>
-              {pin.read().map(|_| view! { <th>Delta</th> })}
-            </thead>
-            {rows}
-          </table>
+      <table>
+        <thead>
+          <th>
+            <button class="w-full text-left" on:click=move |_| set_sort(Sort::Name)>
+              Name
+            </button>
+          </th>
+          <th>
+            <button class="px-2 w-full text-left" on:click=move |_| set_sort(Sort::Hex)>
+              Hex
+            </button>
+          </th>
+          <th class="px-1">Color</th>
+          <th>
+            <button class="w-full" on:click=move |_| set_sort(Sort::L)>
+              L
+            </button>
+          </th>
+          <th>
+            <button class="w-full" on:click=move |_| set_sort(Sort::C)>
+              C
+            </button>
+          </th>
+          <th>
+            <button class="w-full" on:click=move |_| set_sort(Sort::H)>
+              h
+            </button>
+          </th>
+          {pin.read().map(|_| view! { <th>Delta</th> })}
+        </thead>
+        {rows}
+      </table>
     }
 }
 
